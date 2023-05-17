@@ -1,0 +1,2236 @@
+<template>
+  <div class="px-common-layout px-no-trans">
+    <div v-if="!agent">
+      <el-container>
+        <el-aside class="aside">
+          <div class="flex">
+            <img class="logo" :src="logo" alt="" />
+            <button
+              v-if="userInfo.name"
+              class="button-style gpt-button"
+              @click="skip('http://chat.mbmzone.com/', true)"
+            >
+              我的ChatGPT 对话
+            </button>
+            <button v-else class="button-style gpt-button" @click="toLogin">
+              登录我的 MBM OpenAI 账号
+            </button>
+            <div class="default-model">
+              <img class="icon-ai" :src="iconAi" alt="" />
+              <div class="model-name active">默认模型</div>
+              <el-select
+                v-model="aiVersion"
+                :fit-input-width="false"
+                popper-class="select-down"
+                :popper-append-to-body="false"
+                class="ai-select"
+                :class="{
+                  w128:
+                    aiVersion.value === 'GPT-4' ||
+                    aiVersion.value === 'GPT-3.5',
+                  w171: aiVersion.value === 'GPT-4 32K',
+                }"
+                :placeholder="options[0].label"
+                size="small"
+              >
+                <el-option
+                  class="options"
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </div>
+            <div class="default-model" @click="skip('http://visus.ai/', true)">
+              <img class="icon-ai" :src="iconSelf" alt="" />
+              <div class="model-name">训练你自己的ChatGPT</div>
+            </div>
+            <div class="default-model" @click="train('生成我的GPT4 API Key')">
+              <img class="icon-ai" :src="iconKey" alt="" />
+              <div class="model-name">生成我的GPT4 API Key</div>
+            </div>
+          </div>
+          <div class="flex">
+            <ul class="question-box">
+              <li
+                class="question"
+                v-for="(item, index) in questionList"
+                :key="index"
+                @click="
+                  ElNotification({ message: item.label, showClose: false })
+                "
+              >
+                {{ item.label }}
+              </li>
+            </ul>
+            <button
+              v-if="userInfo.name"
+              class="gpt-button color-button"
+              @click="recharge"
+            >
+              充值我的账户
+              <div class="my-count-hover"></div>
+              <span class="light iconfont icon-shandian"></span>
+            </button>
+            <button
+              v-else
+              class="gpt-button color-button get-one-dollar"
+              @click="toLogin"
+            >
+              现在领取 1 美元体验金！
+            </button>
+            <div v-if="userInfo.name" class="share-my-code">
+              分享我的推荐码：
+              <span class="code" @click="copy">{{ userInfo.inviteCode }}</span>
+            </div>
+          </div>
+        </el-aside>
+        <el-container>
+          <el-header class="header">
+            <el-carousel
+              trigger="click"
+              arrow="never"
+              :autoplay="true"
+              :interval="5000"
+              class="swiper"
+              @change="changeSwiper"
+            >
+              <el-carousel-item
+                class="swipe"
+                :style="{
+                  background: `url(${item.bg}) center / auto 100% repeat`,
+                }"
+                v-for="item in swiperList"
+                :key="item.desc"
+              >
+                <div
+                  class="title"
+                  :class="{
+                    'animate__animated animate__fadeIn animate__delay-1':
+                      animate,
+                  }"
+                >
+                  {{ item.title }}
+                </div>
+                <div
+                  class="desc"
+                  :class="{
+                    'animate__animated animate__fadeIn animate__delay-2':
+                      animate,
+                  }"
+                >
+                  {{ item.desc }}
+                </div>
+                <button
+                  class="open-ai"
+                  :class="{
+                    'animate__animated animate__fadeIn animate__delay-3':
+                      animate,
+                  }"
+                >
+                  {{ item.button }}
+                </button>
+              </el-carousel-item>
+            </el-carousel>
+            <div
+              v-if="userInfo.name"
+              class="avatar"
+              @click="showUserInfo = !showUserInfo"
+            >
+              {{ nickname }}
+            </div>
+            <div
+              v-if="userInfo.name"
+              class="user-info"
+              :class="{ 'show-user': showUserInfo }"
+            >
+              <p class="nickname">
+                Hello,
+                <span class="underline">{{ userInfo.name }}!</span>
+              </p>
+              <div class="info-item">
+                <span class="label">手机号：</span>
+                {{ userInfo.mobile }}
+              </div>
+              <div class="info-item">
+                <span class="label">剩余金额：</span>
+                {{ userInfo.remainAmount }}美元
+              </div>
+              <div class="info-item">
+                <span class="label">请求次数：</span>
+                {{ userInfo.requestCount }}次
+              </div>
+              <div class="info-item">
+                <span class="label">推荐码：</span>
+                <span class="code underline" @click="copy">{{
+                  userInfo.inviteCode
+                }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">AI时刻：</span>
+                {{ userInfo.createTime }}
+              </div>
+            </div>
+          </el-header>
+          <el-main class="main">
+            <!-- <h1 class="title">
+            我收藏的应用
+            <span class="app-num">(2)</span>
+          </h1>
+          <collect-item></collect-item> -->
+            <h1 class="title">
+              当下热门 AI 应用
+              <span class="app-num">(2)</span>
+            </h1>
+            <collect-item></collect-item>
+          </el-main>
+        </el-container>
+      </el-container>
+      <el-dialog
+        v-model="showDialog"
+        :close-on-click-modal="true"
+        :close-on-press-escape="false"
+        class="wrap-dialog"
+        :show-close="false"
+        title=""
+      >
+        <div class="dialog">
+          <div class="type-word">
+            <chat-gpt-typewriter
+              exampleText="进入你的AI时刻"
+            ></chat-gpt-typewriter>
+            <div class="mask"></div>
+          </div>
+          <div class="avatar">M</div>
+          <div v-if="status === 1" class="one-key" @click="status = 2">
+            本机号码一键登录
+          </div>
+          <!-- 手机号 -->
+          <div class="ipt-box" v-if="status === 2">
+            <el-input
+              :maxlength="13"
+              class="tel"
+              v-model="tel"
+              :autofocus="true"
+              placeholder="xxxxxxxxxxxxx"
+            />
+            <div class="btm"></div>
+            <div class="btm btm2"></div>
+          </div>
+          <!-- 验证码 -->
+          <div class="square-box" v-if="status === 3">
+            <el-input
+              :maxlength="6"
+              class="tel"
+              v-model="sms"
+              :autofocus="true"
+              placeholder=""
+              @input="inputCode"
+            />
+            <div class="bb">
+              <div class="square"></div>
+              <div class="square square2"></div>
+              <div class="square square3"></div>
+              <div class="square square4"></div>
+              <div class="square square5"></div>
+              <div class="square square6"></div>
+              <div class="square square7"></div>
+            </div>
+          </div>
+          <!-- 昵称 -->
+          <div class="nickname-box" v-if="status === 4">
+            <el-input
+              :maxlength="11"
+              class="tel"
+              v-model="nickname"
+              :autofocus="true"
+              placeholder="怎么称呼你？"
+              @keyup.enter="inputNickname"
+            />
+            <div class="btm"></div>
+          </div>
+          <div class="resend" v-if="status === 3" @click="countDown">
+            重新发送
+            <span class="countdown">({{ time }}s)</span>
+          </div>
+          <div class="tip" v-if="status !== 4 && status !== 3">
+            <div class="point"><div class="in-circle"></div></div>
+            首次登录将自动注册您的 MBM 账号
+            <a class="underline">隐私政策</a>
+          </div>
+        </div>
+      </el-dialog>
+    </div>
+    <div v-else>
+      <el-dialog
+        v-model="showDialog"
+        :close-on-click-modal="true"
+        :close-on-press-escape="false"
+        class="wrap-dialog"
+        :show-close="false"
+        title=""
+      >
+        <div class="dialog">
+          <div class="type-word">
+            <chat-gpt-typewriter
+              exampleText="进入你的AI时刻"
+            ></chat-gpt-typewriter>
+            <div class="mask"></div>
+          </div>
+          <div class="avatar">M</div>
+          <div v-if="status === 1" class="one-key" @click="status = 2">
+            本机号码一键登录
+          </div>
+          <!-- 手机号 -->
+          <div class="ipt-box" v-if="status === 2">
+            <el-input
+              :maxlength="13"
+              class="tel"
+              v-model="tel"
+              :autofocus="true"
+              placeholder="xxxxxxxxxxxxx"
+            />
+            <div class="btm"></div>
+            <div class="btm btm2"></div>
+          </div>
+          <!-- 验证码 -->
+          <div class="square-box" v-if="status === 3">
+            <el-input
+              :maxlength="6"
+              class="tel"
+              v-model="sms"
+              :autofocus="true"
+              placeholder=""
+              @input="inputCode"
+            />
+            <div class="bb">
+              <div class="square"></div>
+              <div class="square square2"></div>
+              <div class="square square3"></div>
+              <div class="square square4"></div>
+              <div class="square square5"></div>
+              <div class="square square6"></div>
+              <div class="square square7"></div>
+            </div>
+          </div>
+          <!-- 昵称 -->
+          <div class="nickname-box" v-if="status === 4">
+            <el-input
+              :maxlength="11"
+              class="tel"
+              v-model="nickname"
+              :autofocus="true"
+              placeholder="怎么称呼你？"
+              @keyup.enter="inputNickname"
+            />
+            <div class="btm"></div>
+          </div>
+          <div class="resend" v-if="status === 3" @click="countDown">
+            重新发送
+            <span class="countdown">({{ time }}s)</span>
+          </div>
+          <div class="tip" v-if="status !== 4 && status !== 3">
+            <div class="point"><div class="in-circle"></div></div>
+            首次登录将自动注册您的 MBM 账号
+            <a class="underline">隐私政策</a>
+          </div>
+        </div>
+      </el-dialog>
+      <el-container>
+        <el-header>
+          <div class="toolbar">
+            <img class="logo" :src="iconMenu" @click="drawer = true" />
+            <div
+              style="
+                flex: 1;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <img class="logo" :src="whiteLogo" alt="" />
+            </div>
+          </div>
+        </el-header>
+        <el-container>
+          <el-header class="phone-header">
+            <el-carousel
+              trigger="click"
+              arrow="never"
+              :autoplay="true"
+              :interval="5000"
+              class="swiper"
+              @change="changeSwiper"
+            >
+              <el-carousel-item
+                class="swipe"
+                :style="{
+                  background: `url(${item.bg}) center / auto 100% repeat`,
+                }"
+                v-for="item in swiperList"
+                :key="item.desc"
+              >
+                <div
+                  class="title"
+                  :class="{
+                    'animate__animated animate__fadeIn animate__delay-1':
+                      animate,
+                  }"
+                >
+                  {{ item.title }}
+                </div>
+                <div
+                  class="desc"
+                  :class="{
+                    'animate__animated animate__fadeIn animate__delay-2':
+                      animate,
+                  }"
+                >
+                  {{ item.desc }}
+                </div>
+                <button
+                  class="open-ai"
+                  :class="{
+                    'animate__animated animate__fadeIn animate__delay-3':
+                      animate,
+                  }"
+                >
+                  {{ item.button }}
+                </button>
+              </el-carousel-item>
+            </el-carousel>
+            <div
+              v-if="userInfo.name"
+              class="avatar"
+              @click="showUserInfo = !showUserInfo"
+            >
+              {{ nickname }}
+            </div>
+            <div
+              v-if="userInfo.name"
+              class="user-info"
+              :class="{ 'show-user': showUserInfo }"
+            >
+              <p class="nickname">
+                Hello,
+                <span class="underline">{{ userInfo.name }}!</span>
+              </p>
+              <div class="info-item">
+                <span class="label">手机号：</span>
+                {{ userInfo.mobile }}
+              </div>
+              <div class="info-item">
+                <span class="label">剩余金额：</span>
+                {{ userInfo.remainAmount }}美元
+              </div>
+              <div class="info-item">
+                <span class="label">请求次数：</span>
+                {{ userInfo.requestCount }}次
+              </div>
+              <div class="info-item">
+                <span class="label">推荐码：</span>
+                <span class="code underline" @click="copy">{{
+                  userInfo.inviteCode
+                }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">AI时刻：</span>
+                {{ userInfo.createTime }}
+              </div>
+            </div>
+          </el-header>
+          <el-main class="phone-main">
+            <!-- <h1 class="title">
+            我收藏的应用
+            <span class="app-num">(2)</span>
+          </h1>
+          <collect-item></collect-item> -->
+            <h1 class="title">
+              当下热门 AI 应用
+              <span class="app-num">(2)</span>
+            </h1>
+            <collect-item-small></collect-item-small>
+          </el-main>
+        </el-container>
+        <el-drawer
+          v-model="drawer"
+          direction="ltr"
+          size="80%"
+          :with-header="false"
+        >
+          <el-aside class="phone-aside">
+            <div class="flex">
+              <img class="logo" :src="logo" alt="" />
+              <button
+                v-if="userInfo.name"
+                class="gpt-button"
+                @click="
+                  skip('http://chat.mbmzone.com/', true);
+                  drawer = false;
+                "
+              >
+                我的ChatGPT 对话
+              </button>
+              <button
+                v-else
+                class="gpt-button"
+                @click="
+                  toLogin();
+                  drawer = false;
+                "
+              >
+                登录我的 MBM OpenAI 账号
+              </button>
+              <div class="default-model">
+                <img class="icon-ai" :src="iconAi" alt="" />
+                <div class="model-name active">默认模型</div>
+                <el-select
+                  v-model="aiVersion"
+                  :fit-input-width="false"
+                  popper-class="select-down"
+                  :popper-append-to-body="false"
+                  class="ai-select"
+                  :class="{
+                    w128:
+                      aiVersion.value === 'GPT-4' ||
+                      aiVersion.value === 'GPT-3.5',
+                    w171: aiVersion.value === 'GPT-4 32K',
+                  }"
+                  :placeholder="options[0].label"
+                  size="small"
+                >
+                  <el-option
+                    class="phone-options"
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </div>
+              <div
+                class="default-model"
+                @click="
+                  skip('http://visus.ai/', true);
+                  drawer = false;
+                "
+              >
+                <img class="icon-ai" :src="iconSelf" alt="" />
+                <div class="model-name">训练你自己的ChatGPT</div>
+              </div>
+              <div
+                class="default-model"
+                @click="
+                  train('生成我的GPT4 API Key');
+                  drawer = false;
+                "
+              >
+                <img class="icon-ai" :src="iconKey" alt="" />
+                <div class="model-name">生成我的GPT4 API Key</div>
+              </div>
+            </div>
+            <div class="flex">
+              <ul class="question-box">
+                <li
+                  class="question"
+                  v-for="(item, index) in questionList"
+                  :key="index"
+                  @click="
+                    ElNotification({ message: item.label, showClose: false });
+                    drawer = false;
+                  "
+                >
+                  {{ item.label }}
+                </li>
+              </ul>
+              <button
+                v-if="userInfo.name"
+                class="gpt-button color-button"
+                @click="
+                  recharge();
+                  drawer = false;
+                "
+              >
+                充值我的账户
+                <div class="my-count-hover"></div>
+                <span class="light iconfont icon-shandian"></span>
+              </button>
+              <button
+                v-else
+                class="gpt-button color-button get-one-dollar"
+                @click="
+                  toLogin();
+                  drawer = false;
+                "
+              >
+                现在领取 1 美元体验金！
+              </button>
+              <div v-if="userInfo.name" class="share-my-code">
+                分享我的推荐码：
+                <span class="code" @click="copy">{{
+                  userInfo.inviteCode
+                }}</span>
+              </div>
+            </div>
+          </el-aside>
+        </el-drawer>
+      </el-container>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import logo from "@/assets/images/logo.png";
+import whiteLogo from "@/assets/images/white-logo.png";
+import iconMenu from "@/assets/images/menu.png";
+import iconAi from "@/assets/images/icon-ai.png";
+import iconSelf from "@/assets/images/icon-ai-self.png";
+import iconKey from "@/assets/images/icon-ai-key.png";
+import swiper1 from "@/assets/images/slider1.png";
+import swiper2 from "@/assets/images/slider2.png";
+import swiper3 from "@/assets/images/slider3.png";
+import { onBeforeMount, ref, watch, nextTick } from "vue";
+import CollectItem from "@/components/CollectItem.vue";
+import ChatGptTypewriter from "@/components/ChatGptTypewriter.vue";
+import CollectItemSmall from "@/components/CollectItemSmall.vue";
+import ChatGptTypewriterSmall from "@/components/ChatGptTypewriterSmall.vue";
+import { ElMessage, ElNotification } from "element-plus";
+import { pinyin } from "pinyin-pro";
+import {
+  checkPhone,
+  doSendCode,
+  doLoginApi,
+  doRegisterCode,
+  registerAccount,
+} from "@/api/index";
+import { useRouter } from "vue-router";
+type Option = {
+  value: string;
+  label: string;
+};
+// select opetion
+const options = ref<Option[]>([
+  { value: "GPT-4", label: "GPT-4" },
+  { value: "GPT-4 32K", label: "GPT-4 32K" },
+  { value: "GPT-3.5", label: "GPT-3.5" },
+]);
+const aiVersion = ref<{ value: string; label: string }>(options.value[0]);
+const showDialog = ref(false);
+// 是否注册过
+const isCreatedAccount = ref(false);
+const status = ref(1);
+const tel = ref("");
+const sms = ref("");
+const userInfo = ref({
+  mobile: "",
+  id: "",
+  name: "",
+  remainAmount: 0,
+  requestCount: 0,
+  token: "",
+  createTime: "",
+  inviteCode: "",
+});
+const agent = ref(
+  navigator.userAgent.match(
+    /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+  )
+);
+const drawer = ref(false);
+const nickname = ref("");
+const animate = ref(true);
+const showUserInfo = ref(false);
+const time = ref(60);
+const $router = useRouter();
+const redirectUrl = ref<any>("");
+const loginFlag = ref(false);
+const swiperList = ref([
+  {
+    title: "MBM OpenAI GPT-4 服务",
+    desc: "作为 Azure OpenAI 中国合作伙伴，MBM 为\n企业用户和个人消费者提供可靠、企业级 OpenAI 服务，\n实现快速访问，无需代理的先进体验。",
+    bg: swiper1,
+    button: "探索与OpenAI的区别",
+  },
+  {
+    title: "MBM OpenAI GPT-4 服务",
+    desc: "我们仅按您使用的内容收取费用，计费标准\n通常还取决于你调用了哪种模型，GPT-3.5 擅长日常会话，而 GPT-4 在专业性和推理能力上则更为强大。",
+    bg: swiper2,
+    button: "MBM OpenAI 服务如何计费",
+  },
+  {
+    title: "MBM OpenAI GPT-4 服务",
+    desc: "为了满足你对商用级别 OpenAI 服务的苛刻要求，\n我们从产品设计的一开始便考虑了安全的重要性，以此确保\n每一个从你访问到的数据，都受到隐私保护和加密处理。",
+    bg: swiper3,
+    button: "企业级OpenAI是什么",
+  },
+]);
+// faq list
+const questionList = ref<Option[]>([
+  {
+    value: "企业级 OpenAI 服务是什么意思？",
+    label: "企业级 OpenAI 服务是什么意思？",
+  },
+  { value: "MBM OpenAI 服务如何计费", label: "MBM OpenAI 服务如何计费" },
+  { value: "探索与 OpenAI 的区别", label: "探索与 OpenAI 的区别" },
+]);
+onBeforeMount(() => {
+  if ($router.currentRoute.value.query.redirectUrl) {
+    redirectUrl.value = $router.currentRoute.value.query.redirectUrl;
+  }
+  let usr = localStorage.getItem("userInfo");
+
+  if (usr) {
+    userInfo.value = JSON.parse(usr);
+    const firstC = getFirstChar(userInfo.value.name);
+    nickname.value = firstC;
+  }
+});
+// 监听手机号
+watch(
+  () => tel.value,
+  async (newValue, oldValue) => {
+    tel.value =
+      newValue.length > oldValue.length
+        ? newValue
+            .replace(/\s/g, "")
+            .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
+        : tel.value.trim();
+    if (tel.value.length === 13) {
+      let mobile = tel.value.replace(/\s/g, "");
+      if (mobile && verifyPhone(mobile)) {
+        if (loginFlag.value) return;
+        loginFlag.value = true;
+        const phoneRegister = await checkPhone({ phone: mobile });
+        console.log(phoneRegister, phoneRegister.data.data.register);
+        let codeRes = null;
+        if (phoneRegister.data.data.register) {
+          // 注册过。登陆验证码
+          codeRes = await doSendCode({ phone: mobile });
+          isCreatedAccount.value = true;
+        } else {
+          // 未注册过，注册验证码
+          codeRes = await doRegisterCode({ phone: mobile });
+        }
+        if (codeRes.data.code === 11000) {
+          ElMessage({ type: "success", message: "验证码已发送" });
+          status.value = 3;
+        } else {
+          ElMessage({ type: "error", message: codeRes.data.msg });
+        }
+        loginFlag.value = false;
+      } else ElMessage("请输入正确的手机号");
+    }
+  }
+);
+const doLogin = () => {};
+// 显示登录选项
+const toLogin = () => {
+  let usr = localStorage.getItem("userInfo");
+  if (!usr) {
+    nextTick(() => {
+      showDialog.value = true;
+    });
+  }
+};
+// 培训
+const train = (message: string) => {
+  ElNotification({
+    title: "Success",
+    message,
+    type: "success",
+    duration: 2000,
+    showClose: false,
+  });
+};
+// swiper slide
+const changeSwiper = () => {
+  animate.value = false;
+  setTimeout(() => {
+    animate.value = true;
+  }, 100);
+};
+// sms countDown
+const countDown = async () => {
+  if (time.value < 60) return;
+  let phone = tel.value.replace(/\s/g, "");
+  const res = await doRegisterCode({ phone });
+  if (res.data.code === 11000) {
+    ElMessage({ type: "success", message: "验证码已发送" });
+    const timer = setInterval(() => {
+      time.value--;
+      if (time.value <= 0) {
+        time.value = 60;
+        clearInterval(timer);
+      }
+    }, 1000);
+    status.value = 3;
+  } else {
+    // 没有注册
+    ElMessage({ type: "warning", message: res.data.msg });
+  }
+};
+
+// 复制
+const copy = () => {
+  navigator.clipboard
+    .writeText(
+      `${window.location.href}?inviteCode=${userInfo.value.inviteCode}`
+    )
+    .then(() => {
+      ElMessage({ message: "复制成功", type: "success" });
+    })
+    .catch(() => {
+      ElMessage("复制失败");
+    });
+};
+// sms-code
+const inputCode = async (code: string) => {
+  if (code && code.length === 6 && !isNaN(parseInt(code))) {
+    console.log(isCreatedAccount, "isCreatedAccountisCreatedAccount");
+    if (isCreatedAccount.value) {
+      // 注册过账号。调登陆接口
+      let phone = tel.value.replace(/\s/g, "");
+      let query = { code: sms.value, phone };
+      const res = await doLoginApi(query);
+      console.log(res, "res====11");
+      if (res.data.code === 11000) {
+        ElMessage({ type: "success", message: "手机号验证成功" });
+        status.value = -1;
+        showDialog.value = false;
+        localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
+        userInfo.value = res?.data?.data;
+        const firstC = getFirstChar(userInfo.value.name);
+        nickname.value = firstC;
+        console.log(
+          nickname,
+          nickname.value,
+          firstC,
+          userInfo.value.name,
+          "11111111"
+        );
+        if (redirectUrl.value) {
+          skip(redirectUrl.value, false);
+        }
+      } else {
+        ElMessage({ type: "error", message: res.data.msg });
+      }
+    } else {
+      // 未注册过。
+      setTimeout(() => {
+        status.value = 4;
+      }, 1000);
+    }
+  }
+};
+// Nickname
+const inputNickname = async () => {
+  if (!nickname.value) return ElMessage("请输入昵称");
+  let phone = tel.value.replace(/\s/g, "");
+  let query: any = { code: sms.value, name: nickname.value, phone };
+  if ($router.currentRoute.value.query.inviteCode) {
+    query.inviteCode = $router.currentRoute.value.query.inviteCode;
+  }
+  const res = await registerAccount(query);
+  if (res.data.code === 11000) {
+    ElMessage({ type: "success", message: "手机号验证成功" });
+    status.value = -1;
+    showDialog.value = false;
+    localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
+    userInfo.value = res?.data?.data;
+
+    const firstC = getFirstChar(userInfo.value.name);
+    nickname.value = firstC;
+    console.log(
+      nickname,
+      nickname.value,
+      firstC,
+      userInfo.value.name,
+      "11111111"
+    );
+    if (redirectUrl.value) {
+      skip(redirectUrl.value, false);
+    }
+  } else {
+    ElMessage({ type: "error", message: res.data.msg });
+  }
+};
+// verify input mobile
+const verifyPhone = (phone: string | number) => {
+  const reg =
+    /^1((3[0-9])|(4[1579])|(5[0-9])|(6[6])|(7[0-9])|(8[0-9])|(9[0-9]))\d{8}$/;
+  return reg.test(phone + "");
+};
+// 跳转url
+const skip = (url: string, openNew: boolean) => {
+  if (openNew) {
+    window.open(`${url}?token=${userInfo.value.token}`);
+  } else {
+    window.location.href = `${url}?token=${userInfo.value.token}`;
+  }
+};
+// 处理首字母nickname
+const getFirstChar = (str: string) => {
+  let firstChar = str.slice(0, 1);
+  // 首字母是英文
+  let reg = /^[a-zA-Z]/;
+  if (reg.test(str)) {
+    return firstChar.toUpperCase();
+  } else {
+    const s = pinyin(firstChar, { pattern: "first" });
+    return s.toUpperCase();
+  }
+};
+// 跳转充值
+const recharge = () => {
+  window.open(`${window.location.href.split("?")[0]}recharge`);
+};
+</script>
+<style lang="scss" scoped>
+@mixin hover2Style {
+  &:hover {
+    color: #fff;
+    .icon-ai {
+      filter: brightness(0.9) !important;
+      width: 1px;
+    }
+  }
+  &:active {
+    color: rgba(255, 255, 255, 0.2);
+  }
+}
+@mixin hover5Style {
+  &:hover {
+    color: #fff;
+  }
+  &:active {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+@mixin chargeHover5Style {
+  &:hover {
+    color: #fff;
+    .my-count-hover {
+      width: 100%;
+      transition: all 0.3s;
+    }
+  }
+  &:active {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.px-common-layout {
+  // height: 100vh;
+  //   min-width: 1200px;
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: calc(100vw - 40px);
+    .logo {
+      //   height: 33px;
+      height: 20px;
+    }
+  }
+  .aside {
+    width: 400px;
+    // height: 100vh;
+    // overflow: hidden;
+    background: #07070d;
+    color: #fff;
+    box-sizing: border-box;
+    padding: 33px 55px 33px 52px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: column;
+    .flex {
+      width: 100%;
+    }
+    .logo {
+      //   height: 33px;
+      height: 40px;
+    }
+    .gpt-button {
+      width: 100%;
+      height: 67px;
+      background: #4383ea;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #ffffff;
+      text-align: center;
+      line-height: 40px;
+      margin: 115px auto 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    .color-button {
+      margin-top: 40px;
+      background: linear-gradient(23deg, #4383ea 0%, #4861eb 49%, #8748eb 100%);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 21px;
+      font-family: PingFangTC-Semibold;
+      @include chargeHover5Style;
+      position: relative;
+      .light {
+        font-size: 25px;
+        margin-left: 5px;
+      }
+      .my-count-hover {
+        width: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.15);
+        transition: all 0.3s;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 10px;
+      }
+    }
+    .get-one-dollar {
+      font-family: Gotham-Rounded;
+    }
+    .share-my-code {
+      width: 100%;
+      box-sizing: border-box;
+      padding: o 10px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.8);
+      .code {
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: 16px;
+      }
+    }
+    .default-model {
+      // width: 235px;
+      width: 100%;
+      // height: 47px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex-wrap: nowrap;
+      color: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      margin-bottom: 42px;
+      @include hover2Style;
+      .icon-ai {
+        display: block;
+      }
+      &:nth-of-type(1) {
+        .icon-ai {
+          width: 40px;
+        }
+      }
+      &:nth-of-type(2),
+      &:nth-of-type(3) {
+        .icon-ai {
+          width: 30px;
+          margin-right: 3px;
+          filter: brightness(0.4);
+        }
+      }
+      .model-name {
+        margin: 0 3px 0 10px;
+        font-size: 21px;
+        font-family: Gotham-Rounded;
+        font-weight: bold;
+      }
+      .active {
+        font-size: 15px;
+        color: #fff;
+      }
+      .ai-select {
+        ::placeholder {
+          color: #fff;
+        }
+
+        :deep(.el-input__wrapper) {
+          background: #202226;
+          color: #ffffff;
+          min-height: 33px;
+          max-width: 175px;
+          box-shadow: none !important;
+          border: 1px dashed rgba(255, 255, 255, 0.6);
+          box-sizing: border-box;
+          .el-input__inner {
+            font-size: 24px;
+            font-family: Gotham-Rounded;
+            font-weight: bold;
+            color: #ffffff;
+          }
+        }
+      }
+      //   .w128 {
+      //     width: 128px;
+      //   }
+      //   .w171 {
+      //     width: 171px;
+      //   }
+    }
+    .default-model:nth-last-child(1) {
+      margin-bottom: 220px;
+    }
+    .question-box {
+      width: 100%;
+      list-style: none;
+      padding: 0;
+      margin: 0 auto;
+      .question {
+        font-size: 16px;
+        font-family: Gotham-Rounded;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 11px 0;
+        cursor: pointer;
+        @include hover5Style;
+      }
+    }
+  }
+
+  .phone-aside {
+    width: 80vw;
+    // height: 100vh;
+    // overflow: hidden;
+    background: #07070d;
+    color: #fff;
+    box-sizing: border-box;
+    padding: 33px 30px 33px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: column;
+    .flex {
+      width: 100%;
+    }
+    .logo {
+      //   height: 33px;
+      height: 32px;
+    }
+    .gpt-button {
+      width: 100%;
+      height: 55px;
+      background: #4383ea;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #ffffff;
+      text-align: center;
+      // line-height: 40px;
+      margin: 80px auto 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    .color-button {
+      margin-top: 20px;
+      background: linear-gradient(23deg, #4383ea 0%, #4861eb 49%, #8748eb 100%);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 16px;
+      font-family: PingFangTC-Semibold;
+      @include chargeHover5Style;
+      position: relative;
+      .light {
+        font-size: 18px;
+        margin-left: 5px;
+      }
+      .my-count-hover {
+        width: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.15);
+        transition: all 0.3s;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 10px;
+      }
+    }
+    .get-one-dollar {
+      font-family: Gotham-Rounded;
+    }
+    .share-my-code {
+      width: 100%;
+      box-sizing: border-box;
+      padding: o 10px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.8);
+      .code {
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: 16px;
+      }
+    }
+    .default-model {
+      // width: 235px;
+      width: 100%;
+      // height: 47px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex-wrap: nowrap;
+      color: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      margin-bottom: 30px;
+      @include hover2Style;
+      .icon-ai {
+        display: block;
+      }
+      &:nth-of-type(1) {
+        .icon-ai {
+          width: 30px;
+        }
+      }
+      &:nth-of-type(2),
+      &:nth-of-type(3) {
+        .icon-ai {
+          width: 24px;
+          margin-right: 3px;
+          filter: brightness(0.4);
+        }
+      }
+      .model-name {
+        margin: 0 3px 0 10px;
+        font-size: 16px;
+        font-family: Gotham-Rounded;
+        font-weight: bold;
+      }
+      .active {
+        font-size: 12px;
+        color: #fff;
+      }
+      .ai-select {
+        ::placeholder {
+          color: #fff;
+        }
+
+        :deep(.el-input__wrapper) {
+          background: #202226;
+          color: #ffffff;
+          min-height: 33px;
+          max-width: 106px;
+          box-shadow: none !important;
+          border: 1px dashed rgba(255, 255, 255, 0.6);
+          box-sizing: border-box;
+          .el-input__inner {
+            font-size: 16px;
+            font-family: Gotham-Rounded;
+            font-weight: bold;
+            color: #ffffff;
+          }
+        }
+      }
+      //   .w128 {
+      //     width: 128px;
+      //   }
+      //   .w171 {
+      //     width: 171px;
+      //   }
+    }
+    .default-model:nth-last-child(1) {
+      margin-bottom: 80px;
+    }
+    .question-box {
+      width: 100%;
+      list-style: none;
+      padding: 0;
+      margin: 0 auto;
+      .question {
+        font-size: 12px;
+        font-family: Gotham-Rounded;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 11px 0;
+        cursor: pointer;
+        @include hover5Style;
+      }
+    }
+  }
+  .header {
+    height: 375px;
+    position: relative;
+    padding: 0;
+    .open-ai {
+      min-width: 275px;
+      height: 46px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #000000;
+      font-size: 24px;
+      font-family: Futurafont;
+      font-weight: 600;
+      color: #000000;
+      position: absolute;
+      left: 100px;
+      bottom: 35px;
+      transition: all 0.3s;
+      padding: 0 20px;
+      &:hover {
+        padding: 0 50px;
+        transition: all 0.3s;
+      }
+    }
+    .swiper {
+      height: 375px;
+      :deep(.el-carousel__container) {
+        height: 375px;
+      }
+      :deep(.el-carousel__indicator--horizontal) {
+        flex-shrink: 0;
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        margin: 0 10px;
+        padding: 0;
+        bottom: 10px;
+        border: none;
+      }
+      :deep(.el-carousel__indicator.is-active) {
+        background: #fff;
+      }
+      :deep(.el-carousel__button) {
+        display: none;
+      }
+    }
+
+    .swipe {
+      height: 100%;
+      width: 100%;
+      color: #fff;
+      box-sizing: border-box;
+      padding: 40px 61px;
+      .title {
+        font-size: 36px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: #ffffff;
+      }
+      .animate__delay-1 {
+        animation-delay: 0.1s;
+      }
+      .animate__delay-2 {
+        animation-delay: 0.2s;
+      }
+      .animate__delay-3 {
+        animation-delay: 0.3s;
+      }
+      .desc {
+        width: 764px;
+        height: 150px;
+        margin-top: 40px;
+        font-size: 28px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        line-height: 38px;
+        color: rgba(255, 255, 255, 0.95);
+        white-space: pre-wrap;
+        width: 764px;
+      }
+    }
+
+    .avatar {
+      width: 66px;
+      height: 66px;
+      background: #818da3;
+      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+      border-radius: 50%;
+      position: absolute;
+      right: 63px;
+      top: 34px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 16px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #ffffff;
+      z-index: 2;
+      cursor: pointer;
+    }
+    .user-info {
+      width: 0;
+      height: 0;
+      background: #ffffff;
+      border: 1px solid #707070;
+      border-radius: 11px;
+      position: absolute;
+      right: 39px;
+      top: 15px;
+      z-index: 1;
+      box-sizing: border-box;
+      padding: 0;
+      transition: all 0.2s;
+      overflow: hidden;
+      .nickname {
+        width: 100%;
+        height: 25px;
+        font-size: 24px;
+        font-family: Gotham-Rounded;
+        font-weight: bold;
+        margin-bottom: 36px;
+        color: #07070d;
+        span {
+          font-size: 24px;
+          font-family: Gotham-Rounded;
+          font-weight: bold;
+        }
+      }
+      .info-item {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: nowrap;
+        height: 35px;
+        font-size: 11px;
+        font-family: BOOK;
+        font-weight: normal;
+        line-height: 21px;
+        color: #07070d;
+        .label {
+          display: inline-block;
+          width: 100px;
+          flex-shrink: 0;
+          overflow: hidden;
+        }
+        .code {
+          font-size: 11px;
+          cursor: pointer;
+        }
+      }
+    }
+    .show-user {
+      padding: 25px 20px 15px 15px;
+      width: 344px;
+      height: 279px;
+      transition: all 0.3s;
+    }
+  }
+  .phone-header {
+    height: 260px;
+    position: relative;
+    padding: 0;
+    .open-ai {
+      min-width: 128px;
+      height: 23px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #000000;
+      font-size: 12px;
+      font-family: Futurafont;
+      font-weight: 600;
+      color: #000000;
+      position: absolute;
+      left: 50px;
+      bottom: 40px;
+      transition: all 0.3s;
+      padding: 0 20px;
+      &:hover {
+        padding: 0 50px;
+        transition: all 0.3s;
+      }
+    }
+    .swiper {
+      height: 260px;
+      :deep(.el-carousel__container) {
+        height: 260px;
+      }
+      :deep(.el-carousel__indicator--horizontal) {
+        flex-shrink: 0;
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        margin: 0 10px;
+        padding: 0;
+        bottom: 10px;
+        border: none;
+      }
+      :deep(.el-carousel__indicator.is-active) {
+        background: #fff;
+      }
+      :deep(.el-carousel__button) {
+        display: none;
+      }
+    }
+
+    .swipe {
+      height: 260px;
+      width: 100vw;
+      color: #fff;
+      box-sizing: border-box;
+      padding: 20px 36px;
+      .title {
+        font-size: 18px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: #ffffff;
+      }
+      .animate__delay-1 {
+        animation-delay: 0.1s;
+      }
+      .animate__delay-2 {
+        animation-delay: 0.2s;
+      }
+      .animate__delay-3 {
+        animation-delay: 0.3s;
+      }
+      .desc {
+        // width: 764px;
+        // height: 150px;
+        // margin-top: 40px;
+        font-size: 14px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        // line-height: 16px;
+        color: rgba(255, 255, 255, 0.95);
+        white-space: pre-wrap;
+      }
+    }
+
+    .avatar {
+      width: 66px;
+      height: 66px;
+      background: #818da3;
+      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+      border-radius: 50%;
+      position: absolute;
+      right: 63px;
+      top: 34px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 16px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #ffffff;
+      z-index: 2;
+      cursor: pointer;
+    }
+    .user-info {
+      width: 0;
+      height: 0;
+      background: #ffffff;
+      border: 1px solid #707070;
+      border-radius: 11px;
+      position: absolute;
+      right: 39px;
+      top: 15px;
+      z-index: 1;
+      box-sizing: border-box;
+      padding: 0;
+      transition: all 0.2s;
+      overflow: hidden;
+      .nickname {
+        width: 100%;
+        height: 25px;
+        font-size: 24px;
+        font-family: Gotham-Rounded;
+        font-weight: bold;
+        margin-bottom: 36px;
+        color: #07070d;
+        span {
+          font-size: 24px;
+          font-family: Gotham-Rounded;
+          font-weight: bold;
+        }
+      }
+      .info-item {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-wrap: nowrap;
+        height: 35px;
+        font-size: 11px;
+        font-family: BOOK;
+        font-weight: normal;
+        line-height: 21px;
+        color: #07070d;
+        .label {
+          display: inline-block;
+          width: 100px;
+          flex-shrink: 0;
+          overflow: hidden;
+        }
+        .code {
+          font-size: 11px;
+          cursor: pointer;
+        }
+      }
+    }
+    .show-user {
+      padding: 25px 20px 15px 15px;
+      width: 344px;
+      height: 279px;
+      transition: all 0.3s;
+    }
+  }
+  .main {
+    padding: 0;
+    height: calc(100vh - 375px);
+    box-sizing: border-box;
+    padding: 40px 50px;
+    background: #fff;
+    .title {
+      font-size: 23px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #333333;
+      margin: 0 auto 23px;
+      .app-num {
+        font-size: 14px;
+        margin-left: 8px;
+        font-weight: bold;
+      }
+    }
+  }
+  .phone-main {
+    padding: 0;
+    height: calc(100vh - 320px);
+    width: 100vw;
+    box-sizing: border-box;
+    padding: 20px 25px;
+    background: #fff;
+    .title {
+      font-size: 12px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #333333;
+      margin: 0 auto 20px;
+      .app-num {
+        font-size: 14px;
+        margin-left: 8px;
+        font-weight: bold;
+      }
+    }
+  }
+  .underline {
+    font-size: 16px;
+    font-family: Gotham-Rounded;
+    font-weight: bold;
+    color: #07070d;
+    text-decoration: underline;
+  }
+}
+.dialog {
+  width: 588px;
+  height: 477px;
+  background: #ffffff;
+  border: 1px solid #707070;
+  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+  border-radius: 11px;
+  overflow: hidden;
+  .type-word {
+    width: 100%;
+    height: 243px;
+    background: url("@/assets/images/type-word.png") center / cover no-repeat;
+    border-radius: 11px 11px 0px 0px;
+    padding: 118px 10px 65px 155px;
+    box-sizing: border-box;
+    .mask {
+      width: 100%;
+      height: 243px;
+      background: rgba(0, 0, 0, 0.2);
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 2;
+    }
+  }
+
+  .avatar {
+    width: 77px;
+    height: 77px;
+    background: #818da3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+    border-radius: 50%;
+    margin: 0 auto;
+    position: absolute;
+    top: 203px;
+    left: 50%;
+    transform: translateX(-38.5px);
+    color: #fff;
+    font-size: 28px;
+    font-family: Gotham-Rounded;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  .one-key {
+    width: 285px;
+    height: 64px;
+    background: #ffffff;
+    border: 1px solid #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 70px auto 30px;
+    font-size: 24px;
+    font-family: Futurafont;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+  }
+  .ipt-box {
+    position: relative;
+    margin: 40px auto 30px;
+    .tel {
+      width: 320px;
+      border: none;
+      margin: 40px 132px 0;
+      ::placeholder {
+        letter-spacing: 5px;
+      }
+      :deep(.el-input__wrapper) {
+        border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        letter-spacing: 9.5px;
+        text-align: left;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 8px;
+      }
+    }
+    .btm {
+      height: 33px;
+      width: 21px;
+      background: #fff;
+      position: absolute;
+      top: 40px;
+      left: 200px;
+    }
+    .btm2 {
+      left: 320px;
+    }
+  }
+  .square-box {
+    position: relative;
+    margin: 50px auto 19px;
+    .tel {
+      width: 100%;
+      border: none;
+      :deep(.el-input__wrapper) {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        position: relative;
+        z-index: 3;
+        background: none;
+        top: 45px;
+      }
+      :deep(.el-input__inner) {
+        padding: 0 10% 0 22%;
+        font-size: 28px;
+        font-family: FZZhengHeiS-B-GB;
+        font-weight: 600;
+        color: #000000;
+        letter-spacing: 46px;
+        text-align: left;
+        overflow-x: hidden;
+        overflow: hidden;
+      }
+    }
+    .bb {
+      width: 430px;
+      height: 64px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+      left: 32px;
+      .square {
+        height: 64px;
+        width: 47px;
+        border: 1px solid #000000;
+        // margin-right:3px;
+      }
+      //   .square2 {
+      //     left: 140px;
+      //   }
+      //   .square3 {
+      //     left: 210px;
+      //   }
+      //   .square4 {
+      //     left: 280px;
+      //   }
+      .square7 {
+        border: none;
+        background: #fff;
+        position: relative;
+        z-index: 99;
+      }
+    }
+  }
+  .nickname-box {
+    position: relative;
+    .tel {
+      width: 50%;
+      border: none;
+      margin: 80px 0 0;
+      transform: translateX(50%);
+      ::placeholder {
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        line-height: 0px;
+        color: #969393;
+        letter-spacing: 3px;
+      }
+      :deep(.el-input__wrapper) {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        position: relative;
+        z-index: 3;
+        background: none;
+        width: 100px;
+      }
+      :deep(.el-input__inner) {
+        margin: 0 auto;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        letter-spacing: 5px;
+        text-align: center;
+        overflow-x: hidden;
+        overflow: hidden;
+        font-weight: 400;
+        color: #000;
+        border-bottom: 1px solid #000;
+      }
+    }
+    .btm {
+      height: 20px;
+      width: 80px;
+      margin: 20px auto 0;
+      border-radius: 50%;
+      background: url("@/assets/images/hudu.png") center / contain no-repeat;
+    }
+  }
+  .resend {
+    height: 30px;
+    font-size: 18px;
+    font-family: Gotham-Rounded;
+    font-weight: 400;
+    color: #000000;
+    margin: 21px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    cursor: pointer;
+    .countdown {
+      margin-left: 5px;
+      font-weight: 100;
+      font-family: PingFangTC-Semibold;
+    }
+  }
+  .tip {
+    height: 30px;
+    font-size: 12px;
+    font-family: Gotham;
+    font-weight: 400;
+    color: #000000;
+    margin: 21px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    .point {
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      background: #000;
+      margin-right: 5px;
+      padding: 1px;
+      box-sizing: border-box;
+
+      .in-circle {
+        height: 100%;
+        width: 100%;
+        border-radius: 50%;
+        background: #000;
+        border: 1px solid #fff;
+      }
+    }
+    a {
+      font-size: 8px;
+      cursor: pointer;
+    }
+  }
+}
+
+.phone-dialog {
+  width: 80vw;
+  height: 310px;
+  background: #ffffff;
+  border: 1px solid #707070;
+  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+  border-radius: 11px;
+  overflow: hidden;
+  .type-word {
+    width: 100%;
+    height: 155px;
+    background: url("@/assets/images/type-word.png") center / cover no-repeat;
+    border-radius: 11px 11px 0px 0px;
+    padding: 56px 10px 65px 50px;
+    box-sizing: border-box;
+    .mask {
+      width: 100%;
+      height: 155px;
+      background: rgba(0, 0, 0, 0.2);
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 2;
+    }
+  }
+
+  .avatar {
+    width: 52px;
+    height: 52px;
+    background: #818da3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+    border-radius: 50%;
+    margin: 0 auto;
+    position: absolute;
+    top: 140px;
+    left: 50%;
+    transform: translateX(-38.5px);
+    color: #fff;
+    font-size: 28px;
+    font-family: Gotham-Rounded;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  .one-key {
+    width: 285px;
+    height: 64px;
+    background: #ffffff;
+    border: 1px solid #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 70px auto 30px;
+    font-size: 24px;
+    font-family: Futurafont;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+  }
+  .ipt-box {
+    position: relative;
+    margin: 40px auto 30px;
+    .tel {
+      width: 320px;
+      border: none;
+      margin: 40px 132px 0;
+      ::placeholder {
+        letter-spacing: 5px;
+      }
+      :deep(.el-input__wrapper) {
+        border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        letter-spacing: 9.5px;
+        text-align: left;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 8px;
+      }
+    }
+    .btm {
+      height: 33px;
+      width: 21px;
+      background: #fff;
+      position: absolute;
+      top: 40px;
+      left: 200px;
+    }
+    .btm2 {
+      left: 320px;
+    }
+  }
+  .square-box {
+    position: relative;
+    margin: 50px auto 19px;
+    .tel {
+      width: 100%;
+      border: none;
+      :deep(.el-input__wrapper) {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        position: relative;
+        z-index: 3;
+        background: none;
+        top: 45px;
+      }
+      :deep(.el-input__inner) {
+        padding: 0 10% 0 22%;
+        font-size: 28px;
+        font-family: FZZhengHeiS-B-GB;
+        font-weight: 600;
+        color: #000000;
+        letter-spacing: 46px;
+        text-align: left;
+        overflow-x: hidden;
+        overflow: hidden;
+      }
+    }
+    .bb {
+      width: 430px;
+      height: 64px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+      left: 32px;
+      .square {
+        height: 64px;
+        width: 47px;
+        border: 1px solid #000000;
+        // margin-right:3px;
+      }
+      //   .square2 {
+      //     left: 140px;
+      //   }
+      //   .square3 {
+      //     left: 210px;
+      //   }
+      //   .square4 {
+      //     left: 280px;
+      //   }
+      .square7 {
+        border: none;
+        background: #fff;
+        position: relative;
+        z-index: 99;
+      }
+    }
+  }
+  .nickname-box {
+    position: relative;
+    .tel {
+      width: 50%;
+      border: none;
+      margin: 80px 0 0;
+      transform: translateX(50%);
+      ::placeholder {
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        line-height: 0px;
+        color: #969393;
+        letter-spacing: 3px;
+      }
+      :deep(.el-input__wrapper) {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        position: relative;
+        z-index: 3;
+        background: none;
+        width: 100px;
+      }
+      :deep(.el-input__inner) {
+        margin: 0 auto;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        letter-spacing: 5px;
+        text-align: center;
+        overflow-x: hidden;
+        overflow: hidden;
+        font-weight: 400;
+        color: #000;
+        border-bottom: 1px solid #000;
+      }
+    }
+    .btm {
+      height: 20px;
+      width: 80px;
+      margin: 20px auto 0;
+      border-radius: 50%;
+      background: url("@/assets/images/hudu.png") center / contain no-repeat;
+    }
+  }
+  .resend {
+    height: 30px;
+    font-size: 18px;
+    font-family: Gotham-Rounded;
+    font-weight: 400;
+    color: #000000;
+    margin: 21px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    cursor: pointer;
+    .countdown {
+      margin-left: 5px;
+      font-weight: 100;
+      font-family: PingFangTC-Semibold;
+    }
+  }
+  .tip {
+    height: 30px;
+    font-size: 12px;
+    font-family: Gotham;
+    font-weight: 400;
+    color: #000000;
+    margin: 21px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    .point {
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      background: #000;
+      margin-right: 5px;
+      padding: 1px;
+      box-sizing: border-box;
+
+      .in-circle {
+        height: 100%;
+        width: 100%;
+        border-radius: 50%;
+        background: #000;
+        border: 1px solid #fff;
+      }
+    }
+    a {
+      font-size: 8px;
+      cursor: pointer;
+    }
+  }
+}
+:deep(.phone-wrap-dialog) {
+  width: 80vw;
+  overflow: hidden;
+  border-radius: 11px;
+}
+:deep(.wrap-dialog) {
+  width: 588px;
+  overflow: hidden;
+  border-radius: 11px;
+}
+:deep(.el-dialog__header) {
+  display: none;
+}
+:deep(.el-dialog__body) {
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: 11px;
+  overflow: hidden;
+}
+:deep(.el-overlay) {
+  background: rgba(0, 0, 0, 0.8);
+}
+.options {
+  width: 100%;
+  font-size: 24px;
+  font-family: Gotham-Rounded;
+  font-weight: bold;
+  color: #ffffff;
+  background: #000 !important;
+  padding: 0 7px;
+  &:hover {
+    background: #1b1c21 !important;
+  }
+}
+.phone-options {
+  width: 100%;
+  font-size: 16px;
+  font-family: Gotham-Rounded;
+  font-weight: bold;
+  color: #ffffff;
+  background: #000 !important;
+  padding: 0 7px;
+  &:hover {
+    background: #1b1c21 !important;
+  }
+}
+:global(.el-popper) {
+  background: #000 !important;
+  //   border: 1px dashed rgba(255, 255, 255, 0.6) !important;
+  margin-top: -14px;
+  box-sizing: border-box;
+  border-radius: 0 0 3px 3px;
+  border: none;
+}
+:global(.el-select-dropdown__list) {
+  width: 100%;
+  border: 1px dashed rgba(255, 255, 255, 0.6) !important;
+  border-top: none !important;
+  margin: 0 !important;
+}
+:global(.el-select-dropdown) {
+  background: #000 !important;
+  border: none;
+}
+:global(.el-scrollbar) {
+  background: #000 !important;
+  border: none;
+}
+:global(.el-popper.is-light) {
+  background: #000 !important;
+  border: none;
+}
+:global(.el-popper__arrow) {
+  display: none;
+}
+
+:v-deep(.select-down) {
+  display: none;
+}
+.bg-block {
+  background: #07070d;
+}
+:deep(.el-drawer__body) {
+  flex: 1;
+  padding: 0;
+  overflow: auto;
+}
+</style>

@@ -1,0 +1,86 @@
+@import "./base.css";
+@import "./iconfont/iconfont.css";
+
+#app {
+  /* min-width: 1280px; */
+  min-width: 100vw;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  font-weight: normal;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+}
+
+@font-face {
+  font-family: Gotham-Rounded;
+  src: url("../assets/fonts/GothamRoundedBold.otf");
+}
+
+@font-face {
+  font-family: PingFangTC-Semibold, sans-serif;
+  src: url("../assets/fonts/PingFangTC-Semibold.ttf");
+}
+
+@font-face {
+  font-family: "iconfont";
+  src: url("../assets/iconfont/iconfont.woff2?t=1683533206601") format("woff2"),
+    url("../assets/iconfont/iconfont.woff?t=1683533206601") format("woff"),
+    url("../assets/iconfont/iconfont.ttf?t=1683533206601") format("truetype");
+}
+
+@font-face {
+  font-family: FZZCHJW;
+  src: url("./fonts/FZZCHJW.ttf");
+}
+
+@font-face {
+  font-family: FUTURA-MEDIUM;
+  src: url("./fonts/Futura.ttc");
+}
+
+@font-face {
+  font-family: BOOK;
+  src: url("./fonts/GothamRnd-Book2.otf");
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+}
+
+button {
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+.button-style {
+  font-size: 21px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.button-style:hover {
+  color: #fff !important;
+}
+
+.button-style:active {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,16 @@
+{
+  "id": "4055838",
+  "name": "mbm-gpt",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "14773879",
+      "name": "闪电",
+      "font_class": "shandian",
+      "unicode": "e746",
+      "unicode_decimal": 59206
+    }
+  ]
+}
