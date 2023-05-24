@@ -8,9 +8,9 @@
             <button
               v-if="userInfo.name"
               class="button-style gpt-button"
-              @click="skip('http://chat.mbmzone.com/', true)"
+              @click="skip('https://mchat.mbmzone.com/', true)"
             >
-              我的ChatGPT 对话
+              和我的 ChatGPT 聊天
             </button>
             <button v-else class="button-style gpt-button" @click="toLogin">
               登录我的 MBM OpenAI 账号
@@ -44,11 +44,11 @@
             </div>
             <div class="default-model" @click="skip('http://visus.ai/', true)">
               <img class="icon-ai" :src="iconSelf" alt="" />
-              <div class="model-name">训练你自己的ChatGPT</div>
+              <div class="model-name">训练你自己的 ChatGPT</div>
             </div>
             <div class="default-model" @click="train('生成我的GPT4 API Key')">
               <img class="icon-ai" :src="iconKey" alt="" />
-              <div class="model-name">生成我的GPT4 API Key</div>
+              <div class="model-name">生成我的 GPT4 API Key</div>
             </div>
           </div>
           <div class="flex">
@@ -57,9 +57,7 @@
                 class="question"
                 v-for="(item, index) in questionList"
                 :key="index"
-                @click="
-                  ElNotification({ message: item.label, showClose: false })
-                "
+                @click="navQuestion(item.value)"
               >
                 {{ item.label }}
               </li>
@@ -89,6 +87,7 @@
         <el-container>
           <el-header class="header">
             <el-carousel
+              ref="slide"
               trigger="click"
               arrow="never"
               :autoplay="true"
@@ -99,9 +98,9 @@
               <el-carousel-item
                 class="swipe"
                 :style="{
-                  background: `url(${item.bg}) center / auto 100% repeat`,
+                  background: `url(${item.bg}) center / 100% auto no-repeat`,
                 }"
-                v-for="item in swiperList"
+                v-for="(item, index) in swiperList"
                 :key="item.desc"
               >
                 <div
@@ -128,6 +127,7 @@
                     'animate__animated animate__fadeIn animate__delay-3':
                       animate,
                   }"
+                  @click="navQuestion(index + 1 + '')"
                 >
                   {{ item.button }}
                 </button>
@@ -136,7 +136,10 @@
             <div
               v-if="userInfo.name"
               class="avatar"
-              @click="showUserInfo = !showUserInfo"
+              @click="
+                updateUserInfo();
+                showUserInfo = !showUserInfo;
+              "
             >
               {{ nickname }}
             </div>
@@ -163,27 +166,31 @@
               </div>
               <div class="info-item">
                 <span class="label">推荐码：</span>
-                <span class="code underline" @click="copy">{{
-                  userInfo.inviteCode
-                }}</span>
+                <span class="code underline" @click="copy">
+                  {{ userInfo.inviteCode }}
+                </span>
               </div>
               <div class="info-item">
                 <span class="label">AI时刻：</span>
                 {{ userInfo.createTime }}
               </div>
+              <div class="info-item">
+                <span
+                  class="label underline"
+                  style="cursor: pointer"
+                  @click="logout()"
+                >
+                  退出登录
+                </span>
+              </div>
             </div>
           </el-header>
           <el-main class="main">
-            <!-- <h1 class="title">
-            我收藏的应用
-            <span class="app-num">(2)</span>
-          </h1>
-          <collect-item></collect-item> -->
             <h1 class="title">
               当下热门 AI 应用
-              <span class="app-num">(2)</span>
+              <span class="app-num">(6)</span>
             </h1>
-            <collect-item></collect-item>
+            <collect-item :ai-version="aiVersion"></collect-item>
           </el-main>
         </el-container>
       </el-container>
@@ -209,32 +216,87 @@
           <!-- 手机号 -->
           <div class="ipt-box" v-if="status === 2">
             <el-input
-              :maxlength="13"
+              :maxlength="11"
               class="tel"
               v-model="tel"
               :autofocus="true"
-              placeholder="xxxxxxxxxxxxx"
+              placeholder="xxxxxxxxxxx"
             />
             <div class="btm"></div>
             <div class="btm btm2"></div>
+            <!-- <el-input
+              :maxlength="3"
+              class="tel1"
+              v-model="tel1"
+              :autofocus="true"
+              placeholder="xxx"
+            />
+            <el-input
+              :maxlength="4"
+              class="tel2"
+              v-model="tel2"
+              :autofocus="false"
+              placeholder="xxxx"
+            />
+            <el-input
+              :maxlength="4"
+              class="tel3"
+              v-model="tel3"
+              :autofocus="false"
+              placeholder="xxxx"
+            /> -->
           </div>
           <!-- 验证码 -->
           <div class="square-box" v-if="status === 3">
-            <el-input
-              :maxlength="6"
+            <!-- <el-input
+              :maxlength="4"
               class="tel"
               v-model="sms"
               :autofocus="true"
               placeholder=""
               @input="inputCode"
-            />
+            /> -->
             <div class="bb">
-              <div class="square"></div>
-              <div class="square square2"></div>
-              <div class="square square3"></div>
-              <div class="square square4"></div>
-              <div class="square square5"></div>
-              <div class="square square6"></div>
+              <div class="square">
+                <el-input
+                  ref="smsInput1"
+                  :maxlength="1"
+                  class="tel"
+                  v-model="sms1"
+                  :autofocus="true"
+                  placeholder=""
+                />
+              </div>
+              <div class="square square2">
+                <el-input
+                  ref="smsInput2"
+                  :maxlength="1"
+                  class="tel"
+                  v-model="sms2"
+                  :autofocus="true"
+                  placeholder=""
+                />
+              </div>
+              <div class="square square3">
+                <el-input
+                  ref="smsInput3"
+                  :maxlength="1"
+                  class="tel"
+                  v-model="sms3"
+                  :autofocus="true"
+                  placeholder=""
+                />
+              </div>
+              <div class="square square4">
+                <el-input
+                  ref="smsInput4"
+                  :maxlength="1"
+                  class="tel"
+                  v-model="sms4"
+                  :autofocus="true"
+                  placeholder=""
+                />
+              </div>
               <div class="square square7"></div>
             </div>
           </div>
@@ -267,15 +329,15 @@
         v-model="showDialog"
         :close-on-click-modal="true"
         :close-on-press-escape="false"
-        class="wrap-dialog"
+        class="phone-wrap-dialog"
         :show-close="false"
         title=""
       >
-        <div class="dialog">
+        <div class="phone-dialog">
           <div class="type-word">
-            <chat-gpt-typewriter
+            <chat-gpt-typewriter-small
               exampleText="进入你的AI时刻"
-            ></chat-gpt-typewriter>
+            ></chat-gpt-typewriter-small>
             <div class="mask"></div>
           </div>
           <div class="avatar">M</div>
@@ -285,11 +347,11 @@
           <!-- 手机号 -->
           <div class="ipt-box" v-if="status === 2">
             <el-input
-              :maxlength="13"
+              :maxlength="11"
               class="tel"
               v-model="tel"
               :autofocus="true"
-              placeholder="xxxxxxxxxxxxx"
+              placeholder="xxx xxxx  xxxx"
             />
             <div class="btm"></div>
             <div class="btm btm2"></div>
@@ -297,7 +359,7 @@
           <!-- 验证码 -->
           <div class="square-box" v-if="status === 3">
             <el-input
-              :maxlength="6"
+              :maxlength="4"
               class="tel"
               v-model="sms"
               :autofocus="true"
@@ -309,8 +371,6 @@
               <div class="square square2"></div>
               <div class="square square3"></div>
               <div class="square square4"></div>
-              <div class="square square5"></div>
-              <div class="square square6"></div>
               <div class="square square7"></div>
             </div>
           </div>
@@ -338,25 +398,35 @@
         </div>
       </el-dialog>
       <el-container>
-        <el-header>
-          <div class="toolbar">
-            <img class="logo" :src="iconMenu" @click="drawer = true" />
-            <div
-              style="
-                flex: 1;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: center;
-              "
-            >
-              <img class="logo" :src="whiteLogo" alt="" />
-            </div>
+        <el-header class="toolbar">
+          <img class="logo" :src="iconMenu" @click="drawer = true" />
+          <div
+            style="
+              flex: 1;
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <img class="logo" :src="whiteLogo" alt="" />
           </div>
+          <div
+            v-if="userInfo.name"
+            class="avatar"
+            @click="
+              updateUserInfo();
+              showUserInfo = !showUserInfo;
+            "
+          >
+            {{ nickname }}
+          </div>
+          <div v-else style="height: 32px; width: 32px"></div>
         </el-header>
         <el-container>
           <el-header class="phone-header">
             <el-carousel
+              ref="slide"
               trigger="click"
               arrow="never"
               :autoplay="true"
@@ -367,9 +437,9 @@
               <el-carousel-item
                 class="swipe"
                 :style="{
-                  background: `url(${item.bg}) center / auto 100% repeat`,
+                  background: `url(${item.bg}) center / auto 100% no-repeat`,
                 }"
-                v-for="item in swiperList"
+                v-for="(item, index) in swiperList"
                 :key="item.desc"
               >
                 <div
@@ -396,18 +466,12 @@
                     'animate__animated animate__fadeIn animate__delay-3':
                       animate,
                   }"
+                  @click="navQuestion(index + 1 + '')"
                 >
                   {{ item.button }}
                 </button>
               </el-carousel-item>
             </el-carousel>
-            <div
-              v-if="userInfo.name"
-              class="avatar"
-              @click="showUserInfo = !showUserInfo"
-            >
-              {{ nickname }}
-            </div>
             <div
               v-if="userInfo.name"
               class="user-info"
@@ -431,13 +495,22 @@
               </div>
               <div class="info-item">
                 <span class="label">推荐码：</span>
-                <span class="code underline" @click="copy">{{
-                  userInfo.inviteCode
-                }}</span>
+                <span class="code underline" @click="copy">
+                  {{ userInfo.inviteCode }}
+                </span>
               </div>
               <div class="info-item">
                 <span class="label">AI时刻：</span>
                 {{ userInfo.createTime }}
+              </div>
+              <div class="info-item">
+                <span
+                  class="label underline"
+                  style="cursor: pointer"
+                  @click="logout()"
+                >
+                  退出登录
+                </span>
               </div>
             </div>
           </el-header>
@@ -449,9 +522,9 @@
           <collect-item></collect-item> -->
             <h1 class="title">
               当下热门 AI 应用
-              <span class="app-num">(2)</span>
+              <span class="app-num">(6)</span>
             </h1>
-            <collect-item-small></collect-item-small>
+            <collect-item-small :ai-version="aiVersion"></collect-item-small>
           </el-main>
         </el-container>
         <el-drawer
@@ -467,11 +540,11 @@
                 v-if="userInfo.name"
                 class="gpt-button"
                 @click="
-                  skip('http://chat.mbmzone.com/', true);
+                  skip('https://mchat.mbmzone.com/', true);
                   drawer = false;
                 "
               >
-                我的ChatGPT 对话
+                和我的 ChatGPT 聊天
               </button>
               <button
                 v-else
@@ -518,7 +591,7 @@
                 "
               >
                 <img class="icon-ai" :src="iconSelf" alt="" />
-                <div class="model-name">训练你自己的ChatGPT</div>
+                <div class="model-name">训练你自己的 ChatGPT</div>
               </div>
               <div
                 class="default-model"
@@ -528,7 +601,7 @@
                 "
               >
                 <img class="icon-ai" :src="iconKey" alt="" />
-                <div class="model-name">生成我的GPT4 API Key</div>
+                <div class="model-name">生成我的 GPT4 API Key</div>
               </div>
             </div>
             <div class="flex">
@@ -538,7 +611,7 @@
                   v-for="(item, index) in questionList"
                   :key="index"
                   @click="
-                    ElNotification({ message: item.label, showClose: false });
+                    navQuestion(item.value);
                     drawer = false;
                   "
                 >
@@ -569,9 +642,9 @@
               </button>
               <div v-if="userInfo.name" class="share-my-code">
                 分享我的推荐码：
-                <span class="code" @click="copy">{{
-                  userInfo.inviteCode
-                }}</span>
+                <span class="code" @click="copy">
+                  {{ userInfo.inviteCode }}
+                </span>
               </div>
             </div>
           </el-aside>
@@ -590,12 +663,19 @@ import iconKey from "@/assets/images/icon-ai-key.png";
 import swiper1 from "@/assets/images/slider1.png";
 import swiper2 from "@/assets/images/slider2.png";
 import swiper3 from "@/assets/images/slider3.png";
-import { onBeforeMount, ref, watch, nextTick } from "vue";
+import {
+  onBeforeMount,
+  ref,
+  watch,
+  nextTick,
+  getCurrentInstance,
+  onMounted,
+} from "vue";
 import CollectItem from "@/components/CollectItem.vue";
 import ChatGptTypewriter from "@/components/ChatGptTypewriter.vue";
 import CollectItemSmall from "@/components/CollectItemSmall.vue";
 import ChatGptTypewriterSmall from "@/components/ChatGptTypewriterSmall.vue";
-import { ElMessage, ElNotification } from "element-plus";
+import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
 import { pinyin } from "pinyin-pro";
 import {
   checkPhone,
@@ -603,17 +683,19 @@ import {
   doLoginApi,
   doRegisterCode,
   registerAccount,
+  doGetInfo,
 } from "@/api/index";
 import { useRouter } from "vue-router";
+import useClipboard from "vue-clipboard3";
 type Option = {
   value: string;
   label: string;
 };
 // select opetion
 const options = ref<Option[]>([
-  { value: "GPT-4", label: "GPT-4" },
-  { value: "GPT-4 32K", label: "GPT-4 32K" },
-  { value: "GPT-3.5", label: "GPT-3.5" },
+  { value: "gpt4", label: "GPT-4" },
+  { value: "gpt432", label: "GPT-4 32K" },
+  { value: "gpt3.5", label: "GPT-3.5" },
 ]);
 const aiVersion = ref<{ value: string; label: string }>(options.value[0]);
 const showDialog = ref(false);
@@ -621,7 +703,14 @@ const showDialog = ref(false);
 const isCreatedAccount = ref(false);
 const status = ref(1);
 const tel = ref("");
+// const tel1 = ref("");
+// const tel2 = ref("");
+// const tel3 = ref("");
 const sms = ref("");
+const sms1 = ref("");
+const sms2 = ref("");
+const sms3 = ref("");
+const sms4 = ref("");
 const userInfo = ref({
   mobile: "",
   id: "",
@@ -638,6 +727,9 @@ const agent = ref(
   )
 );
 const drawer = ref(false);
+// 使用插件
+const { toClipboard } = useClipboard();
+const proxy: any = getCurrentInstance()?.proxy ?? null;
 const nickname = ref("");
 const animate = ref(true);
 const showUserInfo = ref(false);
@@ -650,7 +742,7 @@ const swiperList = ref([
     title: "MBM OpenAI GPT-4 服务",
     desc: "作为 Azure OpenAI 中国合作伙伴，MBM 为\n企业用户和个人消费者提供可靠、企业级 OpenAI 服务，\n实现快速访问，无需代理的先进体验。",
     bg: swiper1,
-    button: "探索与OpenAI的区别",
+    button: "探索与 OpenAI 的区别",
   },
   {
     title: "MBM OpenAI GPT-4 服务",
@@ -662,47 +754,132 @@ const swiperList = ref([
     title: "MBM OpenAI GPT-4 服务",
     desc: "为了满足你对商用级别 OpenAI 服务的苛刻要求，\n我们从产品设计的一开始便考虑了安全的重要性，以此确保\n每一个从你访问到的数据，都受到隐私保护和加密处理。",
     bg: swiper3,
-    button: "企业级OpenAI是什么",
+    button: "企业级 OpenAI 是什么",
   },
 ]);
 // faq list
 const questionList = ref<Option[]>([
   {
-    value: "企业级 OpenAI 服务是什么意思？",
+    value: "3",
     label: "企业级 OpenAI 服务是什么意思？",
   },
-  { value: "MBM OpenAI 服务如何计费", label: "MBM OpenAI 服务如何计费" },
-  { value: "探索与 OpenAI 的区别", label: "探索与 OpenAI 的区别" },
+  { value: "2", label: "MBM OpenAI 服务如何计费" },
+  { value: "1", label: "探索与 OpenAI 的区别" },
 ]);
+onMounted(() => {
+  slideBanner();
+});
 onBeforeMount(() => {
   if ($router.currentRoute.value.query.redirectUrl) {
     redirectUrl.value = $router.currentRoute.value.query.redirectUrl;
   }
   let usr = localStorage.getItem("userInfo");
-
   if (usr) {
-    userInfo.value = JSON.parse(usr);
-    const firstC = getFirstChar(userInfo.value.name);
-    nickname.value = firstC;
+    const info = JSON.parse(usr);
+    getUserInfo(info.token, info.accessKey);
   }
 });
+const updateUserInfo = () => {
+  let usr = localStorage.getItem("userInfo");
+  if (usr) {
+    const info = JSON.parse(usr);
+    getUserInfo(info.token, info.accessKey);
+  }
+};
+//请求接口获取用户信息
+const getUserInfo = async (token: string, accessKey: string) => {
+  const res = await doGetInfo({ token, accessKey });
+  if (res.data.code === 11000) {
+    userInfo.value = res.data.data;
+    const firstC = getFirstChar(userInfo.value.name);
+    nickname.value = firstC;
+  } else if (res.data.code === 12004) {
+    localStorage.removeItem("userInfo");
+    userInfo.value = {
+      mobile: "",
+      id: "",
+      name: "",
+      remainAmount: 0,
+      requestCount: 0,
+      token: "",
+      createTime: "",
+      inviteCode: "",
+    };
+    nickname.value = "";
+    showUserInfo.value = false;
+    status.value = 1;
+    tel.value = "";
+  }
+};
+// watch(
+//   () => tel1.value,
+//   async (newValue, oldValue) => {
+//     tel1.value =
+//       newValue.length > oldValue.length
+//         ? newValue.replace(/\s/g, "")
+//         : tel1.value.trim();
+//     tel.value = tel1.value + tel2.value + tel3.value;
+//     if (tel1.value.length == 3) {
+//     }
+//   }
+// );
+watch(
+  () => sms1.value,
+  async (newValue) => {
+    sms.value = newValue + sms2.value + sms3.value + sms4.value;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    } else {
+      proxy?.$refs["smsInput2"].focus();
+    }
+  }
+);
+watch(
+  () => sms2.value,
+  async (newValue) => {
+    sms.value = sms1.value + newValue + sms3.value + sms4.value;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    } else {
+      proxy?.$refs["smsInput3"].focus();
+    }
+  }
+);
+watch(
+  () => sms3.value,
+  async (newValue) => {
+    sms.value = sms1.value + sms2.value + newValue + sms4.value;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    } else {
+      proxy?.$refs["smsInput4"].focus();
+    }
+  }
+);
+watch(
+  () => sms4.value,
+  async (newValue) => {
+    sms.value = sms1.value + sms2.value + sms3.value + newValue;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    }
+  }
+);
 // 监听手机号
 watch(
   () => tel.value,
   async (newValue, oldValue) => {
     tel.value =
       newValue.length > oldValue.length
-        ? newValue
-            .replace(/\s/g, "")
-            .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
-        : tel.value.trim();
-    if (tel.value.length === 13) {
+        ? newValue.replace(/\s/g, "")
+        : // .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
+          tel.value.trim();
+    if (tel.value.length === 11) {
       let mobile = tel.value.replace(/\s/g, "");
       if (mobile && verifyPhone(mobile)) {
         if (loginFlag.value) return;
         loginFlag.value = true;
         const phoneRegister = await checkPhone({ phone: mobile });
-        console.log(phoneRegister, phoneRegister.data.data.register);
         let codeRes = null;
         if (phoneRegister.data.data.register) {
           // 注册过。登陆验证码
@@ -723,14 +900,22 @@ watch(
     }
   }
 );
-const doLogin = () => {};
 // 显示登录选项
 const toLogin = () => {
   let usr = localStorage.getItem("userInfo");
   if (!usr) {
-    nextTick(() => {
-      showDialog.value = true;
-    });
+    if (!agent.value) {
+      nextTick(() => {
+        showDialog.value = true;
+      });
+    } else {
+      $router.push({
+        name: "singleLogin",
+        query: {
+          redirectUrl: window.location.href,
+        },
+      });
+    }
   }
 };
 // 培训
@@ -770,30 +955,26 @@ const countDown = async () => {
     ElMessage({ type: "warning", message: res.data.msg });
   }
 };
-
 // 复制
-const copy = () => {
-  navigator.clipboard
-    .writeText(
+const copy = async () => {
+  try {
+    // 复制
+    await toClipboard(
       `${window.location.href}?inviteCode=${userInfo.value.inviteCode}`
-    )
-    .then(() => {
-      ElMessage({ message: "复制成功", type: "success" });
-    })
-    .catch(() => {
-      ElMessage("复制失败");
-    });
+    );
+    ElMessage({ message: "复制成功", type: "success" });
+  } catch (e) {
+    ElMessage("复制失败");
+  }
 };
 // sms-code
 const inputCode = async (code: string) => {
-  if (code && code.length === 6 && !isNaN(parseInt(code))) {
-    console.log(isCreatedAccount, "isCreatedAccountisCreatedAccount");
+  if (code && code.length === 4 && !isNaN(parseInt(code))) {
     if (isCreatedAccount.value) {
       // 注册过账号。调登陆接口
       let phone = tel.value.replace(/\s/g, "");
       let query = { code: sms.value, phone };
       const res = await doLoginApi(query);
-      console.log(res, "res====11");
       if (res.data.code === 11000) {
         ElMessage({ type: "success", message: "手机号验证成功" });
         status.value = -1;
@@ -802,13 +983,6 @@ const inputCode = async (code: string) => {
         userInfo.value = res?.data?.data;
         const firstC = getFirstChar(userInfo.value.name);
         nickname.value = firstC;
-        console.log(
-          nickname,
-          nickname.value,
-          firstC,
-          userInfo.value.name,
-          "11111111"
-        );
         if (redirectUrl.value) {
           skip(redirectUrl.value, false);
         }
@@ -841,13 +1015,6 @@ const inputNickname = async () => {
 
     const firstC = getFirstChar(userInfo.value.name);
     nickname.value = firstC;
-    console.log(
-      nickname,
-      nickname.value,
-      firstC,
-      userInfo.value.name,
-      "11111111"
-    );
     if (redirectUrl.value) {
       skip(redirectUrl.value, false);
     }
@@ -863,10 +1030,14 @@ const verifyPhone = (phone: string | number) => {
 };
 // 跳转url
 const skip = (url: string, openNew: boolean) => {
+  let usr: any = localStorage.getItem("userInfo");
+  if (usr) {
+    usr = JSON.parse(usr);
+  }
   if (openNew) {
-    window.open(`${url}?token=${userInfo.value.token}`);
+    window.open(`${url}?token=${usr?.token}&version=${aiVersion.value.value}`);
   } else {
-    window.location.href = `${url}?token=${userInfo.value.token}`;
+    window.location.href = `${url}?token=${usr?.token}&version=${aiVersion.value.value}`;
   }
 };
 // 处理首字母nickname
@@ -884,6 +1055,71 @@ const getFirstChar = (str: string) => {
 // 跳转充值
 const recharge = () => {
   window.open(`${window.location.href.split("?")[0]}recharge`);
+};
+// 滑动切换
+const slideBanner = () => {
+  //选中的轮播图
+  var box = document.querySelector(".el-carousel__container");
+  var startPoint = 0;
+  var stopPoint = 0;
+  //重置坐标
+  var resetPoint = function () {
+    startPoint = 0;
+    stopPoint = 0;
+  };
+  //手指按下
+  box?.addEventListener("touchstart", function (e: any) {
+    //手指点击位置的X坐标
+    startPoint = e.changedTouches[0].pageX;
+  });
+  //手指滑动
+  box?.addEventListener("touchmove", function (e: any) {
+    //手指滑动后终点位置X的坐标
+    stopPoint = e.changedTouches[0].pageX;
+  });
+  //当手指抬起的时候，判断图片滚动离左右的距离
+  box?.addEventListener("touchend", function () {
+    if (stopPoint == 0 || startPoint - stopPoint == 0) {
+      resetPoint();
+      return;
+    }
+    if (startPoint - stopPoint > 0) {
+      resetPoint();
+      proxy?.$refs["slide"].next();
+      return;
+    }
+    if (startPoint - stopPoint < 0) {
+      resetPoint();
+      proxy?.$refs["slide"].prev();
+      return;
+    }
+  });
+};
+const logout = () => {
+  ElMessageBox.confirm("是否退出登录?", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(() => {
+    localStorage.removeItem("userInfo");
+    userInfo.value = {
+      mobile: "",
+      id: "",
+      name: "",
+      remainAmount: 0,
+      requestCount: 0,
+      token: "",
+      createTime: "",
+      inviteCode: "",
+    };
+    nickname.value = "";
+    showUserInfo.value = false;
+    status.value = 1;
+    tel.value = "";
+  });
+};
+const navQuestion = (blogType: string) => {
+  $router.push({ name: "blog", query: { blogType } });
 };
 </script>
 <style lang="scss" scoped>
@@ -928,21 +1164,41 @@ const recharge = () => {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    width: calc(100vw - 40px);
+    height: 60px;
+    width: 100vw;
+    background: #ffffff;
+    padding: 0 20px;
     .logo {
       //   height: 33px;
       height: 20px;
     }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      background: #818da3;
+      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #ffffff;
+      z-index: 2;
+      cursor: pointer;
+    }
   }
   .aside {
-    width: 400px;
-    // height: 100vh;
+    width: 20vw;
+    min-height: 100vh;
+    min-width: 280px;
     // overflow: hidden;
     background: #07070d;
     color: #fff;
     box-sizing: border-box;
-    padding: 33px 55px 33px 52px;
+    padding: 33px 2vw 33px 2vw;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -952,30 +1208,30 @@ const recharge = () => {
     }
     .logo {
       //   height: 33px;
-      height: 40px;
+      // height: 5vh;
+      width: 8.3vw;
     }
     .gpt-button {
       width: 100%;
-      height: 67px;
+      height: 7vh;
+      min-height: 52px;
       background: #4383ea;
       border-radius: 8px;
-      font-size: 16px;
       font-family: Gotham-Rounded;
       font-weight: bold;
       color: #ffffff;
       text-align: center;
-      line-height: 40px;
-      margin: 115px auto 40px;
+      margin: 11vh auto 4vh;
       display: flex;
       justify-content: center;
       align-items: center;
       flex-wrap: nowrap;
     }
     .color-button {
-      margin-top: 40px;
+      margin-top: 4vh;
       background: linear-gradient(23deg, #4383ea 0%, #4861eb 49%, #8748eb 100%);
       color: rgba(255, 255, 255, 0.9);
-      font-size: 21px;
+      font-size: 1rem;
       font-family: PingFangTC-Semibold;
       @include chargeHover5Style;
       position: relative;
@@ -1020,7 +1276,7 @@ const recharge = () => {
       flex-wrap: nowrap;
       color: rgba(255, 255, 255, 0.4);
       cursor: pointer;
-      margin-bottom: 42px;
+      margin-bottom: 4vh;
       @include hover2Style;
       .icon-ai {
         display: block;
@@ -1040,15 +1296,17 @@ const recharge = () => {
       }
       .model-name {
         margin: 0 3px 0 10px;
-        font-size: 21px;
+        font-size: 1rem;
         font-family: Gotham-Rounded;
         font-weight: bold;
+        min-width: 60px;
       }
       .active {
-        font-size: 15px;
+        font-size: 0.9rem;
         color: #fff;
       }
       .ai-select {
+        width: 100%;
         ::placeholder {
           color: #fff;
         }
@@ -1056,13 +1314,13 @@ const recharge = () => {
         :deep(.el-input__wrapper) {
           background: #202226;
           color: #ffffff;
-          min-height: 33px;
-          max-width: 175px;
+          min-height: 3vh;
+          max-width: 7vw;
           box-shadow: none !important;
           border: 1px dashed rgba(255, 255, 255, 0.6);
           box-sizing: border-box;
           .el-input__inner {
-            font-size: 24px;
+            font-size: 1rem;
             font-family: Gotham-Rounded;
             font-weight: bold;
             color: #ffffff;
@@ -1077,7 +1335,7 @@ const recharge = () => {
       //   }
     }
     .default-model:nth-last-child(1) {
-      margin-bottom: 220px;
+      margin-bottom: 21.5vh;
     }
     .question-box {
       width: 100%;
@@ -1085,10 +1343,10 @@ const recharge = () => {
       padding: 0;
       margin: 0 auto;
       .question {
-        font-size: 16px;
+        font-size: 0.8rem;
         font-family: Gotham-Rounded;
         font-weight: bold;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.4);
         margin: 11px 0;
         cursor: pointer;
         @include hover5Style;
@@ -1098,6 +1356,7 @@ const recharge = () => {
 
   .phone-aside {
     width: 80vw;
+    min-height: 100vh;
     // height: 100vh;
     // overflow: hidden;
     background: #07070d;
@@ -1249,7 +1508,7 @@ const recharge = () => {
         font-size: 12px;
         font-family: Gotham-Rounded;
         font-weight: bold;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.4);
         margin: 11px 0;
         cursor: pointer;
         @include hover5Style;
@@ -1257,21 +1516,20 @@ const recharge = () => {
     }
   }
   .header {
-    height: 375px;
+    height: 36vh;
     position: relative;
     padding: 0;
     .open-ai {
-      min-width: 275px;
-      height: 46px;
+      // min-width: 19vw;
+      height: 4vh;
       background: rgba(255, 255, 255, 0.8);
       border: 1px solid #000000;
-      font-size: 24px;
-      font-family: Futurafont;
+      font-size: 1rem;
       font-weight: 600;
-      color: #000000;
+      color: rgba(0, 0, 0, 0.8);
       position: absolute;
-      left: 100px;
-      bottom: 35px;
+      left: 7vw;
+      bottom: 5vh;
       transition: all 0.3s;
       padding: 0 20px;
       &:hover {
@@ -1280,9 +1538,9 @@ const recharge = () => {
       }
     }
     .swiper {
-      height: 375px;
+      height: 36vh;
       :deep(.el-carousel__container) {
-        height: 375px;
+        height: 36vh;
       }
       :deep(.el-carousel__indicator--horizontal) {
         flex-shrink: 0;
@@ -1308,9 +1566,10 @@ const recharge = () => {
       width: 100%;
       color: #fff;
       box-sizing: border-box;
-      padding: 40px 61px;
+      padding: 3vh 4vw;
       .title {
-        font-size: 36px;
+        margin-left: 2vw;
+        font-size: 1.8rem;
         font-family: FUTURA-MEDIUM;
         font-weight: 500;
         color: #ffffff;
@@ -1325,16 +1584,15 @@ const recharge = () => {
         animation-delay: 0.3s;
       }
       .desc {
-        width: 764px;
-        height: 150px;
-        margin-top: 40px;
-        font-size: 28px;
+        width: 50vw;
+        height: 14vh;
+        margin-top: 3vh;
+        font-size: 1.4rem;
         font-family: FZZCHJW;
         font-weight: 400;
-        line-height: 38px;
+        line-height: 1.8rem;
         color: rgba(255, 255, 255, 0.95);
         white-space: pre-wrap;
-        width: 764px;
       }
     }
 
@@ -1413,7 +1671,7 @@ const recharge = () => {
     .show-user {
       padding: 25px 20px 15px 15px;
       width: 344px;
-      height: 279px;
+      height: 300px;
       transition: all 0.3s;
     }
   }
@@ -1427,9 +1685,8 @@ const recharge = () => {
       background: rgba(255, 255, 255, 0.8);
       border: 1px solid #000000;
       font-size: 12px;
-      font-family: Futurafont;
       font-weight: 600;
-      color: #000000;
+      color: rgba(0, 0, 0, 0.8);
       position: absolute;
       left: 50px;
       bottom: 40px;
@@ -1498,26 +1755,6 @@ const recharge = () => {
       }
     }
 
-    .avatar {
-      width: 66px;
-      height: 66px;
-      background: #818da3;
-      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
-      border-radius: 50%;
-      position: absolute;
-      right: 63px;
-      top: 34px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      font-size: 16px;
-      font-family: Gotham-Rounded;
-      font-weight: bold;
-      color: #ffffff;
-      z-index: 2;
-      cursor: pointer;
-    }
     .user-info {
       width: 0;
       height: 0;
@@ -1572,20 +1809,20 @@ const recharge = () => {
     }
     .show-user {
       padding: 25px 20px 15px 15px;
-      width: 344px;
-      height: 279px;
+      width: 80vw;
+      height: 300px;
       transition: all 0.3s;
     }
   }
   .main {
     padding: 0;
-    height: calc(100vh - 375px);
+    height: 64vh;
     box-sizing: border-box;
     padding: 40px 50px;
-    background: #fff;
+    background: #f5f5f7;
     .title {
       font-size: 23px;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #333333;
       margin: 0 auto 23px;
@@ -1602,15 +1839,15 @@ const recharge = () => {
     width: 100vw;
     box-sizing: border-box;
     padding: 20px 25px;
-    background: #fff;
+    background: #f5f5f7;
     .title {
-      font-size: 12px;
-      font-family: Gotham-Rounded;
+      font-size: 16px;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #333333;
       margin: 0 auto 20px;
       .app-num {
-        font-size: 14px;
+        font-size: 16px;
         margin-left: 8px;
         font-weight: bold;
       }
@@ -1682,7 +1919,7 @@ const recharge = () => {
     flex-wrap: wrap;
     margin: 70px auto 30px;
     font-size: 24px;
-    font-family: Futurafont;
+    font-family: FUTURA-MEDIUM;
     font-weight: 500;
     color: rgba(0, 0, 0, 0.8);
     cursor: pointer;
@@ -1690,12 +1927,15 @@ const recharge = () => {
   .ipt-box {
     position: relative;
     margin: 40px auto 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     .tel {
       width: 320px;
       border: none;
       margin: 40px 132px 0;
       ::placeholder {
-        letter-spacing: 5px;
+        letter-spacing: 9.6px;
       }
       :deep(.el-input__wrapper) {
         border-bottom: 1px solid #000;
@@ -1704,25 +1944,90 @@ const recharge = () => {
         padding: 0;
       }
       :deep(.el-input__inner) {
-        letter-spacing: 9.5px;
         text-align: left;
         font-size: 26px;
         font-family: FZZCHJW;
         font-weight: 400;
         color: #000000;
-        letter-spacing: 8px;
+        letter-spacing: 10px;
+      }
+    }
+    .tel1 {
+      width: 80px;
+      border: none;
+      margin: 40px 10px 0;
+      ::placeholder {
+        letter-spacing: 9.6px;
+      }
+      :deep(.el-input__wrapper) {
+        border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        text-align: left;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 10px;
+      }
+    }
+    .tel2 {
+      width: 120px;
+      border: none;
+      margin: 40px 10px 0;
+      ::placeholder {
+        letter-spacing: 9.6px;
+      }
+      :deep(.el-input__wrapper) {
+        border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        text-align: left;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 10px;
+      }
+    }
+    .tel3 {
+      width: 120px;
+      border: none;
+      margin: 40px 10px 0;
+      ::placeholder {
+        letter-spacing: 9.6px;
+      }
+      :deep(.el-input__wrapper) {
+        border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        text-align: left;
+        font-size: 26px;
+        font-family: FZZCHJW;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 10px;
       }
     }
     .btm {
       height: 33px;
-      width: 21px;
+      width: 10px;
       background: #fff;
       position: absolute;
       top: 40px;
-      left: 200px;
+      left: 204px;
     }
     .btm2 {
-      left: 320px;
+      left: 318px;
     }
   }
   .square-box {
@@ -1738,18 +2043,18 @@ const recharge = () => {
         position: relative;
         z-index: 3;
         background: none;
-        top: 45px;
+        // top: 45px;
       }
       :deep(.el-input__inner) {
-        padding: 0 10% 0 22%;
+        // padding: 0 22% 0 21%;
         font-size: 28px;
         font-family: FZZhengHeiS-B-GB;
         font-weight: 600;
         color: #000000;
-        letter-spacing: 46px;
-        text-align: left;
-        overflow-x: hidden;
-        overflow: hidden;
+        // letter-spacing: 80px;
+        text-align: center;
+        // overflow-x: hidden;
+        // overflow: hidden;
       }
     }
     .bb {
@@ -1766,6 +2071,9 @@ const recharge = () => {
         height: 64px;
         width: 47px;
         border: 1px solid #000000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         // margin-right:3px;
       }
       //   .square2 {
@@ -1887,7 +2195,7 @@ const recharge = () => {
 
 .phone-dialog {
   width: 80vw;
-  height: 310px;
+  height: 280px;
   background: #ffffff;
   border: 1px solid #707070;
   box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
@@ -1895,14 +2203,14 @@ const recharge = () => {
   overflow: hidden;
   .type-word {
     width: 100%;
-    height: 155px;
+    height: 120px;
     background: url("@/assets/images/type-word.png") center / cover no-repeat;
     border-radius: 11px 11px 0px 0px;
-    padding: 56px 10px 65px 50px;
+    padding: 56px 10px 65px 90px;
     box-sizing: border-box;
     .mask {
       width: 100%;
-      height: 155px;
+      height: 120px;
       background: rgba(0, 0, 0, 0.2);
       position: absolute;
       left: 0;
@@ -1912,8 +2220,8 @@ const recharge = () => {
   }
 
   .avatar {
-    width: 52px;
-    height: 52px;
+    width: 40px;
+    height: 40px;
     background: #818da3;
     display: flex;
     justify-content: center;
@@ -1923,38 +2231,38 @@ const recharge = () => {
     border-radius: 50%;
     margin: 0 auto;
     position: absolute;
-    top: 140px;
-    left: 50%;
+    top: 100px;
+    left: 56%;
     transform: translateX(-38.5px);
     color: #fff;
-    font-size: 28px;
+    font-size: 20px;
     font-family: Gotham-Rounded;
     font-weight: bold;
     color: #ffffff;
   }
   .one-key {
-    width: 285px;
-    height: 64px;
+    width: 60vw;
+    height: 32px;
     background: #ffffff;
     border: 1px solid #000000;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    margin: 70px auto 30px;
-    font-size: 24px;
-    font-family: Futurafont;
+    margin: 40px auto 30px;
+    font-size: 12px;
+    font-family: FUTURA-MEDIUM;
     font-weight: 500;
     color: rgba(0, 0, 0, 0.8);
     cursor: pointer;
   }
   .ipt-box {
     position: relative;
-    margin: 40px auto 30px;
+    margin: 10px auto 10px;
     .tel {
-      width: 320px;
+      width: calc(80vw - 104px);
       border: none;
-      margin: 40px 132px 0;
+      margin: 40px 52px 0;
       ::placeholder {
         letter-spacing: 5px;
       }
@@ -1965,32 +2273,31 @@ const recharge = () => {
         padding: 0;
       }
       :deep(.el-input__inner) {
-        letter-spacing: 9.5px;
         text-align: left;
-        font-size: 26px;
+        font-size: 14px;
         font-family: FZZCHJW;
         font-weight: 400;
         color: #000000;
-        letter-spacing: 8px;
+        letter-spacing: 7.9px;
       }
     }
     .btm {
       height: 33px;
-      width: 21px;
+      width: 9px;
       background: #fff;
       position: absolute;
       top: 40px;
-      left: 200px;
+      left: 95px;
     }
     .btm2 {
-      left: 320px;
+      left: 167px;
     }
   }
   .square-box {
     position: relative;
-    margin: 50px auto 19px;
+    margin: 10px auto 10px;
     .tel {
-      width: 100%;
+      width: 80vw;
       border: none;
       :deep(.el-input__wrapper) {
         box-shadow: none;
@@ -1999,33 +2306,33 @@ const recharge = () => {
         position: relative;
         z-index: 3;
         background: none;
-        top: 45px;
+        top: 30px;
       }
       :deep(.el-input__inner) {
-        padding: 0 10% 0 22%;
-        font-size: 28px;
+        padding: 0 36px;
+        font-size: 16px;
         font-family: FZZhengHeiS-B-GB;
         font-weight: 600;
         color: #000000;
-        letter-spacing: 46px;
+        letter-spacing: 62px;
         text-align: left;
         overflow-x: hidden;
         overflow: hidden;
       }
     }
     .bb {
-      width: 430px;
-      height: 64px;
+      // width: calc(80vw - 40px);
+      height: 32px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       position: relative;
-      left: 32px;
+      left: 30px;
       .square {
-        height: 64px;
-        width: 47px;
+        height: 32px;
+        width: 23px;
         border: 1px solid #000000;
         // margin-right:3px;
       }
@@ -2093,7 +2400,7 @@ const recharge = () => {
   }
   .resend {
     height: 30px;
-    font-size: 18px;
+    font-size: 14px;
     font-family: Gotham-Rounded;
     font-weight: 400;
     color: #000000;
@@ -2170,7 +2477,7 @@ const recharge = () => {
 }
 .options {
   width: 100%;
-  font-size: 24px;
+  font-size: 1rem;
   font-family: Gotham-Rounded;
   font-weight: bold;
   color: #ffffff;

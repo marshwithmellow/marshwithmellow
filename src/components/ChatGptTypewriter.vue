@@ -6,27 +6,27 @@
 </template>
 <script lang="ts" setup>
 const props = defineProps<{
-  exampleText: string
-}>()
-import { onMounted, ref } from 'vue'
-const visibleText = ref('')
-const showPoint = ref(true)
+  exampleText: string;
+}>();
+import { onMounted, ref } from "vue";
+const visibleText = ref("");
+const showPoint = ref(true);
 onMounted(() => {
   setTimeout(() => {
-    typeCharacters()
-  }, 800)
-})
+    typeCharacters();
+  }, 800);
+});
 const typeCharacters = () => {
-  let index = 0
+  let index = 0;
   const intervalId = setInterval(() => {
-    visibleText.value += props.exampleText[index]
-    index++
+    visibleText.value += props.exampleText[index];
+    index++;
     if (index === props.exampleText.length) {
-      clearInterval(intervalId)
-      showPoint.value = false
+      clearInterval(intervalId);
+      showPoint.value = false;
     }
-  }, 100)
-}
+  }, 100);
+};
 </script>
 <style lang="scss" scoped>
 .wrap {
@@ -46,6 +46,7 @@ const typeCharacters = () => {
     line-height: 25px;
     color: rgba(255, 255, 255, 95);
     letter-spacing: 2px;
+    mix-blend-mode: screen;
   }
 
   #cursor {
