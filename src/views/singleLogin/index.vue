@@ -9,6 +9,7 @@
         <!-- 手机号 -->
         <div class="ipt-box" v-if="status === 1">
           <el-input
+            type="tel"
             :maxlength="13"
             class="tel"
             v-model="tel"
@@ -32,6 +33,7 @@
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
               <el-input
+                type="tel"
                 ref="smsInput1"
                 :maxlength="1"
                 class="tel"
@@ -43,6 +45,7 @@
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
               <el-input
+                type="tel"
                 ref="smsInput2"
                 :maxlength="1"
                 class="tel"
@@ -54,6 +57,7 @@
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
               <el-input
+                type="tel"
                 ref="smsInput3"
                 :maxlength="1"
                 class="tel"
@@ -65,6 +69,7 @@
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
               <el-input
+                type="tel"
                 ref="smsInput4"
                 :maxlength="1"
                 class="tel"
@@ -95,7 +100,7 @@
           首次登录将自动注册您的 <span class="mbm-openai">MBM OpenAI</span> 账号
           <a class="underline">《隐私政策》</a>
         </div>
-        <div class="send-btn" v-if="status === 1">发送验证</div>
+        <div class="send-btn" v-if="status === 1 || status === 2">发送验证</div>
       </div>
       <div class="right-port">
         <img class="right-img" src="../../assets/images/loginBg.png" alt="" />
@@ -118,6 +123,7 @@
       <div style="height: 30vh">
         <div class="ipt-box" v-if="status === 1">
           <el-input
+            type="tel"
             :maxlength="13"
             class="tel"
             v-model="tel"
@@ -139,6 +145,7 @@
           <div class="bb">
             <div class="square">
               <el-input
+                type="tel"
                 ref="smsInput1"
                 :maxlength="1"
                 class="tel"
@@ -149,6 +156,7 @@
             </div>
             <div class="square">
               <el-input
+                type="tel"
                 ref="smsInput2"
                 :maxlength="1"
                 class="tel"
@@ -159,6 +167,7 @@
             </div>
             <div class="square">
               <el-input
+                type="tel"
                 ref="smsInput3"
                 :maxlength="1"
                 class="tel"
@@ -169,6 +178,7 @@
             </div>
             <div class="square">
               <el-input
+                type="tel"
                 ref="smsInput4"
                 :maxlength="1"
                 class="tel"
@@ -241,6 +251,7 @@ const userInfo = ref({
 });
 const nickNameFocus = ref(false);
 const $router = useRouter();
+const time = ref(60);
 const verifyPhone = (phone: string | number) => {
   const reg =
     /^1((3[0-9])|(4[1579])|(5[0-9])|(6[6])|(7[0-9])|(8[0-9])|(9[0-9]))\d{8}$/;
@@ -287,7 +298,9 @@ watch(
           ElMessage({ type: "error", message: codeRes.data.msg });
         }
         loginFlag.value = false;
-      } else ElMessage("请输入正确的手机号");
+      } else {
+        ElMessage("请输入正确的手机号");
+      }
     }
   }
 );
@@ -305,7 +318,7 @@ watch(
     sms.value = newValue + sms2.value + sms3.value + sms4.value;
     if (sms.value.length === 4) {
       inputCode(sms.value);
-    } else {
+    } else if (newValue && newValue.length > 0) {
       proxy?.$refs["smsInput2"].focus();
     }
   }
@@ -316,7 +329,7 @@ watch(
     sms.value = sms1.value + newValue + sms3.value + sms4.value;
     if (sms.value.length === 4) {
       inputCode(sms.value);
-    } else {
+    } else if (newValue && newValue.length > 0) {
       proxy?.$refs["smsInput3"].focus();
     }
   }
@@ -327,7 +340,7 @@ watch(
     sms.value = sms1.value + sms2.value + newValue + sms4.value;
     if (sms.value.length === 4) {
       inputCode(sms.value);
-    } else {
+    } else if (newValue && newValue.length > 0) {
       proxy?.$refs["smsInput4"].focus();
     }
   }
@@ -353,6 +366,10 @@ const inputCode = async (code: string) => {
         status.value = -1;
         localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
         userInfo.value = res?.data?.data;
+        sms1.value = "";
+        sms2.value = "";
+        sms3.value = "";
+        sms4.value = "";
         if (redirectUrl.value) {
           skip(redirectUrl.value, false);
         }
@@ -365,6 +382,40 @@ const inputCode = async (code: string) => {
         status.value = 3;
       }, 1000);
     }
+  }
+};
+// sms countDown
+const countDown = async () => {
+  if (time.value < 60) return;
+  if (tel.value.length === 11) {
+    let mobile = tel.value.replace(/\s/g, "");
+    if (mobile && verifyPhone(mobile)) {
+      if (loginFlag.value) {
+        return;
+      }
+      loginFlag.value = true;
+      const phoneRegister = await checkPhone({ phone: mobile });
+      let codeRes = null;
+      if (phoneRegister.data.data.register) {
+        // 注册过。登陆验证码
+        codeRes = await doSendCode({ phone: mobile });
+        isCreatedAccount.value = true;
+      } else {
+        // 未注册过，注册验证码
+        codeRes = await doRegisterCode({ phone: mobile });
+      }
+      if (codeRes.data.code === 11000) {
+        ElMessage({ type: "success", message: "验证码已发送" });
+        status.value = 2;
+      } else {
+        ElMessage({ type: "error", message: codeRes.data.msg });
+      }
+      loginFlag.value = false;
+    } else {
+      ElMessage("请输入正确的手机号");
+    }
+  } else {
+    ElMessage({ type: "warning", message: "请输入正确的手机号码" });
   }
 };
 // Nickname
@@ -381,6 +432,10 @@ const inputNickname = async () => {
     status.value = -1;
     localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
     userInfo.value = res?.data?.data;
+    sms1.value = "";
+    sms2.value = "";
+    sms3.value = "";
+    sms4.value = "";
     if (redirectUrl.value) {
       skip(redirectUrl.value, false);
     }

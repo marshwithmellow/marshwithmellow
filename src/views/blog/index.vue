@@ -293,6 +293,7 @@
             <!-- 手机号 -->
             <div class="ipt-box" v-if="status === 2">
               <el-input
+                type="tel"
                 :maxlength="11"
                 class="tel"
                 v-model="tel"
@@ -304,19 +305,59 @@
             </div>
             <!-- 验证码 -->
             <div class="square-box" v-if="status === 3">
-              <el-input
+              <!-- <el-input
                 :maxlength="4"
                 class="tel"
                 v-model="sms"
                 :autofocus="true"
                 placeholder=""
                 @input="inputCode"
-              />
+              /> -->
               <div class="bb">
-                <div class="square"></div>
-                <div class="square square2"></div>
-                <div class="square square3"></div>
-                <div class="square square4"></div>
+                <div class="square">
+                  <el-input
+                    type="tel"
+                    ref="smsInput1"
+                    :maxlength="1"
+                    class="tel"
+                    v-model="sms1"
+                    :autofocus="true"
+                    placeholder=""
+                  />
+                </div>
+                <div class="square square2">
+                  <el-input
+                    type="tel"
+                    ref="smsInput2"
+                    :maxlength="1"
+                    class="tel"
+                    v-model="sms2"
+                    :autofocus="true"
+                    placeholder=""
+                  />
+                </div>
+                <div class="square square3">
+                  <el-input
+                    type="tel"
+                    ref="smsInput3"
+                    :maxlength="1"
+                    class="tel"
+                    v-model="sms3"
+                    :autofocus="true"
+                    placeholder=""
+                  />
+                </div>
+                <div class="square square4">
+                  <el-input
+                    type="tel"
+                    ref="smsInput4"
+                    :maxlength="1"
+                    class="tel"
+                    v-model="sms4"
+                    :autofocus="true"
+                    placeholder=""
+                  />
+                </div>
                 <div class="square square7"></div>
               </div>
             </div>
@@ -332,7 +373,11 @@
               />
               <div class="btm"></div>
             </div>
-            <div class="resend" v-if="status === 3" @click="countDown">
+            <div
+              class="resend"
+              v-if="status === 3 || status === 2"
+              @click="countDown"
+            >
               重新发送
               <span class="countdown">({{ time }}s)</span>
             </div>
@@ -369,6 +414,7 @@
             <!-- 手机号 -->
             <div class="ipt-box" v-if="status === 2">
               <el-input
+                type="tel"
                 :maxlength="11"
                 class="tel"
                 v-model="tel"
@@ -381,6 +427,7 @@
             <!-- 验证码 -->
             <div class="square-box" v-if="status === 3">
               <el-input
+                type="tel"
                 :maxlength="4"
                 class="tel"
                 v-model="sms"
@@ -676,14 +723,14 @@
 </template>
 <script setup lang="ts">
 import logo from "@/assets/images/logo.png";
-import { ref, onBeforeMount, watch, nextTick } from "vue";
+import { ref, onBeforeMount, watch, nextTick, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import swiper1 from "@/assets/images/slider1.png";
 import swiper2 from "@/assets/images/slider2.png";
 import swiper3 from "@/assets/images/slider3.png";
 import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
 import { pinyin } from "pinyin-pro";
-import { TopRight } from "@element-plus/icons-vue";
+import { TopRight, Back } from "@element-plus/icons-vue";
 import {
   checkPhone,
   doSendCode,
@@ -707,6 +754,11 @@ const isCreatedAccount = ref(false);
 const status = ref(1);
 const tel = ref("");
 const sms = ref("");
+const sms1 = ref("");
+const sms2 = ref("");
+const sms3 = ref("");
+const sms4 = ref("");
+const proxy: any = getCurrentInstance()?.proxy ?? null;
 const userInfo = ref({
   mobile: "",
   id: "",
@@ -754,6 +806,48 @@ const getUserInfo = async (token: string, accessKey: string) => {
     tel.value = "";
   }
 };
+watch(
+  () => sms1.value,
+  async (newValue) => {
+    sms.value = newValue + sms2.value + sms3.value + sms4.value;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    } else {
+      proxy?.$refs["smsInput2"].focus();
+    }
+  }
+);
+watch(
+  () => sms2.value,
+  async (newValue) => {
+    sms.value = sms1.value + newValue + sms3.value + sms4.value;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    } else {
+      proxy?.$refs["smsInput3"].focus();
+    }
+  }
+);
+watch(
+  () => sms3.value,
+  async (newValue) => {
+    sms.value = sms1.value + sms2.value + newValue + sms4.value;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    } else {
+      proxy?.$refs["smsInput4"].focus();
+    }
+  }
+);
+watch(
+  () => sms4.value,
+  async (newValue) => {
+    sms.value = sms1.value + sms2.value + sms3.value + newValue;
+    if (sms.value.length === 4) {
+      inputCode(sms.value);
+    }
+  }
+);
 // 监听手机号
 watch(
   () => tel.value,
@@ -810,21 +904,28 @@ const toLogin = () => {
 // sms countDown
 const countDown = async () => {
   if (time.value < 60) return;
-  let phone = tel.value.replace(/\s/g, "");
-  const res = await doRegisterCode({ phone });
-  if (res.data.code === 11000) {
-    ElMessage({ type: "success", message: "验证码已发送" });
-    const timer = setInterval(() => {
-      time.value--;
-      if (time.value <= 0) {
-        time.value = 60;
-        clearInterval(timer);
+  if (tel.value.length === 11) {
+    let phone = tel.value.replace(/\s/g, "");
+    if (phone && verifyPhone(phone)) {
+      let phone = tel.value.replace(/\s/g, "");
+      const res = await doRegisterCode({ phone });
+      if (res.data.code === 11000) {
+        ElMessage({ type: "success", message: "验证码已发送" });
+        const timer = setInterval(() => {
+          time.value--;
+          if (time.value <= 0) {
+            time.value = 60;
+            clearInterval(timer);
+          }
+        }, 1000);
+        status.value = 3;
+      } else {
+        // 没有注册
+        ElMessage({ type: "warning", message: res.data.msg });
       }
-    }, 1000);
-    status.value = 3;
-  } else {
-    // 没有注册
-    ElMessage({ type: "warning", message: res.data.msg });
+    } else {
+      ElMessage({ type: "warning", message: "请输入正确的手机号码" });
+    }
   }
 };
 // sms-code
@@ -1074,10 +1175,10 @@ const getFirstChar = (str: string) => {
     box-sizing: border-box;
     padding: 0 48px 0 0;
     .content {
-      font-size: 22px;
+      font-size: 18px;
       font-family: FUTURA-MEDIUM;
       font-weight: 400;
-      line-height: 44px;
+      line-height: 36px;
       color: #ffffff;
       opacity: 0.95;
       margin-top: 24px;
@@ -1264,7 +1365,7 @@ const getFirstChar = (str: string) => {
     .tel {
       width: 320px;
       border: none;
-      margin: 40px 132px 0;
+      margin: 20px 132px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
@@ -1308,18 +1409,18 @@ const getFirstChar = (str: string) => {
         position: relative;
         z-index: 3;
         background: none;
-        top: 45px;
+        // top: 45px;
       }
       :deep(.el-input__inner) {
-        padding: 0 22% 0 21%;
+        // padding: 0 22% 0 21%;
         font-size: 28px;
         font-family: FZZhengHeiS-B-GB;
         font-weight: 600;
         color: #000000;
-        letter-spacing: 80px;
-        text-align: left;
-        overflow-x: hidden;
-        overflow: hidden;
+        // letter-spacing: 80px;
+        text-align: center;
+        // overflow-x: hidden;
+        // overflow: hidden;
       }
     }
     .bb {
@@ -1336,6 +1437,9 @@ const getFirstChar = (str: string) => {
         height: 64px;
         width: 47px;
         border: 1px solid #000000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         // margin-right:3px;
       }
       //   .square2 {

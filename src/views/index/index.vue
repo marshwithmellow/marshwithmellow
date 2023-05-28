@@ -13,7 +13,7 @@
               和我的 ChatGPT 聊天
             </button>
             <button v-else class="button-style gpt-button" @click="toLogin">
-              登录我的 MBM OpenAI 账号
+              登录 MBM OpenAI 账号
             </button>
             <div class="default-model">
               <img class="icon-ai" :src="iconAi" alt="" />
@@ -80,7 +80,27 @@
             </button>
             <div v-if="userInfo.name" class="share-my-code">
               分享我的推荐码：
-              <span class="code" @click="copy">{{ userInfo.inviteCode }}</span>
+              <span class="code" @click="copy">
+                {{ userInfo.inviteCode }}
+              </span>
+              <!-- <el-popover placement="right-end" :width="200" trigger="click">
+                <template #reference>
+                  <span class="code" @click="copy">
+                    {{ userInfo.inviteCode }}
+                  </span>
+                </template>
+                <div class="popover-container">
+                  <div class="popover-top">
+                    <img
+                      v-if="qrCodeImgUrl"
+                      class="qrCode"
+                      :src="qrCodeImgUrl"
+                      alt=""
+                    />
+                  </div>
+                  <div class="popover-bottom"></div>
+                </div>
+              </el-popover> -->
             </div>
           </div>
         </el-aside>
@@ -216,6 +236,7 @@
           <!-- 手机号 -->
           <div class="ipt-box" v-if="status === 2">
             <el-input
+              type="tel"
               :maxlength="11"
               class="tel"
               v-model="tel"
@@ -259,6 +280,7 @@
             <div class="bb">
               <div class="square">
                 <el-input
+                  type="tel"
                   ref="smsInput1"
                   :maxlength="1"
                   class="tel"
@@ -269,6 +291,7 @@
               </div>
               <div class="square square2">
                 <el-input
+                  type="tel"
                   ref="smsInput2"
                   :maxlength="1"
                   class="tel"
@@ -279,6 +302,7 @@
               </div>
               <div class="square square3">
                 <el-input
+                  type="tel"
                   ref="smsInput3"
                   :maxlength="1"
                   class="tel"
@@ -289,6 +313,7 @@
               </div>
               <div class="square square4">
                 <el-input
+                  type="tel"
                   ref="smsInput4"
                   :maxlength="1"
                   class="tel"
@@ -312,9 +337,24 @@
             />
             <div class="btm"></div>
           </div>
-          <div class="resend" v-if="status === 3" @click="countDown">
-            重新发送
-            <span class="countdown">({{ time }}s)</span>
+          <div
+            class="resend"
+            :class="time < 60 ? 'disable' : ''"
+            v-if="status === 3 || status === 2"
+            @click="countDown"
+          >
+            {{
+              time < 60
+                ? "验证码已发送"
+                : status === 2
+                ? "发送验证码"
+                : "重新发送"
+            }}
+            <span class="countdown"> ({{ time }}s) </span>
+          </div>
+          <div class="back" v-if="status === 3" @click="status = 2">
+            <el-icon><Back /></el-icon>
+            <div style="margin-left: 8px">返回</div>
           </div>
           <div class="tip" v-if="status !== 4 && status !== 3">
             <div class="point"><div class="in-circle"></div></div>
@@ -347,6 +387,7 @@
           <!-- 手机号 -->
           <div class="ipt-box" v-if="status === 2">
             <el-input
+              type="tel"
               :maxlength="11"
               class="tel"
               v-model="tel"
@@ -359,6 +400,7 @@
           <!-- 验证码 -->
           <div class="square-box" v-if="status === 3">
             <el-input
+              type="tel"
               :maxlength="4"
               class="tel"
               v-model="sms"
@@ -386,8 +428,13 @@
             />
             <div class="btm"></div>
           </div>
-          <div class="resend" v-if="status === 3" @click="countDown">
-            重新发送
+          <div
+            class="resend"
+            :class="time < 60 ? 'disable' : ''"
+            v-if="status === 3"
+            @click="countDown"
+          >
+            {{ time < 60 ? "验证码已发送" : "重新发送" }}
             <span class="countdown">({{ time }}s)</span>
           </div>
           <div class="tip" v-if="status !== 4 && status !== 3">
@@ -554,7 +601,7 @@
                   drawer = false;
                 "
               >
-                登录我的 MBM OpenAI 账号
+                登录 MBM OpenAI 账号
               </button>
               <div class="default-model">
                 <img class="icon-ai" :src="iconAi" alt="" />
@@ -654,6 +701,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import QRCode from "qrcode";
 import logo from "@/assets/images/logo.png";
 import whiteLogo from "@/assets/images/white-logo.png";
 import iconMenu from "@/assets/images/menu.png";
@@ -676,6 +724,7 @@ import ChatGptTypewriter from "@/components/ChatGptTypewriter.vue";
 import CollectItemSmall from "@/components/CollectItemSmall.vue";
 import ChatGptTypewriterSmall from "@/components/ChatGptTypewriterSmall.vue";
 import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
+import { Back } from "@element-plus/icons-vue";
 import { pinyin } from "pinyin-pro";
 import {
   checkPhone,
@@ -727,6 +776,7 @@ const agent = ref(
   )
 );
 const drawer = ref(false);
+const qrCodeImgUrl = ref("");
 // 使用插件
 const { toClipboard } = useClipboard();
 const proxy: any = getCurrentInstance()?.proxy ?? null;
@@ -793,6 +843,15 @@ const getUserInfo = async (token: string, accessKey: string) => {
     userInfo.value = res.data.data;
     const firstC = getFirstChar(userInfo.value.name);
     nickname.value = firstC;
+    if (
+      qrCodeImgUrl.value.length == 0 &&
+      userInfo.value.inviteCode &&
+      userInfo.value.inviteCode.length > 0
+    ) {
+      QRCode.toDataURL(userInfo.value.inviteCode).then((res1: any) => {
+        qrCodeImgUrl.value = res1;
+      });
+    }
   } else if (res.data.code === 12004) {
     localStorage.removeItem("userInfo");
     userInfo.value = {
@@ -809,6 +868,7 @@ const getUserInfo = async (token: string, accessKey: string) => {
     showUserInfo.value = false;
     status.value = 1;
     tel.value = "";
+    qrCodeImgUrl.value = "";
   }
 };
 // watch(
@@ -829,7 +889,7 @@ watch(
     sms.value = newValue + sms2.value + sms3.value + sms4.value;
     if (sms.value.length === 4) {
       inputCode(sms.value);
-    } else {
+    } else if (showDialog.value && newValue && newValue.length > 0) {
       proxy?.$refs["smsInput2"].focus();
     }
   }
@@ -840,7 +900,7 @@ watch(
     sms.value = sms1.value + newValue + sms3.value + sms4.value;
     if (sms.value.length === 4) {
       inputCode(sms.value);
-    } else {
+    } else if (showDialog.value && newValue && newValue.length > 0) {
       proxy?.$refs["smsInput3"].focus();
     }
   }
@@ -851,7 +911,7 @@ watch(
     sms.value = sms1.value + sms2.value + newValue + sms4.value;
     if (sms.value.length === 4) {
       inputCode(sms.value);
-    } else {
+    } else if (showDialog.value && newValue && newValue.length > 0) {
       proxy?.$refs["smsInput4"].focus();
     }
   }
@@ -891,6 +951,13 @@ watch(
         }
         if (codeRes.data.code === 11000) {
           ElMessage({ type: "success", message: "验证码已发送" });
+          const timer = setInterval(() => {
+            time.value--;
+            if (time.value <= 0) {
+              time.value = 60;
+              clearInterval(timer);
+            }
+          }, 1000);
           status.value = 3;
         } else {
           ElMessage({ type: "error", message: codeRes.data.msg });
@@ -938,21 +1005,29 @@ const changeSwiper = () => {
 // sms countDown
 const countDown = async () => {
   if (time.value < 60) return;
-  let phone = tel.value.replace(/\s/g, "");
-  const res = await doRegisterCode({ phone });
-  if (res.data.code === 11000) {
-    ElMessage({ type: "success", message: "验证码已发送" });
-    const timer = setInterval(() => {
-      time.value--;
-      if (time.value <= 0) {
-        time.value = 60;
-        clearInterval(timer);
+  if (tel.value.length === 11) {
+    let phone = tel.value.replace(/\s/g, "");
+    if (phone && verifyPhone(phone)) {
+      const res = await doRegisterCode({ phone });
+      if (res.data.code === 11000) {
+        ElMessage({ type: "success", message: "验证码已发送" });
+        const timer = setInterval(() => {
+          time.value--;
+          if (time.value <= 0) {
+            time.value = 60;
+            clearInterval(timer);
+          }
+        }, 1000);
+        status.value = 3;
+      } else {
+        // 没有注册
+        ElMessage({ type: "warning", message: res.data.msg });
       }
-    }, 1000);
-    status.value = 3;
+    } else {
+      ElMessage({ type: "warning", message: "请输入正确的手机号码" });
+    }
   } else {
-    // 没有注册
-    ElMessage({ type: "warning", message: res.data.msg });
+    ElMessage({ type: "warning", message: "请输入正确的手机号码" });
   }
 };
 // 复制
@@ -983,8 +1058,22 @@ const inputCode = async (code: string) => {
         userInfo.value = res?.data?.data;
         const firstC = getFirstChar(userInfo.value.name);
         nickname.value = firstC;
+        sms1.value = "";
+        sms2.value = "";
+        sms3.value = "";
+        sms4.value = "";
         if (redirectUrl.value) {
           skip(redirectUrl.value, false);
+        } else {
+          if (
+            qrCodeImgUrl.value.length == 0 &&
+            userInfo.value.inviteCode &&
+            userInfo.value.inviteCode.length > 0
+          ) {
+            QRCode.toDataURL(userInfo.value.inviteCode).then((res1: any) => {
+              qrCodeImgUrl.value = res1;
+            });
+          }
         }
       } else {
         ElMessage({ type: "error", message: res.data.msg });
@@ -1012,11 +1101,24 @@ const inputNickname = async () => {
     showDialog.value = false;
     localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
     userInfo.value = res?.data?.data;
-
     const firstC = getFirstChar(userInfo.value.name);
     nickname.value = firstC;
+    sms1.value = "";
+    sms2.value = "";
+    sms3.value = "";
+    sms4.value = "";
     if (redirectUrl.value) {
       skip(redirectUrl.value, false);
+    } else {
+      if (
+        qrCodeImgUrl.value.length == 0 &&
+        userInfo.value.inviteCode &&
+        userInfo.value.inviteCode.length > 0
+      ) {
+        QRCode.toDataURL(userInfo.value.inviteCode).then((res1: any) => {
+          qrCodeImgUrl.value = res1;
+        });
+      }
     }
   } else {
     ElMessage({ type: "error", message: res.data.msg });
@@ -1116,6 +1218,7 @@ const logout = () => {
     showUserInfo.value = false;
     status.value = 1;
     tel.value = "";
+    qrCodeImgUrl.value = "";
   });
 };
 const navQuestion = (blogType: string) => {
@@ -1933,7 +2036,7 @@ const navQuestion = (blogType: string) => {
     .tel {
       width: 320px;
       border: none;
-      margin: 40px 132px 0;
+      margin: 20px 132px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
@@ -2156,6 +2259,22 @@ const navQuestion = (blogType: string) => {
       font-weight: 100;
       font-family: PingFangTC-Semibold;
     }
+    &.disable {
+      color: rgba(0, 0, 0, 0.3);
+    }
+  }
+  .back {
+    font-size: 12px;
+    font-family: Gotham-Rounded;
+    font-weight: 400;
+    color: #000000;
+    margin: 16px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    cursor: pointer;
   }
   .tip {
     height: 30px;
@@ -2416,6 +2535,9 @@ const navQuestion = (blogType: string) => {
       font-weight: 100;
       font-family: PingFangTC-Semibold;
     }
+    &.disable {
+      color: rgba(0, 0, 0, 0.3);
+    }
   }
   .tip {
     height: 30px;
@@ -2539,5 +2661,22 @@ const navQuestion = (blogType: string) => {
   flex: 1;
   padding: 0;
   overflow: auto;
+}
+.popover-container {
+  width: 200px;
+  height: 300px;
+  background: #ffffff;
+  .popover-top {
+    width: 200px;
+    height: 200px;
+  }
+  .qrCode {
+    width: 150px;
+    height: 150px;
+  }
+}
+:global(.el-popper.is-light.el-popover) {
+  background: #ffffff !important;
+  border: none;
 }
 </style>

@@ -219,10 +219,10 @@ const nav = (item: any) => {
     align-items: flex-end;
     flex-direction: column;
     &.inset {
-      box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.16);
+      box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
     }
     &.unset {
-      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.16);
+      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
     }
     .app-name-box {
       height: 40px;
