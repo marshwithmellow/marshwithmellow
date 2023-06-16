@@ -3,8 +3,12 @@
     <div v-if="!agent">
       <el-container>
         <el-aside class="aside">
-          <div class="flex">
-            <img class="logo" :src="logo" alt="" />
+          <div class="flex" @click="navHome">
+            <img
+              class="logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+              alt=""
+            />
           </div>
         </el-aside>
         <el-container>
@@ -28,7 +32,15 @@
                 }}
               </div>
               <div class="buttons" v-if="!userInfo.name" @click="toLogin">
-                现在领取 1 美元体验金！
+                <!-- 现在领取 1 美元体验金！ -->
+                现在开启你的 AI 时刻！
+              </div>
+              <div
+                class="buttons"
+                v-if="userInfo.name"
+                @click="skip('https://mchat.mbmzone.com/', true)"
+              >
+                和我的 ChatGPT 聊天
               </div>
             </div>
             <div
@@ -70,7 +82,7 @@
                     blogType == "3"
                       ? "MBM 企业级的 OpenAI 服务，将大型语言模型和生成 AI 应用于你企业的生产环节变得轻而易举。调用我们为你准备独有 API Key，就意味着你同时拥有安全、专业和可靠。"
                       : blogType == "2"
-                      ? "我们仅按您使用的内容收取费用，计费标准取决于你调用了哪种模型。右表是个人用户调用模型的详细价格。通常来说，每 1K tokens 可以写出555个汉字或750字英文。"
+                      ? "我们仅按您使用的内容收取费用，计费标准取决于你调用了哪种模型。右表是个人用户调用模型的详细价格。通常来说，每 1K tokens 可以写出 555 个汉字或 750 字英文。"
                       : "作为 Azure OpenAI 中国合作伙伴，MBM 为 企业用户和个人消费者在中国提供可靠、企业级 OpenAI 服务，实现快速访问，无需代理的先进体验。"
                   }}
                 </div>
@@ -176,7 +188,7 @@
                           ? "确保 162 RPM GPT4 访问请求"
                           : blogType == "2"
                           ? "0.12美金 / 1K tokens"
-                          : "Azures双重审查、敏感词过滤"
+                          : "Azure 双重审查、敏感词过滤"
                       }}
                     </div>
                   </el-col>
@@ -262,10 +274,10 @@
               :style="{
                 background: `url(${
                   blogType == '3'
-                    ? swiper3
+                    ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider3.png'
                     : blogType == '2'
-                    ? swiper2
-                    : swiper1
+                    ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider2.png'
+                    : 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider1.png'
                 }) center / auto 100% no-repeat`,
               }"
             ></div>
@@ -292,7 +304,7 @@
             </div>
             <!-- 手机号 -->
             <div class="ipt-box" v-if="status === 2">
-              <el-input
+              <!-- <el-input
                 type="tel"
                 :maxlength="11"
                 class="tel"
@@ -301,7 +313,48 @@
                 placeholder="xxxxxxxxxxx"
               />
               <div class="btm"></div>
-              <div class="btm btm2"></div>
+              <div class="btm btm2"></div> -->
+              <div class="tel-container">
+                <el-input
+                  ref="telInput1"
+                  :maxlength="3"
+                  class="tel1"
+                  v-model="tel1"
+                  :autofocus="true"
+                  :placeholder="telholder1"
+                  @focus="telholder1 = ''"
+                  @blur="telholder1 = 'xxx'"
+                  @input="talInput($event, 0)"
+                />
+              </div>
+              <div class="tel-container">
+                <el-input
+                  ref="telInput2"
+                  :maxlength="4"
+                  class="tel2"
+                  v-model="tel2"
+                  :autofocus="false"
+                  :placeholder="telholder2"
+                  @focus="telholder2 = ''"
+                  @blur="telholder2 = 'xxx'"
+                  @input="talInput($event, 1)"
+                  @keyup.delete.native="deleteTel(2)"
+                />
+              </div>
+              <div class="tel-container">
+                <el-input
+                  ref="telInput3"
+                  :maxlength="4"
+                  class="tel3"
+                  v-model="tel3"
+                  :autofocus="false"
+                  :placeholder="telholder3"
+                  @focus="telholder3 = ''"
+                  @blur="telholder3 = 'xxx'"
+                  @input="talInput($event, 2)"
+                  @keyup.delete.native="deleteTel(3)"
+                />
+              </div>
             </div>
             <!-- 验证码 -->
             <div class="square-box" v-if="status === 3">
@@ -358,7 +411,7 @@
                     placeholder=""
                   />
                 </div>
-                <div class="square square7"></div>
+                <!-- <div class="square square7"></div> -->
               </div>
             </div>
             <!-- 昵称 -->
@@ -375,11 +428,16 @@
             </div>
             <div
               class="resend"
+              :class="time < 60 ? 'disable' : ''"
               v-if="status === 3 || status === 2"
               @click="countDown"
             >
-              重新发送
-              <span class="countdown">({{ time }}s)</span>
+              {{ status === 2 ? "发送验证码" : "重新发送" }}
+              <span class="countdown" v-if="time < 60">({{ time }}s)</span>
+            </div>
+            <div class="back" v-if="status === 3" @click="status = 2">
+              <el-icon><Back /></el-icon>
+              <div style="margin-left: 8px">返回</div>
             </div>
             <div class="tip" v-if="status !== 4 && status !== 3">
               <div class="point"><div class="in-circle"></div></div>
@@ -476,7 +534,11 @@
               justify-content: center;
             "
           >
-            <img class="logo" :src="logo" alt="" />
+            <img
+              class="logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+              alt=""
+            />
           </div>
         </el-header>
         <el-container>
@@ -523,7 +585,15 @@
               </div>
             </div>
             <div class="buttons" v-if="!userInfo.name" @click="toLogin">
-              现在领取 1 美元体验金！
+              <!-- 现在领取 1 美元体验金！ -->
+              现在开启你的 AI 时刻！
+            </div>
+            <div
+              class="buttons"
+              v-if="userInfo.name"
+              @click="skip('https://mchat.mbmzone.com/', true)"
+            >
+              和我的 ChatGPT 聊天
             </div>
           </el-header>
           <el-main class="phone-main">
@@ -636,7 +706,7 @@
                       ? "确保 162 RPM GPT4 访问请求"
                       : blogType == "2"
                       ? "0.12美金 / 1K tokens"
-                      : "Azures双重审查、敏感词过滤"
+                      : "Azure 双重审查、敏感词过滤"
                   }}
                 </div>
               </el-col>
@@ -722,12 +792,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import logo from "@/assets/images/logo.png";
+// import logo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png";
 import { ref, onBeforeMount, watch, nextTick, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
-import swiper1 from "@/assets/images/slider1.png";
-import swiper2 from "@/assets/images/slider2.png";
-import swiper3 from "@/assets/images/slider3.png";
+// import swiper1 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider1.png";
+// import swiper2 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider2.png";
+// import swiper3 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider3.png";
 import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
 import { pinyin } from "pinyin-pro";
 import { TopRight, Back } from "@element-plus/icons-vue";
@@ -753,6 +823,12 @@ const showDialog = ref(false);
 const isCreatedAccount = ref(false);
 const status = ref(1);
 const tel = ref("");
+const tel1 = ref("");
+const tel2 = ref("");
+const tel3 = ref("");
+const telholder1 = ref("xxx");
+const telholder2 = ref("xxxx");
+const telholder3 = ref("xxxx");
 const sms = ref("");
 const sms1 = ref("");
 const sms2 = ref("");
@@ -804,6 +880,89 @@ const getUserInfo = async (token: string, accessKey: string) => {
     nickname.value = "";
     status.value = 1;
     tel.value = "";
+  }
+};
+const deleteTel = (flag: number) => {
+  if (flag == 3 && tel3.value.length == 0) {
+    proxy?.$refs["telInput2"].focus();
+  } else if (tel2.value.length == 0) {
+    proxy?.$refs["telInput1"].focus();
+  }
+};
+const talInput = (e: string, index: number) => {
+  switch (index) {
+    case 0:
+      if (e.length == 3) {
+        proxy?.$refs["telInput2"].focus();
+      }
+      tel1.value = e;
+      if (
+        tel1.value.length == 3 &&
+        tel2.value.length == 4 &&
+        tel3.value.length == 4
+      ) {
+        getTelCode(tel1.value + tel2.value + tel3.value);
+      }
+      break;
+    case 1:
+      if (e.length == 4) {
+        proxy?.$refs["telInput3"].focus();
+      }
+      tel2.value = e;
+      if (
+        tel1.value.length == 3 &&
+        tel2.value.length == 4 &&
+        tel3.value.length == 4
+      ) {
+        getTelCode(tel1.value + tel2.value + tel3.value);
+      }
+      break;
+    case 2:
+      tel3.value = e;
+      if (
+        tel1.value.length == 3 &&
+        tel2.value.length == 4 &&
+        tel3.value.length == 4
+      ) {
+        getTelCode(tel1.value + tel2.value + tel3.value);
+      }
+      break;
+    default:
+      break;
+  }
+};
+const getTelCode = async (val: string) => {
+  tel.value = val.replace(/\s/g, "");
+  if (tel.value.length === 11) {
+    let mobile = tel.value.replace(/\s/g, "");
+    if (mobile && verifyPhone(mobile)) {
+      if (loginFlag.value) return;
+      loginFlag.value = true;
+      const phoneRegister = await checkPhone({ phone: mobile });
+      let codeRes = null;
+      if (phoneRegister.data.data.register) {
+        // 注册过。登陆验证码
+        codeRes = await doSendCode({ phone: mobile });
+        isCreatedAccount.value = true;
+      } else {
+        // 未注册过，注册验证码
+        codeRes = await doRegisterCode({ phone: mobile });
+      }
+      if (codeRes.data.code === 11000) {
+        ElMessage({ type: "success", message: "验证码已发送" });
+        const timer = setInterval(() => {
+          time.value--;
+          if (time.value <= 0) {
+            time.value = 60;
+            clearInterval(timer);
+          }
+        }, 1000);
+        status.value = 3;
+      } else {
+        ElMessage({ type: "error", message: codeRes.data.msg });
+      }
+      loginFlag.value = false;
+    } else ElMessage("请输入正确的手机号");
   }
 };
 watch(
@@ -1002,6 +1161,20 @@ const getFirstChar = (str: string) => {
     return s.toUpperCase();
   }
 };
+const navHome = () => {
+  $router.back();
+};
+const skip = (url: string, openNew: boolean) => {
+  let usr: any = localStorage.getItem("userInfo");
+  if (usr) {
+    usr = JSON.parse(usr);
+  }
+  if (openNew) {
+    window.open(`${url}?token=${usr?.token}`);
+  } else {
+    window.location.href = `${url}?token=${usr?.token}`;
+  }
+};
 </script>
 <style lang="scss" scoped>
 @mixin hover2Style {
@@ -1092,10 +1265,9 @@ const getFirstChar = (str: string) => {
       height: 6vh;
       border: 1px solid #ffffff;
       background: linear-gradient(
-        23deg,
+        to right,
         rgba(0, 0, 0, 0.1) 0%,
-        #4383ea 73%,
-        #8748eb 100%
+        #4383ea 100%
       );
       opacity: 1;
       border-radius: 0px;
@@ -1103,7 +1275,7 @@ const getFirstChar = (str: string) => {
       justify-content: center;
       align-items: center;
       font-size: 1rem;
-      font-family: Gotham Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #ffffff;
       cursor: pointer;
@@ -1143,10 +1315,9 @@ const getFirstChar = (str: string) => {
       min-height: 52px;
       border: 1px solid #ffffff;
       background: linear-gradient(
-        23deg,
+        to right,
         rgba(0, 0, 0, 0.1) 0%,
-        #4383ea 73%,
-        #8748eb 100%
+        #4383ea 100%
       );
       opacity: 1;
       border-radius: 0px;
@@ -1154,7 +1325,7 @@ const getFirstChar = (str: string) => {
       justify-content: center;
       align-items: center;
       font-size: 1rem;
-      font-family: Gotham Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #ffffff;
     }
@@ -1289,7 +1460,7 @@ const getFirstChar = (str: string) => {
   }
   .underline {
     font-size: 16px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #07070d;
     text-decoration: underline;
@@ -1307,14 +1478,15 @@ const getFirstChar = (str: string) => {
   .type-word {
     width: 100%;
     height: 243px;
-    background: url("@/assets/images/type-word.png") center / cover no-repeat;
+    background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/type-word.png")
+      center / cover no-repeat;
     border-radius: 11px 11px 0px 0px;
     padding: 118px 10px 65px 155px;
     box-sizing: border-box;
     .mask {
       width: 100%;
       height: 243px;
-      background: rgba(0, 0, 0, 0.2);
+      // background: rgba(0, 0, 0, 0.2);
       position: absolute;
       left: 0;
       top: 0;
@@ -1339,7 +1511,7 @@ const getFirstChar = (str: string) => {
     transform: translateX(-38.5px);
     color: #fff;
     font-size: 28px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #ffffff;
   }
@@ -1361,7 +1533,10 @@ const getFirstChar = (str: string) => {
   }
   .ipt-box {
     position: relative;
-    margin: 40px auto 30px;
+    margin: 20px auto 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     .tel {
       width: 320px;
       border: none;
@@ -1378,10 +1553,81 @@ const getFirstChar = (str: string) => {
       :deep(.el-input__inner) {
         text-align: left;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         color: #000000;
         letter-spacing: 10px;
+      }
+    }
+    .tel-container {
+      margin: 40px 10px 0;
+      border-bottom: 1px solid #000;
+      padding: 0 6px;
+    }
+    .tel1 {
+      width: 66px;
+      border: none;
+      // margin: 40px 10px 0;
+      ::placeholder {
+        letter-spacing: 9.6px;
+      }
+      :deep(.el-input__wrapper) {
+        // border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        text-align: center;
+        font-size: 26px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 6px;
+      }
+    }
+    .tel2 {
+      width: 90px;
+      border: none;
+      // margin: 40px 10px 0;
+      ::placeholder {
+        letter-spacing: 9.6px;
+      }
+      :deep(.el-input__wrapper) {
+        // border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        text-align: center;
+        font-size: 26px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 6px;
+      }
+    }
+    .tel3 {
+      width: 90px;
+      border: none;
+      // margin: 40px 10px 0;
+      ::placeholder {
+        letter-spacing: 9.6px;
+      }
+      :deep(.el-input__wrapper) {
+        // border-bottom: 1px solid #000;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+      :deep(.el-input__inner) {
+        text-align: center;
+        font-size: 26px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 6px;
       }
     }
     .btm {
@@ -1414,7 +1660,7 @@ const getFirstChar = (str: string) => {
       :deep(.el-input__inner) {
         // padding: 0 22% 0 21%;
         font-size: 28px;
-        font-family: FZZhengHeiS-B-GB;
+        font-family: FUTURA-MEDIUM;
         font-weight: 600;
         color: #000000;
         // letter-spacing: 80px;
@@ -1424,7 +1670,7 @@ const getFirstChar = (str: string) => {
       }
     }
     .bb {
-      width: 430px;
+      width: 360px;
       height: 64px;
       margin: 0 auto;
       display: flex;
@@ -1432,7 +1678,7 @@ const getFirstChar = (str: string) => {
       align-items: center;
       flex-wrap: wrap;
       position: relative;
-      left: 32px;
+      // left: 32px;
       .square {
         height: 64px;
         width: 47px;
@@ -1468,7 +1714,7 @@ const getFirstChar = (str: string) => {
       transform: translateX(50%);
       ::placeholder {
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         line-height: 0px;
         color: #969393;
@@ -1486,7 +1732,7 @@ const getFirstChar = (str: string) => {
       :deep(.el-input__inner) {
         margin: 0 auto;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         letter-spacing: 5px;
         text-align: center;
         overflow-x: hidden;
@@ -1501,16 +1747,17 @@ const getFirstChar = (str: string) => {
       width: 80px;
       margin: 20px auto 0;
       border-radius: 50%;
-      background: url("@/assets/images/hudu.png") center / contain no-repeat;
+      background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/hudu.png")
+        center / contain no-repeat;
     }
   }
   .resend {
-    height: 30px;
+    // height: 30px;
     font-size: 18px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
-    margin: 21px auto 0;
+    margin: 15px auto 0;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -1520,13 +1767,29 @@ const getFirstChar = (str: string) => {
     .countdown {
       margin-left: 5px;
       font-weight: 100;
-      font-family: PingFangTC-Semibold;
+      font-family: FUTURA-MEDIUM;
     }
+    &.disable {
+      color: rgba(0, 0, 0, 0.3);
+    }
+  }
+  .back {
+    font-size: 12px;
+    font-family: FUTURA-MEDIUM;
+    font-weight: 400;
+    color: #000000;
+    margin: 16px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    cursor: pointer;
   }
   .tip {
     height: 30px;
     font-size: 12px;
-    font-family: Gotham;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 21px auto 0;
@@ -1570,7 +1833,8 @@ const getFirstChar = (str: string) => {
   .type-word {
     width: 100%;
     height: 120px;
-    background: url("@/assets/images/type-word.png") center / cover no-repeat;
+    background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/type-word.png")
+      center / cover no-repeat;
     border-radius: 11px 11px 0px 0px;
     padding: 56px 10px 65px 90px;
     box-sizing: border-box;
@@ -1602,7 +1866,7 @@ const getFirstChar = (str: string) => {
     transform: translateX(-38.5px);
     color: #fff;
     font-size: 20px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #ffffff;
   }
@@ -1641,7 +1905,7 @@ const getFirstChar = (str: string) => {
       :deep(.el-input__inner) {
         text-align: left;
         font-size: 14px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         color: #000000;
         letter-spacing: 7.9px;
@@ -1677,7 +1941,7 @@ const getFirstChar = (str: string) => {
       :deep(.el-input__inner) {
         padding: 0 36px;
         font-size: 16px;
-        font-family: FZZhengHeiS-B-GB;
+        font-family: FUTURA-MEDIUM;
         font-weight: 600;
         color: #000000;
         letter-spacing: 62px;
@@ -1728,7 +1992,7 @@ const getFirstChar = (str: string) => {
       transform: translateX(50%);
       ::placeholder {
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         line-height: 0px;
         color: #969393;
@@ -1746,7 +2010,7 @@ const getFirstChar = (str: string) => {
       :deep(.el-input__inner) {
         margin: 0 auto;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         letter-spacing: 5px;
         text-align: center;
         overflow-x: hidden;
@@ -1761,13 +2025,14 @@ const getFirstChar = (str: string) => {
       width: 80px;
       margin: 20px auto 0;
       border-radius: 50%;
-      background: url("@/assets/images/hudu.png") center / contain no-repeat;
+      background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/hudu.png")
+        center / contain no-repeat;
     }
   }
   .resend {
     height: 30px;
     font-size: 14px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 21px auto 0;
@@ -1780,13 +2045,13 @@ const getFirstChar = (str: string) => {
     .countdown {
       margin-left: 5px;
       font-weight: 100;
-      font-family: PingFangTC-Semibold;
+      font-family: FUTURA-MEDIUM;
     }
   }
   .tip {
     height: 30px;
     font-size: 12px;
-    font-family: Gotham;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 21px auto 0;
@@ -1845,7 +2110,7 @@ const getFirstChar = (str: string) => {
 .options {
   width: 100%;
   font-size: 1rem;
-  font-family: Gotham-Rounded;
+  font-family: FUTURA-MEDIUM;
   font-weight: bold;
   color: #ffffff;
   background: #000 !important;
@@ -1857,7 +2122,7 @@ const getFirstChar = (str: string) => {
 .phone-options {
   width: 100%;
   font-size: 16px;
-  font-family: Gotham-Rounded;
+  font-family: FUTURA-MEDIUM;
   font-weight: bold;
   color: #ffffff;
   background: #000 !important;

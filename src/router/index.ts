@@ -23,6 +23,26 @@ const router = createRouter({
       name: "blog",
       component: () => import("../views/blog/index.vue"),
     },
+    {
+      path: "/pay",
+      name: "pay",
+      component: () => import("../views/pay/index.vue"),
+    },
+    {
+      path: "/loading",
+      name: "loading",
+      component: () => import("../views/loading/index.vue"),
+    },
+    {
+      path: "/result",
+      name: "result",
+      component: () => import("../views/result/index.vue"),
+    },
+    {
+      path: "/miniLogin",
+      name: "miniLogin",
+      component: () => import("../views/miniLogin/index.vue"),
+    },
   ],
 });
 

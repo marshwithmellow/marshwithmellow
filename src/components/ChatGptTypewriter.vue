@@ -5,10 +5,10 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { onMounted, ref } from "vue";
 const props = defineProps<{
   exampleText: string;
 }>();
-import { onMounted, ref } from "vue";
 const visibleText = ref("");
 const showPoint = ref(true);
 onMounted(() => {
@@ -41,14 +41,31 @@ const typeCharacters = () => {
   .chat-gpt-typewriter {
     height: 100%;
     font-size: 36px;
-    font-family: FZZCHJW;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     line-height: 25px;
-    color: rgba(255, 255, 255, 95);
+    color: rgba(255, 255, 255, 0.95);
     letter-spacing: 2px;
-    mix-blend-mode: screen;
+    mix-blend-mode: multiply;
+    background-blend-mode: multiply;
+    position: relative;
   }
-
+  .chat-gpt-typewriter::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    color: #ffffff;
+    mix-blend-mode: screen;
+    background-blend-mode: screen;
+  }
+  .chat-gpt-typewriter::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #000000;
+    mix-blend-mode: multiply;
+    background-blend-mode: multiply;
+  }
   #cursor {
     font-size: 36px;
     height: 25px;

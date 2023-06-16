@@ -140,6 +140,7 @@
             :maxlength="13"
             class="tel"
             v-model="nickname"
+            :autofocus="true"
             placeholder="怎么称呼你？"
             @keyup.enter="inputNickname"
           />
@@ -324,6 +325,7 @@
             :maxlength="13"
             class="tel"
             v-model="nickname"
+            :autofocus="true"
             placeholder="怎么称呼你？"
             @keyup.enter="inputNickname"
             @blur="nickNameFocus = false"
@@ -357,6 +359,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import jweixin from "weixin-js-sdk";
 import {
   onBeforeMount,
   ref,
@@ -427,53 +430,12 @@ onBeforeMount(() => {
   }
 });
 onMounted(() => {
-  // proxy?.$refs["telInput1"].$.vnode.el?.click();
   nextTick(() => {
     if (!isIOS.value) {
       proxy?.$refs["telInput1"].focus();
     }
   });
 });
-// watch(
-//   () => tel.value,
-//   async (newValue, oldValue) => {
-//     tel.value =
-//       newValue.length > oldValue.length
-//         ? newValue
-//             .replace(/\s/g, "")
-//             .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
-//         : tel.value.trim();
-//     if (tel.value.length === 13) {
-//       let mobile = tel.value.replace(/\s/g, "");
-//       if (mobile && verifyPhone(mobile)) {
-//         if (loginFlag.value) return;
-//         loginFlag.value = true;
-//         const phoneRegister = await checkPhone({ phone: mobile });
-//         let codeRes = null;
-//         if (phoneRegister.data.data.register) {
-//           // 注册过。登陆验证码
-//           codeRes = await doSendCode({ phone: mobile });
-//           isCreatedAccount.value = true;
-//         } else {
-//           // 未注册过，注册验证码
-//           codeRes = await doRegisterCode({ phone: mobile });
-//         }
-//         if (codeRes.data.code === 11000) {
-//           ElMessage({ type: "success", message: "验证码已发送" });
-//           status.value = 2;
-//         } else {
-//           if (codeRes.data.code === 12006) {
-//             status.value = 2;
-//           }
-//           ElMessage({ type: "error", message: codeRes.data.msg });
-//         }
-//         loginFlag.value = false;
-//       } else {
-//         ElMessage("请输入正确的手机号");
-//       }
-//     }
-//   }
-// );
 const deleteSms = (e: any) => {
   if (e.key === "Backspace") {
     if (sms.value.length == 0) {
@@ -544,48 +506,6 @@ const deleteTel3 = (e: any) => {
     proxy?.$refs["telInput2"].focus();
   }
 };
-// const talInput = (e: string, index: number) => {
-//   switch (index) {
-//     case 0:
-//       if (e.length == 3) {
-//         proxy?.$refs["telInput2"].focus();
-//       }
-//       tel1.value = e;
-//       if (
-//         tel1.value.length == 3 &&
-//         tel2.value.length == 4 &&
-//         tel3.value.length == 4
-//       ) {
-//         getTelCode(tel1.value + tel2.value + tel3.value);
-//       }
-//       break;
-//     case 1:
-//       if (e.length == 4) {
-//         proxy?.$refs["telInput3"].focus();
-//       }
-//       tel2.value = e;
-//       if (
-//         tel1.value.length == 3 &&
-//         tel2.value.length == 4 &&
-//         tel3.value.length == 4
-//       ) {
-//         getTelCode(tel1.value + tel2.value + tel3.value);
-//       }
-//       break;
-//     case 2:
-//       tel3.value = e;
-//       if (
-//         tel1.value.length == 3 &&
-//         tel2.value.length == 4 &&
-//         tel3.value.length == 4
-//       ) {
-//         getTelCode(tel1.value + tel2.value + tel3.value);
-//       }
-//       break;
-//     default:
-//       break;
-//   }
-// };
 watch(
   () => tel1.value,
   async (newValue) => {
@@ -662,48 +582,6 @@ const getTelCode = async (val: string) => {
     }
   }
 };
-// watch(
-//   () => sms1.value,
-//   async (newValue) => {
-//     sms.value = newValue + sms2.value + sms3.value + sms4.value;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     } else if (newValue && newValue.length > 0) {
-//       proxy?.$refs["smsInput2"].focus();
-//     }
-//   }
-// );
-// watch(
-//   () => sms2.value,
-//   async (newValue) => {
-//     sms.value = sms1.value + newValue + sms3.value + sms4.value;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     } else if (newValue && newValue.length > 0) {
-//       proxy?.$refs["smsInput3"].focus();
-//     }
-//   }
-// );
-// watch(
-//   () => sms3.value,
-//   async (newValue) => {
-//     sms.value = sms1.value + sms2.value + newValue + sms4.value;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     } else if (newValue && newValue.length > 0) {
-//       proxy?.$refs["smsInput4"].focus();
-//     }
-//   }
-// );
-// watch(
-//   () => sms4.value,
-//   async (newValue) => {
-//     sms.value = sms1.value + sms2.value + sms3.value + newValue;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     }
-//   }
-// );
 const inputSms = (e: string, index: number) => {
   if (!agent.value) {
     sms.value =
@@ -755,15 +633,16 @@ const inputCode = async (code: string) => {
       if (res.data.code === 11000) {
         ElMessage({ type: "success", message: "手机号验证成功" });
         status.value = -1;
-        localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
+        // localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
         userInfo.value = res?.data?.data;
         sms1.value = "";
         sms2.value = "";
         sms3.value = "";
         sms4.value = "";
-        if (redirectUrl.value) {
-          skip(redirectUrl.value, false);
-        }
+        // if (redirectUrl.value) {
+        //   skip(redirectUrl.value, false);
+        // }
+        skipMini();
       } else {
         ElMessage({ type: "error", message: res.data.msg });
       }
@@ -837,15 +716,16 @@ const inputNickname = async () => {
   if (res.data.code === 11000) {
     ElMessage({ type: "success", message: "手机号验证成功" });
     status.value = -1;
-    localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
+    // localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
     userInfo.value = res?.data?.data;
     sms1.value = "";
     sms2.value = "";
     sms3.value = "";
     sms4.value = "";
-    if (redirectUrl.value) {
-      skip(redirectUrl.value, false);
-    }
+    // if (redirectUrl.value) {
+    //   skip(redirectUrl.value, false);
+    // }
+    skipMini();
   } else {
     ElMessage({ type: "error", message: res.data.msg });
   }
@@ -857,6 +737,12 @@ const skip = (url: string, openNew: boolean) => {
   } else {
     window.location.href = `${url}?token=${userInfo.value.token}`;
   }
+};
+const skipMini = () => {
+  jweixin.miniProgram.postMessage({ data: userInfo.value.token });
+  jweixin.miniProgram.navigateBack({
+    delta: 1,
+  });
 };
 </script>
 <style lang="scss" scoped>

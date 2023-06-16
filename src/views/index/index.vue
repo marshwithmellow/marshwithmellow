@@ -4,7 +4,11 @@
       <el-container>
         <el-aside class="aside">
           <div class="flex">
-            <img class="logo" :src="logo" alt="" />
+            <img
+              class="logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+              alt=""
+            />
             <button
               v-if="userInfo.name"
               class="button-style gpt-button"
@@ -16,7 +20,11 @@
               登录 MBM OpenAI 账号
             </button>
             <div class="default-model">
-              <img class="icon-ai" :src="iconAi" alt="" />
+              <img
+                class="icon-ai"
+                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png"
+                alt=""
+              />
               <div class="model-name active">默认模型</div>
               <el-select
                 v-model="aiVersion"
@@ -43,11 +51,19 @@
               </el-select>
             </div>
             <div class="default-model" @click="skip('http://visus.ai/', true)">
-              <img class="icon-ai" :src="iconSelf" alt="" />
+              <img
+                class="icon-ai"
+                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
+                alt=""
+              />
               <div class="model-name">训练你自己的 ChatGPT</div>
             </div>
             <div class="default-model" @click="train('生成我的GPT4 API Key')">
-              <img class="icon-ai" :src="iconKey" alt="" />
+              <img
+                class="icon-ai"
+                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
+                alt=""
+              />
               <div class="model-name">生成我的 GPT4 API Key</div>
             </div>
           </div>
@@ -69,14 +85,24 @@
             >
               充值我的账户
               <div class="my-count-hover"></div>
+              <!-- <div class="block_hoverer"></div>
+              <div class="block_hoverer"></div>
+              <div class="block_hoverer"></div>
+              <div class="block_hoverer"></div> -->
               <span class="light iconfont icon-shandian"></span>
             </button>
-            <button
-              v-else
-              class="gpt-button color-button get-one-dollar"
-              @click="toLogin"
-            >
-              现在领取 1 美元体验金！
+            <button v-else class="gpt-button color-button" @click="toLogin">
+              <!-- 现在领取 1 美元体验金！ -->
+              现在开启你的 AI 时刻！
+              <div class="my-count-hover"></div>
+              <!-- <div class="top"></div>
+              <div class="left"></div>
+              <div class="right"></div>
+              <div class="bottom"></div> -->
+              <!-- <div class="block_hoverer"></div>
+              <div class="block_hoverer"></div>
+              <div class="block_hoverer"></div>
+              <div class="block_hoverer"></div> -->
             </button>
             <div v-if="userInfo.name" class="share-my-code">
               分享我的推荐码：
@@ -118,7 +144,7 @@
               <el-carousel-item
                 class="swipe"
                 :style="{
-                  background: `url(${item.bg}) center / 100% auto no-repeat`,
+                  background: `url(${item.bg}) center / 100% 100% no-repeat`,
                 }"
                 v-for="(item, index) in swiperList"
                 :key="item.desc"
@@ -235,7 +261,7 @@
           </div>
           <!-- 手机号 -->
           <div class="ipt-box" v-if="status === 2">
-            <el-input
+            <!-- <el-input
               type="tel"
               :maxlength="11"
               class="tel"
@@ -244,28 +270,55 @@
               placeholder="xxxxxxxxxxx"
             />
             <div class="btm"></div>
-            <div class="btm btm2"></div>
+            <div class="btm btm2"></div> -->
             <!-- <el-input
-              :maxlength="3"
-              class="tel1"
-              v-model="tel1"
-              :autofocus="true"
-              placeholder="xxx"
-            />
-            <el-input
-              :maxlength="4"
-              class="tel2"
-              v-model="tel2"
-              :autofocus="false"
-              placeholder="xxxx"
-            />
-            <el-input
-              :maxlength="4"
-              class="tel3"
-              v-model="tel3"
-              :autofocus="false"
-              placeholder="xxxx"
+              ref="telInput1"
+              :maxlength="11"
+              class="tel"
+              v-model="tel"
+              @input="telInput"
             /> -->
+            <div class="tel-container" style="width: 66px">
+              <el-input
+                ref="telInput1"
+                :maxlength="3"
+                class="tel1"
+                v-model="tel1"
+                :autofocus="true"
+                :placeholder="telholder1"
+                @focus="telholder1 = ''"
+                @blur="telholder1 = 'xxx'"
+                @input="talInput($event, 0)"
+              />
+            </div>
+            <div class="tel-container" style="width: 90px">
+              <el-input
+                ref="telInput2"
+                :maxlength="4"
+                class="tel2"
+                v-model="tel2"
+                :autofocus="false"
+                :placeholder="telholder2"
+                @focus="telholder2 = ''"
+                @blur="telholder2 = 'xxxx'"
+                @input="talInput($event, 1)"
+                @keyup.delete.native="deleteTel(2)"
+              />
+            </div>
+            <div class="tel-container" style="width: 90px">
+              <el-input
+                ref="telInput3"
+                :maxlength="4"
+                class="tel3"
+                v-model="tel3"
+                :autofocus="false"
+                :placeholder="telholder3"
+                @focus="telholder3 = ''"
+                @blur="telholder3 = 'xxxx'"
+                @input="talInput($event, 2)"
+                @keyup.delete.native="deleteTel(3)"
+              />
+            </div>
           </div>
           <!-- 验证码 -->
           <div class="square-box" v-if="status === 3">
@@ -322,13 +375,13 @@
                   placeholder=""
                 />
               </div>
-              <div class="square square7"></div>
+              <!-- <div class="square square7"></div> -->
             </div>
           </div>
           <!-- 昵称 -->
           <div class="nickname-box" v-if="status === 4">
             <el-input
-              :maxlength="11"
+              :maxlength="13"
               class="tel"
               v-model="nickname"
               :autofocus="true"
@@ -343,14 +396,8 @@
             v-if="status === 3 || status === 2"
             @click="countDown"
           >
-            {{
-              time < 60
-                ? "验证码已发送"
-                : status === 2
-                ? "发送验证码"
-                : "重新发送"
-            }}
-            <span class="countdown"> ({{ time }}s) </span>
+            {{ status === 2 ? "发送验证码" : "重新发送" }}
+            <span class="countdown" v-if="time < 60"> ({{ time }}s) </span>
           </div>
           <div class="back" v-if="status === 3" @click="status = 2">
             <el-icon><Back /></el-icon>
@@ -446,7 +493,11 @@
       </el-dialog>
       <el-container>
         <el-header class="toolbar">
-          <img class="logo" :src="iconMenu" @click="drawer = true" />
+          <img
+            class="logo"
+            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/menu.png"
+            @click="drawer = true"
+          />
           <div
             style="
               flex: 1;
@@ -456,7 +507,11 @@
               justify-content: center;
             "
           >
-            <img class="logo" :src="whiteLogo" alt="" />
+            <img
+              class="logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
+              alt=""
+            />
           </div>
           <div
             v-if="userInfo.name"
@@ -582,7 +637,11 @@
         >
           <el-aside class="phone-aside">
             <div class="flex">
-              <img class="logo" :src="logo" alt="" />
+              <img
+                class="logo"
+                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+                alt=""
+              />
               <button
                 v-if="userInfo.name"
                 class="gpt-button"
@@ -604,7 +663,11 @@
                 登录 MBM OpenAI 账号
               </button>
               <div class="default-model">
-                <img class="icon-ai" :src="iconAi" alt="" />
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png"
+                  alt=""
+                />
                 <div class="model-name active">默认模型</div>
                 <el-select
                   v-model="aiVersion"
@@ -637,7 +700,11 @@
                   drawer = false;
                 "
               >
-                <img class="icon-ai" :src="iconSelf" alt="" />
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
+                  alt=""
+                />
                 <div class="model-name">训练你自己的 ChatGPT</div>
               </div>
               <div
@@ -647,7 +714,11 @@
                   drawer = false;
                 "
               >
-                <img class="icon-ai" :src="iconKey" alt="" />
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
+                  alt=""
+                />
                 <div class="model-name">生成我的 GPT4 API Key</div>
               </div>
             </div>
@@ -679,13 +750,15 @@
               </button>
               <button
                 v-else
-                class="gpt-button color-button get-one-dollar"
+                class="gpt-button color-button"
                 @click="
                   toLogin();
                   drawer = false;
                 "
               >
-                现在领取 1 美元体验金！
+                <!-- 现在领取 1 美元体验金！ -->
+                现在开启你的 AI 时刻！
+                <div class="my-count-hover"></div>
               </button>
               <div v-if="userInfo.name" class="share-my-code">
                 分享我的推荐码：
@@ -702,15 +775,15 @@
 </template>
 <script setup lang="ts">
 import QRCode from "qrcode";
-import logo from "@/assets/images/logo.png";
-import whiteLogo from "@/assets/images/white-logo.png";
-import iconMenu from "@/assets/images/menu.png";
-import iconAi from "@/assets/images/icon-ai.png";
-import iconSelf from "@/assets/images/icon-ai-self.png";
-import iconKey from "@/assets/images/icon-ai-key.png";
-import swiper1 from "@/assets/images/slider1.png";
-import swiper2 from "@/assets/images/slider2.png";
-import swiper3 from "@/assets/images/slider3.png";
+// import logo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png";
+// import whiteLogo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png";
+// import iconMenu from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/images/menu.png";
+// import iconAi from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png";
+// import iconSelf from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png";
+// import iconKey from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png";
+// import swiper1 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider1.png";
+// import swiper2 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider2.png";
+// import swiper3 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider3.png";
 import {
   onBeforeMount,
   ref,
@@ -752,9 +825,12 @@ const showDialog = ref(false);
 const isCreatedAccount = ref(false);
 const status = ref(1);
 const tel = ref("");
-// const tel1 = ref("");
-// const tel2 = ref("");
-// const tel3 = ref("");
+const tel1 = ref("");
+const tel2 = ref("");
+const tel3 = ref("");
+const telholder1 = ref("xxx");
+const telholder2 = ref("xxxx");
+const telholder3 = ref("xxxx");
 const sms = ref("");
 const sms1 = ref("");
 const sms2 = ref("");
@@ -790,20 +866,20 @@ const loginFlag = ref(false);
 const swiperList = ref([
   {
     title: "MBM OpenAI GPT-4 服务",
-    desc: "作为 Azure OpenAI 中国合作伙伴，MBM 为\n企业用户和个人消费者提供可靠、企业级 OpenAI 服务，\n实现快速访问，无需代理的先进体验。",
-    bg: swiper1,
+    desc: "作为 微软 Azure OpenAI 中国合作伙伴，MBM 为\n企业用户和个人消费者提供可靠、企业级 OpenAI 服务，\n实现快速访问，无需代理的先进体验。",
+    bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider1.png",
     button: "探索与 OpenAI 的区别",
   },
   {
     title: "MBM OpenAI GPT-4 服务",
     desc: "我们仅按您使用的内容收取费用，计费标准\n通常还取决于你调用了哪种模型，GPT-3.5 擅长日常会话，而 GPT-4 在专业性和推理能力上则更为强大。",
-    bg: swiper2,
+    bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider2.png",
     button: "MBM OpenAI 服务如何计费",
   },
   {
     title: "MBM OpenAI GPT-4 服务",
     desc: "为了满足你对商用级别 OpenAI 服务的苛刻要求，\n我们从产品设计的一开始便考虑了安全的重要性，以此确保\n每一个从你访问到的数据，都受到隐私保护和加密处理。",
-    bg: swiper3,
+    bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider3.png",
     button: "企业级 OpenAI 是什么",
   },
 ]);
@@ -868,21 +944,99 @@ const getUserInfo = async (token: string, accessKey: string) => {
     showUserInfo.value = false;
     status.value = 1;
     tel.value = "";
+    tel1.value = "";
+    tel2.value = "";
+    tel3.value = "";
     qrCodeImgUrl.value = "";
   }
 };
-// watch(
-//   () => tel1.value,
-//   async (newValue, oldValue) => {
-//     tel1.value =
-//       newValue.length > oldValue.length
-//         ? newValue.replace(/\s/g, "")
-//         : tel1.value.trim();
-//     tel.value = tel1.value + tel2.value + tel3.value;
-//     if (tel1.value.length == 3) {
-//     }
-//   }
-// );
+const deleteTel = (flag: number) => {
+  if (flag == 3 && tel3.value.length == 0) {
+    proxy?.$refs["telInput2"].focus();
+  } else if (tel2.value.length == 0) {
+    proxy?.$refs["telInput1"].focus();
+  }
+};
+const telInput = (e: string) => {};
+const talInput = (e: string, index: number) => {
+  switch (index) {
+    case 0:
+      if (e.length == 3) {
+        proxy?.$refs["telInput2"].focus();
+      }
+      tel1.value = e;
+      if (
+        tel1.value.length == 3 &&
+        tel2.value.length == 4 &&
+        tel3.value.length == 4
+      ) {
+        getTelCode(tel1.value + tel2.value + tel3.value);
+      }
+      break;
+    case 1:
+      if (e.length == 4) {
+        proxy?.$refs["telInput3"].focus();
+      }
+      tel2.value = e;
+      if (
+        tel1.value.length == 3 &&
+        tel2.value.length == 4 &&
+        tel3.value.length == 4
+      ) {
+        getTelCode(tel1.value + tel2.value + tel3.value);
+      }
+      break;
+    case 2:
+      tel3.value = e;
+      if (
+        tel1.value.length == 3 &&
+        tel2.value.length == 4 &&
+        tel3.value.length == 4
+      ) {
+        getTelCode(tel1.value + tel2.value + tel3.value);
+      }
+      break;
+    default:
+      break;
+  }
+};
+const getTelCode = async (val: string) => {
+  tel.value = val.replace(/\s/g, "");
+  if (tel.value.length === 11) {
+    let mobile = tel.value.replace(/\s/g, "");
+    if (mobile && verifyPhone(mobile)) {
+      if (loginFlag.value) return;
+      loginFlag.value = true;
+      const phoneRegister = await checkPhone({ phone: mobile });
+      let codeRes = null;
+      if (phoneRegister.data.data.register) {
+        // 注册过。登陆验证码
+        codeRes = await doSendCode({ phone: mobile });
+        isCreatedAccount.value = true;
+      } else {
+        // 未注册过，注册验证码
+        codeRes = await doRegisterCode({ phone: mobile });
+      }
+      if (codeRes.data.code === 11000) {
+        ElMessage({ type: "success", message: "验证码已发送" });
+        const timer = setInterval(() => {
+          time.value--;
+          if (time.value <= 0) {
+            time.value = 60;
+            clearInterval(timer);
+          }
+        }, 1000);
+        status.value = 3;
+      } else {
+        if (codeRes.data.code === 12006) {
+          status.value = 3;
+        }
+        ElMessage({ type: "error", message: codeRes.data.msg });
+      }
+      loginFlag.value = false;
+    } else ElMessage("请输入正确的手机号");
+  }
+};
 watch(
   () => sms1.value,
   async (newValue) => {
@@ -926,47 +1080,47 @@ watch(
   }
 );
 // 监听手机号
-watch(
-  () => tel.value,
-  async (newValue, oldValue) => {
-    tel.value =
-      newValue.length > oldValue.length
-        ? newValue.replace(/\s/g, "")
-        : // .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
-          tel.value.trim();
-    if (tel.value.length === 11) {
-      let mobile = tel.value.replace(/\s/g, "");
-      if (mobile && verifyPhone(mobile)) {
-        if (loginFlag.value) return;
-        loginFlag.value = true;
-        const phoneRegister = await checkPhone({ phone: mobile });
-        let codeRes = null;
-        if (phoneRegister.data.data.register) {
-          // 注册过。登陆验证码
-          codeRes = await doSendCode({ phone: mobile });
-          isCreatedAccount.value = true;
-        } else {
-          // 未注册过，注册验证码
-          codeRes = await doRegisterCode({ phone: mobile });
-        }
-        if (codeRes.data.code === 11000) {
-          ElMessage({ type: "success", message: "验证码已发送" });
-          const timer = setInterval(() => {
-            time.value--;
-            if (time.value <= 0) {
-              time.value = 60;
-              clearInterval(timer);
-            }
-          }, 1000);
-          status.value = 3;
-        } else {
-          ElMessage({ type: "error", message: codeRes.data.msg });
-        }
-        loginFlag.value = false;
-      } else ElMessage("请输入正确的手机号");
-    }
-  }
-);
+// watch(
+//   () => tel.value,
+//   async (newValue, oldValue) => {
+//     tel.value =
+//       newValue.length > oldValue.length
+//         ? newValue.replace(/\s/g, "")
+//         : // .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
+//           tel.value.trim();
+//     if (tel.value.length === 11) {
+//       let mobile = tel.value.replace(/\s/g, "");
+//       if (mobile && verifyPhone(mobile)) {
+//         if (loginFlag.value) return;
+//         loginFlag.value = true;
+//         const phoneRegister = await checkPhone({ phone: mobile });
+//         let codeRes = null;
+//         if (phoneRegister.data.data.register) {
+//           // 注册过。登陆验证码
+//           codeRes = await doSendCode({ phone: mobile });
+//           isCreatedAccount.value = true;
+//         } else {
+//           // 未注册过，注册验证码
+//           codeRes = await doRegisterCode({ phone: mobile });
+//         }
+//         if (codeRes.data.code === 11000) {
+//           ElMessage({ type: "success", message: "验证码已发送" });
+//           const timer = setInterval(() => {
+//             time.value--;
+//             if (time.value <= 0) {
+//               time.value = 60;
+//               clearInterval(timer);
+//             }
+//           }, 1000);
+//           status.value = 3;
+//         } else {
+//           ElMessage({ type: "error", message: codeRes.data.msg });
+//         }
+//         loginFlag.value = false;
+//       } else ElMessage("请输入正确的手机号");
+//     }
+//   }
+// );
 // 显示登录选项
 const toLogin = () => {
   let usr = localStorage.getItem("userInfo");
@@ -1020,6 +1174,9 @@ const countDown = async () => {
         }, 1000);
         status.value = 3;
       } else {
+        if (res.data.code === 12006) {
+          status.value = 3;
+        }
         // 没有注册
         ElMessage({ type: "warning", message: res.data.msg });
       }
@@ -1218,6 +1375,9 @@ const logout = () => {
     showUserInfo.value = false;
     status.value = 1;
     tel.value = "";
+    tel1.value = "";
+    tel2.value = "";
+    tel3.value = "";
     qrCodeImgUrl.value = "";
   });
 };
@@ -1253,12 +1413,27 @@ const navQuestion = (blogType: string) => {
       width: 100%;
       transition: all 0.3s;
     }
+    // .top {
+    //   top: 0;
+    //   background: rgba(255, 255, 255, 0.15);
+    // }
+    // .right {
+    //   right: 0;
+    //   background: rgba(255, 255, 255, 0.15);
+    // }
+    // .bottom {
+    //   bottom: 0;
+    //   background: rgba(255, 255, 255, 0.15);
+    // }
+    // .left {
+    //   left: 0;
+    //   background: rgba(255, 255, 255, 0.15);
+    // }
   }
   &:active {
     color: rgba(255, 255, 255, 0.5);
   }
 }
-
 .px-common-layout {
   // height: 100vh;
   //   min-width: 1200px;
@@ -1286,7 +1461,7 @@ const navQuestion = (blogType: string) => {
       align-items: center;
       flex-wrap: wrap;
       font-size: 0.8rem;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #ffffff;
       z-index: 2;
@@ -1320,7 +1495,7 @@ const navQuestion = (blogType: string) => {
       min-height: 52px;
       background: #4383ea;
       border-radius: 8px;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #ffffff;
       text-align: center;
@@ -1331,13 +1506,14 @@ const navQuestion = (blogType: string) => {
       flex-wrap: nowrap;
     }
     .color-button {
-      margin-top: 4vh;
+      margin-top: 5vh;
       background: linear-gradient(23deg, #4383ea 0%, #4861eb 49%, #8748eb 100%);
       color: rgba(255, 255, 255, 0.9);
       font-size: 1rem;
-      font-family: PingFangTC-Semibold;
+      font-family: FUTURA-MEDIUM;
       @include chargeHover5Style;
       position: relative;
+      cursor: pointer;
       .light {
         font-size: 25px;
         margin-left: 5px;
@@ -1352,15 +1528,164 @@ const navQuestion = (blogType: string) => {
         top: 0;
         border-radius: 10px;
       }
+      // .top,
+      // .right,
+      // .bottom,
+      // .left {
+      //   position: absolute;
+      //   width: 100%;
+      //   height: 100%;
+      //   top: 0;
+      //   left: 0;
+      //   transition: all 0.3s;
+      // }
+      // .top:after,
+      // .right:after,
+      // .bottom:after,
+      // .left:after {
+      //   position: absolute;
+      //   content: "";
+      //   width: 100%;
+      //   height: 100%;
+      // }
+      // .top {
+      //   top: -100%;
+      //   background: transparent;
+      // }
+      // .right {
+      //   right: -100%;
+      //   left: auto;
+      //   background: transparent;
+      // }
+      // .bottom {
+      //   bottom: -100%;
+      //   top: auto;
+      //   background: transparent;
+      // }
+      // .left {
+      //   left: -100%;
+      //   background: transparent;
+      // }
+      // .top:after {
+      //   clip-path: polygon(0 0, 50% 50%, 100% 0);
+      //   top: 100%;
+      //   left: 0;
+      // }
+      // .right:after {
+      //   clip-path: polygon(100% 0, 50% 50%, 100% 100%);
+      //   right: 100%;
+      //   top: 0;
+      // }
+      // .bottom:after {
+      //   clip-path: polygon(0 100%, 50% 50%, 100% 100%);
+      //   bottom: 100%;
+      //   left: 0;
+      // }
+      // .left:after {
+      //   clip-path: polygon(0 0, 50% 50%, 0 100%);
+      //   left: 100%;
+      //   top: 0;
+      // }
+      // .top:after,
+      // .right:after,
+      // .bottom:after,
+      // .left:after {
+      //   position: absolute;
+      //   content: "";
+      //   width: 100%;
+      //   height: 100%;
+      //   transform-origin: 0 0;
+      // }
+      // .top:after {
+      //   top: 150%;
+      //   left: 50%;
+      //   transform: rotate(calc(var(--angle) - 180deg))
+      //     skew(calc((var(--angle) - 45deg) * 2));
+      // }
+      // .right:after {
+      //   top: 50%;
+      //   left: -50%;
+      //   transform: rotate(calc(0deg - var(--angle)))
+      //     skew(calc((45deg - var(--angle)) * 2));
+      // }
+      // .bottom:after {
+      //   top: -50%;
+      //   left: 50%;
+      //   transform: rotate(var(--angle)) skew(calc((var(--angle) - 45deg) * 2));
+      // }
+      // .left:after {
+      //   top: 50%;
+      //   left: 150%;
+      //   transform: rotate(calc(180deg - var(--angle)))
+      //     skew(calc((45deg - var(--angle)) * 2));
+      // }
+      // .top:hover {
+      //   top: 0;
+      //   background: rgba(255, 255, 255, 0.15);
+      // }
+      // .right:hover {
+      //   right: 0;
+      //   background: rgba(255, 255, 255, 0.15);
+      // }
+      // .bottom:hover {
+      //   bottom: 0;
+      //   background: rgba(255, 255, 255, 0.15);
+      // }
+      // .left:hover {
+      //   left: 0;
+      //   background: rgba(255, 255, 255, 0.15);
+      // }
+      // /* 解决层级阻断问题 */
+      // .top:hover ~ .right,
+      // .top:hover ~ .bottom,
+      // .top:hover ~ .left,
+      // .right:hover ~ .bottom,
+      // .right:hover ~ .left,
+      // .bottom:hover ~ .left {
+      //   display: none;
+      // }
+      .block_hoverer {
+        position: absolute;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+
+      .block_hoverer:nth-child(1) {
+        background: rgba(255, 255, 255, 0.15);
+        top: -90%;
+      }
+
+      .block_hoverer:nth-child(2) {
+        background: rgba(255, 255, 255, 0.15);
+        top: 90%;
+      }
+
+      .block_hoverer:nth-child(3) {
+        background: rgba(255, 255, 255, 0.15);
+        left: -90%;
+      }
+
+      .block_hoverer:nth-child(4) {
+        background: rgba(255, 255, 255, 0.15);
+        left: 90%;
+      }
+      .block_hoverer:hover {
+        opacity: 1;
+        top: 0;
+        left: 0;
+      }
     }
     .get-one-dollar {
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
     }
     .share-my-code {
       width: 100%;
       box-sizing: border-box;
       padding: o 10px;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: rgba(255, 255, 255, 0.8);
       .code {
@@ -1400,7 +1725,7 @@ const navQuestion = (blogType: string) => {
       .model-name {
         margin: 0 3px 0 10px;
         font-size: 1rem;
-        font-family: Gotham-Rounded;
+        font-family: FUTURA-MEDIUM;
         font-weight: bold;
         min-width: 60px;
       }
@@ -1424,7 +1749,7 @@ const navQuestion = (blogType: string) => {
           box-sizing: border-box;
           .el-input__inner {
             font-size: 1rem;
-            font-family: Gotham-Rounded;
+            font-family: FUTURA-MEDIUM;
             font-weight: bold;
             color: #ffffff;
           }
@@ -1447,7 +1772,7 @@ const navQuestion = (blogType: string) => {
       margin: 0 auto;
       .question {
         font-size: 0.8rem;
-        font-family: Gotham-Rounded;
+        font-family: FUTURA-MEDIUM;
         font-weight: bold;
         color: rgba(255, 255, 255, 0.4);
         margin: 11px 0;
@@ -1483,7 +1808,7 @@ const navQuestion = (blogType: string) => {
       background: #4383ea;
       border-radius: 8px;
       font-size: 12px;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #ffffff;
       text-align: center;
@@ -1499,7 +1824,7 @@ const navQuestion = (blogType: string) => {
       background: linear-gradient(23deg, #4383ea 0%, #4861eb 49%, #8748eb 100%);
       color: rgba(255, 255, 255, 0.9);
       font-size: 16px;
-      font-family: PingFangTC-Semibold;
+      font-family: FUTURA-MEDIUM;
       @include chargeHover5Style;
       position: relative;
       .light {
@@ -1518,13 +1843,13 @@ const navQuestion = (blogType: string) => {
       }
     }
     .get-one-dollar {
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
     }
     .share-my-code {
       width: 100%;
       box-sizing: border-box;
       padding: o 10px;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: rgba(255, 255, 255, 0.8);
       .code {
@@ -1564,7 +1889,7 @@ const navQuestion = (blogType: string) => {
       .model-name {
         margin: 0 3px 0 10px;
         font-size: 16px;
-        font-family: Gotham-Rounded;
+        font-family: FUTURA-MEDIUM;
         font-weight: bold;
       }
       .active {
@@ -1586,7 +1911,7 @@ const navQuestion = (blogType: string) => {
           box-sizing: border-box;
           .el-input__inner {
             font-size: 16px;
-            font-family: Gotham-Rounded;
+            font-family: FUTURA-MEDIUM;
             font-weight: bold;
             color: #ffffff;
           }
@@ -1609,7 +1934,7 @@ const navQuestion = (blogType: string) => {
       margin: 0 auto;
       .question {
         font-size: 12px;
-        font-family: Gotham-Rounded;
+        font-family: FUTURA-MEDIUM;
         font-weight: bold;
         color: rgba(255, 255, 255, 0.4);
         margin: 11px 0;
@@ -1624,7 +1949,7 @@ const navQuestion = (blogType: string) => {
     padding: 0;
     .open-ai {
       // min-width: 19vw;
-      height: 4vh;
+      height: 5vh;
       background: rgba(255, 255, 255, 0.8);
       border: 1px solid #000000;
       font-size: 1rem;
@@ -1689,9 +2014,9 @@ const navQuestion = (blogType: string) => {
       .desc {
         width: 50vw;
         height: 14vh;
-        margin-top: 3vh;
+        margin-top: 1.5vh;
         font-size: 1.4rem;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         line-height: 1.8rem;
         color: rgba(255, 255, 255, 0.95);
@@ -1713,7 +2038,7 @@ const navQuestion = (blogType: string) => {
       align-items: center;
       flex-wrap: wrap;
       font-size: 16px;
-      font-family: Gotham-Rounded;
+      font-family: FUTURA-MEDIUM;
       font-weight: bold;
       color: #ffffff;
       z-index: 2;
@@ -1737,13 +2062,13 @@ const navQuestion = (blogType: string) => {
         width: 100%;
         height: 25px;
         font-size: 24px;
-        font-family: Gotham-Rounded;
+        font-family: FUTURA-MEDIUM;
         font-weight: bold;
         margin-bottom: 36px;
         color: #07070d;
         span {
           font-size: 24px;
-          font-family: Gotham-Rounded;
+          font-family: FUTURA-MEDIUM;
           font-weight: bold;
         }
       }
@@ -1755,7 +2080,7 @@ const navQuestion = (blogType: string) => {
         flex-wrap: nowrap;
         height: 35px;
         font-size: 11px;
-        font-family: BOOK;
+        font-family: FUTURA-MEDIUM;
         font-weight: normal;
         line-height: 21px;
         color: #07070d;
@@ -1850,7 +2175,7 @@ const navQuestion = (blogType: string) => {
         // height: 150px;
         // margin-top: 40px;
         font-size: 14px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         // line-height: 16px;
         color: rgba(255, 255, 255, 0.95);
@@ -1876,13 +2201,13 @@ const navQuestion = (blogType: string) => {
         width: 100%;
         height: 25px;
         font-size: 24px;
-        font-family: Gotham-Rounded;
+        font-family: FUTURA-MEDIUM;
         font-weight: bold;
         margin-bottom: 36px;
         color: #07070d;
         span {
           font-size: 24px;
-          font-family: Gotham-Rounded;
+          font-family: FUTURA-MEDIUM;
           font-weight: bold;
         }
       }
@@ -1894,7 +2219,7 @@ const navQuestion = (blogType: string) => {
         flex-wrap: nowrap;
         height: 35px;
         font-size: 11px;
-        font-family: BOOK;
+        font-family: FUTURA-MEDIUM;
         font-weight: normal;
         line-height: 21px;
         color: #07070d;
@@ -1958,7 +2283,7 @@ const navQuestion = (blogType: string) => {
   }
   .underline {
     font-size: 16px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #07070d;
     text-decoration: underline;
@@ -1975,14 +2300,15 @@ const navQuestion = (blogType: string) => {
   .type-word {
     width: 100%;
     height: 243px;
-    background: url("@/assets/images/type-word.png") center / cover no-repeat;
+    background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/type-word.png")
+      center / cover no-repeat;
     border-radius: 11px 11px 0px 0px;
     padding: 118px 10px 65px 155px;
     box-sizing: border-box;
     .mask {
       width: 100%;
       height: 243px;
-      background: rgba(0, 0, 0, 0.2);
+      // background: rgba(0, 0, 0, 0.2);
       position: absolute;
       left: 0;
       top: 0;
@@ -2007,7 +2333,7 @@ const navQuestion = (blogType: string) => {
     transform: translateX(-38.5px);
     color: #fff;
     font-size: 28px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #ffffff;
   }
@@ -2029,19 +2355,18 @@ const navQuestion = (blogType: string) => {
   }
   .ipt-box {
     position: relative;
-    margin: 40px auto 30px;
+    margin: 20px auto 10px;
     display: flex;
     justify-content: center;
     align-items: center;
     .tel {
       width: 320px;
       border: none;
-      margin: 20px 132px 0;
-      ::placeholder {
-        letter-spacing: 9.6px;
-      }
+      margin: 40px 10px 0;
+      position: absolute;
+      z-index: 99;
       :deep(.el-input__wrapper) {
-        border-bottom: 1px solid #000;
+        // border-bottom: 1px solid #000;
         box-shadow: none;
         border-radius: 0;
         padding: 0;
@@ -2049,76 +2374,82 @@ const navQuestion = (blogType: string) => {
       :deep(.el-input__inner) {
         text-align: left;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
-        color: #000000;
-        letter-spacing: 10px;
+        color: transparent;
+        // 设置光标颜色
+        caret-color: transparent;
       }
     }
+    .tel-container {
+      margin: 60px 10px 0;
+      border-bottom: 1px solid #000;
+      padding: 0 6px;
+    }
     .tel1 {
-      width: 80px;
+      width: 66px;
       border: none;
-      margin: 40px 10px 0;
+      // margin: 40px 10px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
       :deep(.el-input__wrapper) {
-        border-bottom: 1px solid #000;
+        // border-bottom: 1px solid #000;
         box-shadow: none;
         border-radius: 0;
         padding: 0;
       }
       :deep(.el-input__inner) {
-        text-align: left;
+        text-align: center;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         color: #000000;
-        letter-spacing: 10px;
+        letter-spacing: 6px;
       }
     }
     .tel2 {
-      width: 120px;
+      width: 90px;
       border: none;
-      margin: 40px 10px 0;
+      // margin: 40px 10px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
       :deep(.el-input__wrapper) {
-        border-bottom: 1px solid #000;
+        // border-bottom: 1px solid #000;
         box-shadow: none;
         border-radius: 0;
         padding: 0;
       }
       :deep(.el-input__inner) {
-        text-align: left;
+        text-align: center;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         color: #000000;
-        letter-spacing: 10px;
+        letter-spacing: 6px;
       }
     }
     .tel3 {
-      width: 120px;
+      width: 90px;
       border: none;
-      margin: 40px 10px 0;
+      // margin: 40px 10px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
       :deep(.el-input__wrapper) {
-        border-bottom: 1px solid #000;
+        // border-bottom: 1px solid #000;
         box-shadow: none;
         border-radius: 0;
         padding: 0;
       }
       :deep(.el-input__inner) {
-        text-align: left;
+        text-align: center;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         color: #000000;
-        letter-spacing: 10px;
+        letter-spacing: 6px;
       }
     }
     .btm {
@@ -2151,7 +2482,7 @@ const navQuestion = (blogType: string) => {
       :deep(.el-input__inner) {
         // padding: 0 22% 0 21%;
         font-size: 28px;
-        font-family: FZZhengHeiS-B-GB;
+        font-family: FUTURA-MEDIUM;
         font-weight: 600;
         color: #000000;
         // letter-spacing: 80px;
@@ -2161,7 +2492,7 @@ const navQuestion = (blogType: string) => {
       }
     }
     .bb {
-      width: 430px;
+      width: 360px;
       height: 64px;
       margin: 0 auto;
       display: flex;
@@ -2169,7 +2500,7 @@ const navQuestion = (blogType: string) => {
       align-items: center;
       flex-wrap: wrap;
       position: relative;
-      left: 32px;
+      // left: 32px;
       .square {
         height: 64px;
         width: 47px;
@@ -2205,7 +2536,7 @@ const navQuestion = (blogType: string) => {
       transform: translateX(50%);
       ::placeholder {
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         line-height: 0px;
         color: #969393;
@@ -2223,7 +2554,7 @@ const navQuestion = (blogType: string) => {
       :deep(.el-input__inner) {
         margin: 0 auto;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         letter-spacing: 5px;
         text-align: center;
         overflow-x: hidden;
@@ -2235,19 +2566,20 @@ const navQuestion = (blogType: string) => {
     }
     .btm {
       height: 20px;
-      width: 80px;
+      width: 120px;
       margin: 20px auto 0;
       border-radius: 50%;
-      background: url("@/assets/images/hudu.png") center / contain no-repeat;
+      background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/hudu.png")
+        center / contain no-repeat;
     }
   }
   .resend {
-    height: 30px;
+    // height: 30px;
     font-size: 18px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
-    margin: 21px auto 0;
+    margin: 15px auto 0;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -2257,7 +2589,7 @@ const navQuestion = (blogType: string) => {
     .countdown {
       margin-left: 5px;
       font-weight: 100;
-      font-family: PingFangTC-Semibold;
+      font-family: FUTURA-MEDIUM;
     }
     &.disable {
       color: rgba(0, 0, 0, 0.3);
@@ -2265,7 +2597,7 @@ const navQuestion = (blogType: string) => {
   }
   .back {
     font-size: 12px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 16px auto 0;
@@ -2279,7 +2611,7 @@ const navQuestion = (blogType: string) => {
   .tip {
     height: 30px;
     font-size: 12px;
-    font-family: Gotham;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 21px auto 0;
@@ -2323,7 +2655,8 @@ const navQuestion = (blogType: string) => {
   .type-word {
     width: 100%;
     height: 120px;
-    background: url("@/assets/images/type-word.png") center / cover no-repeat;
+    background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/type-word.png")
+      center / cover no-repeat;
     border-radius: 11px 11px 0px 0px;
     padding: 56px 10px 65px 90px;
     box-sizing: border-box;
@@ -2355,7 +2688,7 @@ const navQuestion = (blogType: string) => {
     transform: translateX(-38.5px);
     color: #fff;
     font-size: 20px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #ffffff;
   }
@@ -2394,7 +2727,7 @@ const navQuestion = (blogType: string) => {
       :deep(.el-input__inner) {
         text-align: left;
         font-size: 14px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         color: #000000;
         letter-spacing: 7.9px;
@@ -2430,7 +2763,7 @@ const navQuestion = (blogType: string) => {
       :deep(.el-input__inner) {
         padding: 0 36px;
         font-size: 16px;
-        font-family: FZZhengHeiS-B-GB;
+        font-family: FUTURA-MEDIUM;
         font-weight: 600;
         color: #000000;
         letter-spacing: 62px;
@@ -2481,7 +2814,7 @@ const navQuestion = (blogType: string) => {
       transform: translateX(50%);
       ::placeholder {
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         font-weight: 400;
         line-height: 0px;
         color: #969393;
@@ -2499,7 +2832,7 @@ const navQuestion = (blogType: string) => {
       :deep(.el-input__inner) {
         margin: 0 auto;
         font-size: 26px;
-        font-family: FZZCHJW;
+        font-family: FUTURA-MEDIUM;
         letter-spacing: 5px;
         text-align: center;
         overflow-x: hidden;
@@ -2514,13 +2847,14 @@ const navQuestion = (blogType: string) => {
       width: 80px;
       margin: 20px auto 0;
       border-radius: 50%;
-      background: url("@/assets/images/hudu.png") center / contain no-repeat;
+      background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/hudu.png")
+        center / contain no-repeat;
     }
   }
   .resend {
     height: 30px;
     font-size: 14px;
-    font-family: Gotham-Rounded;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 21px auto 0;
@@ -2533,7 +2867,7 @@ const navQuestion = (blogType: string) => {
     .countdown {
       margin-left: 5px;
       font-weight: 100;
-      font-family: PingFangTC-Semibold;
+      font-family: FUTURA-MEDIUM;
     }
     &.disable {
       color: rgba(0, 0, 0, 0.3);
@@ -2542,7 +2876,7 @@ const navQuestion = (blogType: string) => {
   .tip {
     height: 30px;
     font-size: 12px;
-    font-family: Gotham;
+    font-family: FUTURA-MEDIUM;
     font-weight: 400;
     color: #000000;
     margin: 21px auto 0;
@@ -2600,7 +2934,7 @@ const navQuestion = (blogType: string) => {
 .options {
   width: 100%;
   font-size: 1rem;
-  font-family: Gotham-Rounded;
+  font-family: FUTURA-MEDIUM;
   font-weight: bold;
   color: #ffffff;
   background: #000 !important;
@@ -2612,7 +2946,7 @@ const navQuestion = (blogType: string) => {
 .phone-options {
   width: 100%;
   font-size: 16px;
-  font-family: Gotham-Rounded;
+  font-family: FUTURA-MEDIUM;
   font-weight: bold;
   color: #ffffff;
   background: #000 !important;
