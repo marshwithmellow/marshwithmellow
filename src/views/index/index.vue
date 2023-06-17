@@ -271,13 +271,6 @@
             />
             <div class="btm"></div>
             <div class="btm btm2"></div> -->
-            <!-- <el-input
-              ref="telInput1"
-              :maxlength="11"
-              class="tel"
-              v-model="tel"
-              @input="telInput"
-            /> -->
             <div class="tel-container" style="width: 66px">
               <el-input
                 ref="telInput1"
@@ -319,6 +312,25 @@
                 @keyup.delete.native="deleteTel(3)"
               />
             </div>
+            <!-- <div class="tel-big" :class="telFocus ? 'focus' : ''">
+              <div class="tel-contain" :class="telFocus ? 'focus' : ''">
+                <el-input
+                  ref="telInput1"
+                  :maxlength="13"
+                  class="tel"
+                  v-model="tel"
+                  :placeholder="telholder"
+                  @focus="
+                    telFocus = true;
+                    telholder = '';
+                  "
+                  @blur="
+                    telFocus = false;
+                    telholder = '请输入手机号码';
+                  "
+                />
+              </div>
+            </div> -->
           </div>
           <!-- 验证码 -->
           <div class="square-box" v-if="status === 3">
@@ -831,6 +843,8 @@ const tel3 = ref("");
 const telholder1 = ref("xxx");
 const telholder2 = ref("xxxx");
 const telholder3 = ref("xxxx");
+const telFocus = ref(false);
+const telholder = ref("请输入手机号码");
 const sms = ref("");
 const sms1 = ref("");
 const sms2 = ref("");
@@ -957,7 +971,6 @@ const deleteTel = (flag: number) => {
     proxy?.$refs["telInput1"].focus();
   }
 };
-const telInput = (e: string) => {};
 const talInput = (e: string, index: number) => {
   switch (index) {
     case 0:
@@ -1085,10 +1098,11 @@ watch(
 //   async (newValue, oldValue) => {
 //     tel.value =
 //       newValue.length > oldValue.length
-//         ? newValue.replace(/\s/g, "")
-//         : // .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
-//           tel.value.trim();
-//     if (tel.value.length === 11) {
+//         ? newValue
+//             .replace(/\s/g, "")
+//             .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
+//         : tel.value.trim();
+//     if (tel.value.length === 13) {
 //       let mobile = tel.value.replace(/\s/g, "");
 //       if (mobile && verifyPhone(mobile)) {
 //         if (loginFlag.value) return;
@@ -2360,11 +2374,9 @@ const navQuestion = (blogType: string) => {
     justify-content: center;
     align-items: center;
     .tel {
-      width: 320px;
+      // width: 320px;
       border: none;
-      margin: 40px 10px 0;
-      position: absolute;
-      z-index: 99;
+      // margin: 40px 10px 0;
       :deep(.el-input__wrapper) {
         // border-bottom: 1px solid #000;
         box-shadow: none;
@@ -2376,15 +2388,34 @@ const navQuestion = (blogType: string) => {
         font-size: 26px;
         font-family: FUTURA-MEDIUM;
         font-weight: 400;
-        color: transparent;
-        // 设置光标颜色
-        caret-color: transparent;
+        color: #000;
       }
     }
     .tel-container {
       margin: 60px 10px 0;
       border-bottom: 1px solid #000;
       padding: 0 6px;
+    }
+    .tel-big {
+      margin: 40px 10px 0;
+      border: 3px solid transparent;
+      border-radius: 6px;
+      &.focus {
+        border: 3px solid #66b1fc;
+      }
+      .tel-contain {
+        border: 1px solid #d2d2d7;
+        width: 320px;
+        height: 50px;
+        border-radius: 3px;
+        padding: 0 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        &.focus {
+          border: 2px solid #4383ea;
+        }
+      }
     }
     .tel1 {
       width: 66px;
