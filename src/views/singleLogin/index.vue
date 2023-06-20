@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :style="{ background: agent ? '#121826' : '#ffffff' }">
     <div class="content" v-if="!agent">
       <div class="left-port">
         <div class="left-top-container">
@@ -27,7 +27,8 @@
           <div class="btm"></div>
           <div class="btm btm2"></div> -->
           <div class="tel-container">
-            <el-input
+            <input
+              type="tel"
               ref="telInput1"
               :maxlength="3"
               class="tel1"
@@ -35,10 +36,13 @@
               :placeholder="telholder1"
               @focus="telholder1 = ''"
               @blur="telholder1 = 'xxx'"
+              @input="telInput(0)"
+              @paste="pasteTel"
             />
           </div>
           <div class="tel-container">
-            <el-input
+            <input
+              type="tel"
               ref="telInput2"
               :maxlength="4"
               class="tel2"
@@ -47,10 +51,13 @@
               @focus="telholder2 = ''"
               @blur="telholder2 = 'xxx'"
               v-on:keydown="deleteTel2"
+              @input="telInput(1)"
+              @paste="pasteTel"
             />
           </div>
           <div class="tel-container">
-            <el-input
+            <input
+              type="tel"
               ref="telInput3"
               :maxlength="4"
               class="tel3"
@@ -59,6 +66,8 @@
               @focus="telholder3 = ''"
               @blur="telholder3 = 'xxx'"
               v-on:keydown="deleteTel3"
+              @input="telInput(2)"
+              @paste="pasteTel"
             />
           </div>
         </div>
@@ -75,61 +84,57 @@
           <div class="bb">
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
-              <el-input
+              <input
                 type="tel"
                 ref="smsInput1"
                 :maxlength="1"
                 class="tel"
                 v-model="sms1"
-                :autofocus="true"
                 placeholder=""
                 @paste="pasteSms"
-                @input="inputSms($event, 0)"
+                @input="inputSms(0)"
               />
             </div>
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
-              <el-input
+              <input
                 type="tel"
                 ref="smsInput2"
                 :maxlength="1"
                 class="tel"
                 v-model="sms2"
-                :autofocus="false"
                 placeholder=""
                 v-on:keydown="deleteSms2"
                 @paste="pasteSms"
-                @input="inputSms($event, 1)"
+                @input="inputSms(1)"
               />
             </div>
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
-              <el-input
+              <input
                 type="tel"
                 ref="smsInput3"
                 :maxlength="1"
                 class="tel"
                 v-model="sms3"
-                :autofocus="false"
                 placeholder=""
                 v-on:keydown="deleteSms3"
                 @paste="pasteSms"
-                @input="inputSms($event, 2)"
+                @input="inputSms(2)"
               />
             </div>
             <div class="square">
               <!-- {{ sms[index - 1] }} -->
-              <el-input
+              <input
                 type="tel"
                 ref="smsInput4"
                 :maxlength="1"
                 class="tel"
                 v-model="sms4"
-                :autofocus="false"
                 placeholder=""
                 v-on:keydown="deleteSms4"
                 @paste="pasteSms"
-                @input="inputSms($event, 3)"
+                @input="inputSms(3)"
               />
             </div>
           </div>
@@ -209,7 +214,8 @@
           <div class="btm"></div>
           <div class="btm btm2"></div> -->
           <div class="tel-container">
-            <el-input
+            <input
+              type="tel"
               ref="telInput1"
               :maxlength="3"
               class="tel1"
@@ -217,10 +223,13 @@
               :placeholder="telholder1"
               @focus="telholder1 = ''"
               @blur="telholder1 = 'xxx'"
+              @input="telInput(0)"
+              @paste="pasteTel"
             />
           </div>
           <div class="tel-container">
-            <el-input
+            <input
+              type="tel"
               ref="telInput2"
               :maxlength="4"
               class="tel2"
@@ -229,10 +238,13 @@
               @focus="telholder2 = ''"
               @blur="telholder2 = 'xxx'"
               v-on:keydown="deleteTel2"
+              @input="telInput(1)"
+              @paste="pasteTel"
             />
           </div>
           <div class="tel-container">
-            <el-input
+            <input
+              type="tel"
               ref="telInput3"
               :maxlength="4"
               class="tel3"
@@ -241,6 +253,8 @@
               @focus="telholder3 = ''"
               @blur="telholder3 = 'xxx'"
               v-on:keydown="deleteTel3"
+              @input="telInput(2)"
+              @paste="pasteTel"
             />
           </div>
         </div>
@@ -254,9 +268,26 @@
             @input="inputCode"
           /> -->
           <div class="bb">
-            <el-input
-              id="smsInput1"
+            <form style="position: absolute; left: 0; top: 0">
+              <input
+                type="tel"
+                ref="smsInput1"
+                :maxlength="4"
+                class="tel"
+                v-model="sms"
+                placeholder=""
+                :autofocus="true"
+                @paste="pasteSms"
+                @input="inputSms(0)"
+                @focus="smsFocus"
+                @blur="smsBlur"
+                v-on:keydown="deleteSms"
+                autocomplete="one-time-code"
+              />
+            </form>
+            <!-- <el-input
               type="tel"
+              id="smsInput1"
               ref="smsInput1"
               :maxlength="4"
               class="tel"
@@ -264,11 +295,12 @@
               :autofocus="true"
               placeholder=""
               @paste="pasteSms"
-              @input="inputSms($event, 0)"
+              @input="inputSms(0)"
               @focus="smsFocus"
               @blur="smsBlur"
               v-on:keydown="deleteSms"
-            />
+              autocomplete="one-time-code"
+            /> -->
             <div class="square" :class="focusIndex == 0 ? 'square-focus' : ''">
               <div class="sms">{{ sms1 }}</div>
             </div>
@@ -377,6 +409,7 @@ import {
 // import logoBg from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/single-bg.png";
 import { useRouter } from "vue-router";
 import { Back } from "@element-plus/icons-vue";
+const requestLock = ref(false);
 const proxy: any = getCurrentInstance()?.proxy ?? null;
 const tel = ref("");
 const tel1 = ref("");
@@ -427,9 +460,8 @@ onBeforeMount(() => {
   }
 });
 onMounted(() => {
-  // proxy?.$refs["telInput1"].$.vnode.el?.click();
   nextTick(() => {
-    if (!isIOS.value) {
+    if (!isIOS) {
       proxy?.$refs["telInput1"].focus();
     }
   });
@@ -474,7 +506,7 @@ onMounted(() => {
 //     }
 //   }
 // );
-const deleteSms = (e: any) => {
+const deleteSms = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
     if (sms.value.length == 0) {
       sms1.value = "";
@@ -499,31 +531,40 @@ const deleteSms = (e: any) => {
     }
   }
 };
-const deleteSms2 = (e: any) => {
+const deleteSms2 = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
     proxy?.$refs["smsInput1"].focus();
   }
 };
-const deleteSms3 = (e: any) => {
+const deleteSms3 = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
     proxy?.$refs["smsInput2"].focus();
   }
 };
-const deleteSms4 = (e: any) => {
+const deleteSms4 = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
     proxy?.$refs["smsInput3"].focus();
   }
 };
-const pasteSms = (e: any) => {
-  const text = e.clipboardData.getData("text");
-  const arrText = text.split(/ [(\r\n)\r\n] +/); // 以转行符切割文本字符串
-  if (arrText.length > 0 && arrText[0].length >= 4) {
+const pasteSms = (e: ClipboardEvent) => {
+  const text = e.clipboardData?.getData("text");
+  const arrText = text?.split(/ [(\r\n)\r\n] +/); // 以转行符切割文本字符串
+  if (arrText && arrText.length > 0 && arrText[0].length >= 4) {
     sms1.value = arrText[0][0];
     sms2.value = arrText[0][1];
     sms3.value = arrText[0][2];
     sms4.value = arrText[0][3];
-    sms.value = sms1.value + sms2.value + sms3.value + sms4.value;
-    inputCode(sms.value);
+    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
+  }
+};
+const pasteTel = (e: ClipboardEvent) => {
+  const text = e.clipboardData?.getData("text");
+  const arrText = text?.split(/ [(\r\n)\r\n] +/);
+  if (arrText && arrText.length > 0 && arrText[0].length >= 11) {
+    tel1.value = arrText[0][0] + arrText[0][1] + arrText[0][2];
+    tel2.value = arrText[0][3] + arrText[0][4] + arrText[0][5] + arrText[0][6];
+    tel3.value = arrText[0][7] + arrText[0][8] + arrText[0][9] + arrText[0][10];
+    getTelCode(tel1.value + tel2.value + tel3.value);
   }
 };
 const nav = () => {
@@ -534,12 +575,12 @@ const nav = () => {
     },
   });
 };
-const deleteTel2 = (e: any) => {
+const deleteTel2 = (e: KeyboardEvent) => {
   if (e.key === "Backspace" && tel2.value.length == 0) {
     proxy?.$refs["telInput1"].focus();
   }
 };
-const deleteTel3 = (e: any) => {
+const deleteTel3 = (e: KeyboardEvent) => {
   if (e.key === "Backspace" && tel3.value.length == 0) {
     proxy?.$refs["telInput2"].focus();
   }
@@ -586,37 +627,74 @@ const deleteTel3 = (e: any) => {
 //       break;
 //   }
 // };
+// watch(
+//   () => tel1.value,
+//   async (newValue) => {
+//     tel.value = newValue + tel2.value + tel3.value;
+//     if (tel.value.length === 11) {
+//       getTelCode(tel.value);
+//     } else if (newValue && newValue.length === 3) {
+//       proxy?.$refs["telInput2"].focus();
+//     }
+//   }
+// );
+// watch(
+//   () => tel2.value,
+//   async (newValue) => {
+//     tel.value = tel1.value + newValue + tel3.value;
+//     if (tel.value.length === 11) {
+//       getTelCode(tel.value);
+//     } else if (newValue && newValue.length === 4) {
+//       proxy?.$refs["telInput3"].focus();
+//     }
+//   }
+// );
+// watch(
+//   () => tel3.value,
+//   async (newValue) => {
+//     tel.value = tel1.value + tel2.value + newValue;
+//     if (tel.value.length === 11) {
+//       getTelCode(tel.value);
+//     }
+//   }
+// );
 watch(
-  () => tel1.value,
-  async (newValue) => {
-    tel.value = newValue + tel2.value + tel3.value;
-    if (tel.value.length === 11) {
-      getTelCode(tel.value);
-    } else if (newValue && newValue.length === 3) {
-      proxy?.$refs["telInput2"].focus();
+  () => status.value,
+  (newValue, oldValue) => {
+    if (newValue == 2 && oldValue == 1) {
+      nextTick(() => {
+        proxy?.$refs["smsInput1"].focus();
+      });
+    } else if (newValue == 1 && oldValue == 2) {
+      nextTick(() => {
+        proxy?.$refs["telInput3"].focus();
+      });
     }
   }
 );
-watch(
-  () => tel2.value,
-  async (newValue) => {
-    tel.value = tel1.value + newValue + tel3.value;
-    if (tel.value.length === 11) {
-      getTelCode(tel.value);
-    } else if (newValue && newValue.length === 4) {
-      proxy?.$refs["telInput3"].focus();
-    }
+const telInput = (index: number) => {
+  switch (index) {
+    case 0:
+      if (tel1.value.length == 3) {
+        proxy?.$refs["telInput2"].focus();
+      }
+      break;
+    case 1:
+      if (tel2.value.length == 4) {
+        proxy?.$refs["telInput3"].focus();
+      }
+      break;
+    default:
+      break;
   }
-);
-watch(
-  () => tel3.value,
-  async (newValue) => {
-    tel.value = tel1.value + tel2.value + newValue;
-    if (tel.value.length === 11) {
-      getTelCode(tel.value);
-    }
+  if (
+    tel1.value.length == 3 &&
+    tel2.value.length == 4 &&
+    tel3.value.length == 4
+  ) {
+    getTelCode(tel1.value + tel2.value + tel3.value);
   }
-);
+};
 const getTelCode = async (val: string) => {
   tel.value = val.replace(/\s/g, "");
   if (tel.value.length === 11) {
@@ -644,15 +722,9 @@ const getTelCode = async (val: string) => {
           }
         }, 1000);
         status.value = 2;
-        nextTick(() => {
-          proxy?.$refs["smsInput1"].focus();
-        });
       } else {
         if (codeRes.data.code === 12006) {
           status.value = 2;
-          nextTick(() => {
-            proxy?.$refs["smsInput1"].focus();
-          });
         }
         ElMessage({ type: "error", message: codeRes.data.msg });
       }
@@ -704,21 +776,34 @@ const getTelCode = async (val: string) => {
 //     }
 //   }
 // );
-const inputSms = (e: string, index: number) => {
+const inputSms = (index: number) => {
   if (!agent.value) {
-    sms.value =
-      (index === 0 ? e : sms1.value) +
-      (index === 1 ? e : sms2.value) +
-      (index === 2 ? e : sms3.value) +
-      (index === 3 ? e : sms4.value);
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else if (index === 0 && e.length > 0) {
-      proxy?.$refs["smsInput2"].focus();
-    } else if (index === 1 && e.length > 0) {
-      proxy?.$refs["smsInput3"].focus();
-    } else if (index === 2 && e.length > 0) {
-      proxy?.$refs["smsInput4"].focus();
+    switch (index) {
+      case 0:
+        if (sms1.value.length == 1) {
+          proxy?.$refs["smsInput2"].focus();
+        }
+        break;
+      case 1:
+        if (sms2.value.length == 1) {
+          proxy?.$refs["smsInput3"].focus();
+        }
+        break;
+      case 2:
+        if (sms3.value.length == 1) {
+          proxy?.$refs["smsInput4"].focus();
+        }
+        break;
+      default:
+        break;
+    }
+    if (
+      sms1.value.length == 1 &&
+      sms2.value.length == 1 &&
+      sms3.value.length == 1 &&
+      sms4.value.length == 1
+    ) {
+      inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
     }
   } else {
     if (sms.value.length === 4) {
@@ -747,7 +832,10 @@ const smsBlur = () => {
 };
 const inputCode = async (code: string) => {
   if (code && code.length === 4 && !isNaN(parseInt(code))) {
+    sms.value = code.replace(/\s/g, "");
     if (isCreatedAccount.value) {
+      if (requestLock.value) return;
+      requestLock.value = true;
       // 注册过账号。调登陆接口
       let phone = tel.value.replace(/\s/g, "");
       let query = { code: sms.value, phone };
@@ -767,6 +855,7 @@ const inputCode = async (code: string) => {
       } else {
         ElMessage({ type: "error", message: res.data.msg });
       }
+      requestLock.value = false;
     } else {
       // 未注册过。
       setTimeout(() => {
@@ -805,15 +894,9 @@ const countDown = async () => {
           }
         }, 1000);
         status.value = 2;
-        nextTick(() => {
-          proxy?.$refs["smsInput1"].focus();
-        });
       } else {
         if (codeRes.data.code === 12006) {
           status.value = 2;
-          nextTick(() => {
-            proxy?.$refs["smsInput1"].focus();
-          });
         }
         ElMessage({ type: "error", message: codeRes.data.msg });
       }
@@ -952,68 +1035,107 @@ const skip = (url: string, openNew: boolean) => {
       .tel1 {
         width: 66px;
         border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        text-align: center;
+        font-size: 26px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 6px;
         // margin: 40px 10px 0;
         ::placeholder {
           letter-spacing: 9.6px;
         }
-        :deep(.el-input__wrapper) {
-          // border-bottom: 1px solid #000;
-          box-shadow: none;
-          border-radius: 0;
-          padding: 0;
+        &:focus,
+        & :focus {
+          outline: none;
         }
-        :deep(.el-input__inner) {
-          text-align: center;
-          font-size: 26px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 400;
-          color: #000000;
-          letter-spacing: 6px;
-        }
+        // :deep(.el-input__wrapper) {
+        //   // border-bottom: 1px solid #000;
+        //   box-shadow: none;
+        //   border-radius: 0;
+        //   padding: 0;
+        // }
+        // :deep(.el-input__inner) {
+        //   text-align: center;
+        //   font-size: 26px;
+        //   font-family: FUTURA-MEDIUM;
+        //   font-weight: 400;
+        //   color: #000000;
+        //   letter-spacing: 6px;
+        // }
       }
       .tel2 {
         width: 90px;
         border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        text-align: center;
+        font-size: 26px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 6px;
         // margin: 40px 10px 0;
         ::placeholder {
           letter-spacing: 9.6px;
         }
-        :deep(.el-input__wrapper) {
-          // border-bottom: 1px solid #000;
-          box-shadow: none;
-          border-radius: 0;
-          padding: 0;
+        &:focus,
+        & :focus {
+          outline: none;
         }
-        :deep(.el-input__inner) {
-          text-align: center;
-          font-size: 26px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 400;
-          color: #000000;
-          letter-spacing: 6px;
-        }
+        // :deep(.el-input__wrapper) {
+        //   // border-bottom: 1px solid #000;
+        //   box-shadow: none;
+        //   border-radius: 0;
+        //   padding: 0;
+        // }
+        // :deep(.el-input__inner) {
+        //   text-align: center;
+        //   font-size: 26px;
+        //   font-family: FUTURA-MEDIUM;
+        //   font-weight: 400;
+        //   color: #000000;
+        //   letter-spacing: 6px;
+        // }
       }
       .tel3 {
         width: 90px;
         border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        text-align: center;
+        font-size: 26px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 400;
+        color: #000000;
+        letter-spacing: 6px;
         // margin: 40px 10px 0;
         ::placeholder {
           letter-spacing: 9.6px;
         }
-        :deep(.el-input__wrapper) {
-          // border-bottom: 1px solid #000;
-          box-shadow: none;
-          border-radius: 0;
-          padding: 0;
+        &:focus,
+        & :focus {
+          outline: none;
         }
-        :deep(.el-input__inner) {
-          text-align: center;
-          font-size: 26px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 400;
-          color: #000000;
-          letter-spacing: 6px;
-        }
+        // :deep(.el-input__wrapper) {
+        //   // border-bottom: 1px solid #000;
+        //   box-shadow: none;
+        //   border-radius: 0;
+        //   padding: 0;
+        // }
+        // :deep(.el-input__inner) {
+        //   text-align: center;
+        //   font-size: 26px;
+        //   font-family: FUTURA-MEDIUM;
+        //   font-weight: 400;
+        //   color: #000000;
+        //   letter-spacing: 6px;
+        // }
       }
       .btm {
         height: 33px;
@@ -1126,26 +1248,41 @@ const skip = (url: string, openNew: boolean) => {
       .tel {
         width: 100%;
         border: none;
-        :deep(.el-input__wrapper) {
-          box-shadow: none;
-          border-radius: 0;
-          padding: 0;
-          position: relative;
-          z-index: 3;
-          background: none;
-          // top: 47px;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        position: relative;
+        z-index: 3;
+        background: none;
+        font-size: 28px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 600;
+        color: #000;
+        text-align: center;
+        &:focus,
+        & :focus {
+          outline: none;
         }
-        :deep(.el-input__inner) {
-          // padding: 0 0 0 15%;
-          font-size: 28px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 600;
-          color: #000;
-          // letter-spacing: 114px;
-          text-align: center;
-          // overflow-x: hidden;
-          // overflow: hidden;
-        }
+        // :deep(.el-input__wrapper) {
+        //   box-shadow: none;
+        //   border-radius: 0;
+        //   padding: 0;
+        //   position: relative;
+        //   z-index: 3;
+        //   background: none;
+        //   // top: 47px;
+        // }
+        // :deep(.el-input__inner) {
+        //   // padding: 0 0 0 15%;
+        //   font-size: 28px;
+        //   font-family: FUTURA-MEDIUM;
+        //   font-weight: 600;
+        //   color: #000;
+        //   // letter-spacing: 114px;
+        //   text-align: center;
+        //   // overflow-x: hidden;
+        //   // overflow: hidden;
+        // }
       }
       .bb {
         width: 100%;
@@ -1281,7 +1418,7 @@ const skip = (url: string, openNew: boolean) => {
       top: -20px;
       left: 0;
       z-index: 10;
-      width: 100vw;
+      width: 95vw;
     }
   }
   .ipt-box {
@@ -1296,25 +1433,41 @@ const skip = (url: string, openNew: boolean) => {
       width: 78vw;
       border: none;
       margin: 10px auto 0;
+      border-bottom: 1px solid #fff;
+      background: #121826;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      background: #121826;
+      text-align: left;
+      font-size: 24px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #fff;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 6px;
       }
-      :deep(.el-input__wrapper) {
-        border-bottom: 1px solid #fff;
-        background: #121826;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        background: #121826;
-        text-align: left;
-        font-size: 24px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #fff;
-        letter-spacing: 6px;
-      }
+      // :deep(.el-input__wrapper) {
+      //   border-bottom: 1px solid #fff;
+      //   background: #121826;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   background: #121826;
+      //   text-align: left;
+      //   font-size: 24px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   color: #fff;
+      //   letter-spacing: 6px;
+      // }
     }
     .tel-container {
       margin: 10px 5px 0;
@@ -1325,74 +1478,119 @@ const skip = (url: string, openNew: boolean) => {
     .tel1 {
       width: 66px;
       border: none;
+      box-shadow: none;
+      border-radius: 0;
+      background: #121826;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #ffffff;
+      letter-spacing: 6px;
+      background: #121826;
       // margin: 40px 10px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        background: #121826;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #ffffff;
-        letter-spacing: 6px;
-        background: #121826;
-      }
+      // :deep(.el-input__wrapper) {
+      //   // border-bottom: 1px solid #000;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   background: #121826;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   text-align: center;
+      //   font-size: 26px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   color: #ffffff;
+      //   letter-spacing: 6px;
+      //   background: #121826;
+      // }
     }
     .tel2 {
       width: 90px;
       border: none;
       // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      background: #121826;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      background: #121826;
+      color: #fff;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        background: #121826;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        background: #121826;
-        color: #fff;
-        letter-spacing: 6px;
-      }
+      // :deep(.el-input__wrapper) {
+      //   // border-bottom: 1px solid #000;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   background: #121826;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   text-align: center;
+      //   font-size: 26px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   background: #121826;
+      //   color: #fff;
+      //   letter-spacing: 6px;
+      // }
     }
     .tel3 {
       width: 90px;
       border: none;
       // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      background: #121826;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      background: #121826;
+      color: #fff;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        background: #121826;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        background: #121826;
-        color: #fff;
-        letter-spacing: 6px;
-      }
+      // :deep(.el-input__wrapper) {
+      //   // border-bottom: 1px solid #000;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   background: #121826;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   text-align: center;
+      //   font-size: 26px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   background: #121826;
+      //   color: #fff;
+      //   letter-spacing: 6px;
+      // }
     }
     .btm {
       height: 10px;
@@ -1415,33 +1613,47 @@ const skip = (url: string, openNew: boolean) => {
       width: 78vw;
       height: 48px;
       border: none;
-      position: absolute;
-      left: 0;
-      top: 0;
+
       z-index: 99;
-      :deep(.el-input__wrapper) {
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-        position: relative;
-        background: none;
-        // top: 47px;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      // position: relative;
+      background: none;
+      font-size: 28px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 600;
+      color: transparent;
+      // 设置光标颜色
+      caret-color: transparent;
+      text-align: left;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        // padding: 0 0 0 15%;
-        width: 78vw;
-        height: 48px;
-        font-size: 28px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 600;
-        color: transparent;
-        // 设置光标颜色
-        caret-color: transparent;
-        // letter-spacing: 114px;
-        text-align: left;
-        // overflow-x: hidden;
-        // overflow: hidden;
-      }
+      // :deep(.el-input__wrapper) {
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   padding: 0;
+      //   position: relative;
+      //   background: none;
+      //   // top: 47px;
+      // }
+      // :deep(.el-input__inner) {
+      //   // padding: 0 0 0 15%;
+      //   width: 78vw;
+      //   height: 48px;
+      //   font-size: 28px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 600;
+      //   color: transparent;
+      //   // 设置光标颜色
+      //   caret-color: transparent;
+      //   // letter-spacing: 114px;
+      //   text-align: left;
+      //   // overflow-x: hidden;
+      //   // overflow: hidden;
+      // }
     }
     .bb {
       width: 78vw;

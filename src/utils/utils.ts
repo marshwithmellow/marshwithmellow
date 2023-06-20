@@ -111,3 +111,35 @@ export const isWeiXinBrowser = () => {
   // }
   return ua.indexOf("micromessenger") != -1;
 };
+
+/**
+ * 节流
+	节流原理：在一定时间内，只能触发一次
+ * @param {Function} func 要执行的回调函数 
+ * @param {Number} wait 延时的时间
+ * @param {Boolean} immediate 是否立即执行
+ * @return null
+ */
+var timesr: any = NaN,
+  throttleFlag: boolean;
+export function throttle(func: Function, wait = 500, immediate = true) {
+  if (immediate) {
+    if (!throttleFlag) {
+      throttleFlag = true;
+      // 如果是立即执行，则在wait毫秒内开始时执行
+      typeof func === "function" && func();
+      timesr = setTimeout(() => {
+        throttleFlag = false;
+      }, wait);
+    }
+  } else {
+    if (!throttleFlag) {
+      throttleFlag = true;
+      // 如果是非立即执行，则在wait毫秒内的结束处执行
+      timesr = setTimeout(() => {
+        throttleFlag = false;
+        typeof func === "function" && func();
+      }, wait);
+    }
+  }
+}

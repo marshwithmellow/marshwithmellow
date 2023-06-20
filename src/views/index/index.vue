@@ -271,8 +271,8 @@
             />
             <div class="btm"></div>
             <div class="btm btm2"></div> -->
-            <div class="tel-container" style="width: 66px">
-              <el-input
+            <div class="tel-container" style="width: 78px">
+              <!-- <el-input
                 ref="telInput1"
                 :maxlength="3"
                 class="tel1"
@@ -282,10 +282,21 @@
                 @focus="telholder1 = ''"
                 @blur="telholder1 = 'xxx'"
                 @input="talInput($event, 0)"
+              /> -->
+              <input
+                ref="telInput1"
+                :maxlength="3"
+                class="tel1"
+                v-model="tel1"
+                :placeholder="telholder1"
+                @focus="telholder1 = ''"
+                @paste="pasteTel"
+                @blur="telholder1 = 'xxx'"
+                @input="telInput(0)"
               />
             </div>
-            <div class="tel-container" style="width: 90px">
-              <el-input
+            <div class="tel-container" style="width: 102px">
+              <!-- <el-input
                 ref="telInput2"
                 :maxlength="4"
                 class="tel2"
@@ -296,10 +307,22 @@
                 @blur="telholder2 = 'xxxx'"
                 @input="talInput($event, 1)"
                 @keyup.delete.native="deleteTel(2)"
+              /> -->
+              <input
+                ref="telInput2"
+                :maxlength="4"
+                class="tel2"
+                v-model="tel2"
+                :placeholder="telholder2"
+                @focus="telholder2 = ''"
+                @blur="telholder2 = 'xxxx'"
+                @paste="pasteTel"
+                @input="telInput(1)"
+                @keyup.delete.native="deleteTel(1)"
               />
             </div>
-            <div class="tel-container" style="width: 90px">
-              <el-input
+            <div class="tel-container" style="width: 102px">
+              <!-- <el-input
                 ref="telInput3"
                 :maxlength="4"
                 class="tel3"
@@ -310,6 +333,18 @@
                 @blur="telholder3 = 'xxxx'"
                 @input="talInput($event, 2)"
                 @keyup.delete.native="deleteTel(3)"
+              /> -->
+              <input
+                ref="telInput3"
+                :maxlength="4"
+                class="tel3"
+                v-model="tel3"
+                :placeholder="telholder3"
+                @focus="telholder3 = ''"
+                @blur="telholder3 = 'xxxx'"
+                @paste="pasteTel"
+                @input="telInput(2)"
+                @keyup.delete.native="deleteTel(2)"
               />
             </div>
             <!-- <div class="tel-big" :class="telFocus ? 'focus' : ''">
@@ -344,47 +379,55 @@
             /> -->
             <div class="bb">
               <div class="square">
-                <el-input
+                <input
                   type="tel"
                   ref="smsInput1"
                   :maxlength="1"
                   class="tel"
                   v-model="sms1"
-                  :autofocus="true"
                   placeholder=""
+                  @paste="pasteSms"
+                  @input="smsInput(0)"
+                  @keyup.delete.native="deleteSms(0)"
                 />
               </div>
               <div class="square square2">
-                <el-input
+                <input
                   type="tel"
                   ref="smsInput2"
                   :maxlength="1"
                   class="tel"
                   v-model="sms2"
-                  :autofocus="true"
                   placeholder=""
+                  @paste="pasteSms"
+                  @input="smsInput(1)"
+                  @keyup.delete.native="deleteSms(1)"
                 />
               </div>
               <div class="square square3">
-                <el-input
+                <input
                   type="tel"
                   ref="smsInput3"
                   :maxlength="1"
                   class="tel"
                   v-model="sms3"
-                  :autofocus="true"
                   placeholder=""
+                  @paste="pasteSms"
+                  @input="smsInput(2)"
+                  @keyup.delete.native="deleteSms(2)"
                 />
               </div>
               <div class="square square4">
-                <el-input
+                <input
                   type="tel"
                   ref="smsInput4"
                   :maxlength="1"
                   class="tel"
                   v-model="sms4"
-                  :autofocus="true"
                   placeholder=""
+                  @paste="pasteSms"
+                  @input="smsInput(3)"
+                  @keyup.delete.native="deleteSms(3)"
                 />
               </div>
               <!-- <div class="square square7"></div> -->
@@ -396,7 +439,6 @@
               :maxlength="13"
               class="tel"
               v-model="nickname"
-              :autofocus="true"
               placeholder="怎么称呼你？"
               @keyup.enter="inputNickname"
             />
@@ -843,8 +885,8 @@ const tel3 = ref("");
 const telholder1 = ref("xxx");
 const telholder2 = ref("xxxx");
 const telholder3 = ref("xxxx");
-const telFocus = ref(false);
-const telholder = ref("请输入手机号码");
+// const telFocus = ref(false);
+// const telholder = ref("请输入手机号码");
 const sms = ref("");
 const sms1 = ref("");
 const sms2 = ref("");
@@ -865,6 +907,7 @@ const agent = ref(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
   )
 );
+const requestLock = ref(false);
 const drawer = ref(false);
 const qrCodeImgUrl = ref("");
 // 使用插件
@@ -965,52 +1008,63 @@ const getUserInfo = async (token: string, accessKey: string) => {
   }
 };
 const deleteTel = (flag: number) => {
-  if (flag == 3 && tel3.value.length == 0) {
+  if (flag == 2 && tel3.value.length == 0) {
     proxy?.$refs["telInput2"].focus();
   } else if (tel2.value.length == 0) {
     proxy?.$refs["telInput1"].focus();
   }
 };
-const talInput = (e: string, index: number) => {
+const deleteSms = (flag: number) => {
+  if (flag == 3 && sms4.value.length == 0) {
+    proxy?.$refs["smsInput3"].focus();
+  } else if (flag == 2 && sms3.value.length == 0) {
+    proxy?.$refs["smsInput2"].focus();
+  } else if (sms2.value.length == 0) {
+    proxy?.$refs["smsInput1"].focus();
+  }
+};
+const pasteSms = (e: ClipboardEvent) => {
+  const text = e.clipboardData?.getData("text");
+  const arrText = text?.split(/ [(\r\n)\r\n] +/); // 以转行符切割文本字符串
+  if (arrText && arrText.length > 0 && arrText[0].length >= 4) {
+    sms1.value = arrText[0][0];
+    sms2.value = arrText[0][1];
+    sms3.value = arrText[0][2];
+    sms4.value = arrText[0][3];
+    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
+  }
+};
+const pasteTel = (e: ClipboardEvent) => {
+  const text = e.clipboardData?.getData("text");
+  const arrText = text?.split(/ [(\r\n)\r\n] +/);
+  if (arrText && arrText.length > 0 && arrText[0].length >= 11) {
+    tel1.value = arrText[0][0] + arrText[0][1] + arrText[0][2];
+    tel2.value = arrText[0][3] + arrText[0][4] + arrText[0][5] + arrText[0][6];
+    tel3.value = arrText[0][7] + arrText[0][8] + arrText[0][9] + arrText[0][10];
+    getTelCode(tel1.value + tel2.value + tel3.value);
+  }
+};
+const telInput = (index: number) => {
   switch (index) {
     case 0:
-      if (e.length == 3) {
+      if (tel1.value.length == 3) {
         proxy?.$refs["telInput2"].focus();
-      }
-      tel1.value = e;
-      if (
-        tel1.value.length == 3 &&
-        tel2.value.length == 4 &&
-        tel3.value.length == 4
-      ) {
-        getTelCode(tel1.value + tel2.value + tel3.value);
       }
       break;
     case 1:
-      if (e.length == 4) {
+      if (tel2.value.length == 4) {
         proxy?.$refs["telInput3"].focus();
-      }
-      tel2.value = e;
-      if (
-        tel1.value.length == 3 &&
-        tel2.value.length == 4 &&
-        tel3.value.length == 4
-      ) {
-        getTelCode(tel1.value + tel2.value + tel3.value);
-      }
-      break;
-    case 2:
-      tel3.value = e;
-      if (
-        tel1.value.length == 3 &&
-        tel2.value.length == 4 &&
-        tel3.value.length == 4
-      ) {
-        getTelCode(tel1.value + tel2.value + tel3.value);
       }
       break;
     default:
       break;
+  }
+  if (
+    tel1.value.length == 3 &&
+    tel2.value.length == 4 &&
+    tel3.value.length == 4
+  ) {
+    getTelCode(tel1.value + tel2.value + tel3.value);
   }
 };
 const getTelCode = async (val: string) => {
@@ -1050,48 +1104,137 @@ const getTelCode = async (val: string) => {
     } else ElMessage("请输入正确的手机号");
   }
 };
+const smsInput = (index: number) => {
+  switch (index) {
+    case 0:
+      if (sms1.value.length == 1) {
+        proxy?.$refs["smsInput2"].focus();
+      }
+      break;
+    case 1:
+      if (sms2.value.length == 1) {
+        proxy?.$refs["smsInput3"].focus();
+      }
+      break;
+    case 2:
+      if (sms3.value.length == 1) {
+        proxy?.$refs["smsInput4"].focus();
+      }
+      break;
+    default:
+      break;
+  }
+  if (
+    sms1.value.length == 1 &&
+    sms2.value.length == 1 &&
+    sms3.value.length == 1 &&
+    sms4.value.length == 1
+  ) {
+    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
+  }
+};
 watch(
-  () => sms1.value,
-  async (newValue) => {
-    sms.value = newValue + sms2.value + sms3.value + sms4.value;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else if (showDialog.value && newValue && newValue.length > 0) {
-      proxy?.$refs["smsInput2"].focus();
+  () => status.value,
+  (newValue, oldValue) => {
+    if (newValue == 2 && oldValue == 1) {
+      nextTick(() => {
+        proxy?.$refs["telInput1"].focus();
+      });
+    } else if (newValue == 2 && oldValue == 3) {
+      nextTick(() => {
+        proxy?.$refs["telInput3"].focus();
+      });
+    } else if (newValue == 3 && oldValue == 2) {
+      nextTick(() => {
+        proxy?.$refs["smsInput1"].focus();
+      });
     }
   }
 );
 watch(
-  () => sms2.value,
-  async (newValue) => {
-    sms.value = sms1.value + newValue + sms3.value + sms4.value;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else if (showDialog.value && newValue && newValue.length > 0) {
-      proxy?.$refs["smsInput3"].focus();
+  () => showDialog.value,
+  (newValue) => {
+    if (newValue && status.value == 2) {
+      nextTick(() => {
+        if (tel3.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["telInput3"].focus();
+          }, 500);
+        } else if (tel2.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["telInput2"].focus();
+          }, 500);
+        } else {
+          setTimeout(() => {
+            proxy?.$refs["telInput1"].focus();
+          }, 500);
+        }
+      });
+    } else if (newValue && status.value == 3) {
+      nextTick(() => {
+        if (sms4.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["smsInput4"].focus();
+          }, 500);
+        } else if (sms3.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["smsInput3"].focus();
+          }, 500);
+        } else if (sms2.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["smsInput2"].focus();
+          }, 500);
+        } else {
+          setTimeout(() => {
+            proxy?.$refs["smsInput1"].focus();
+          }, 500);
+        }
+      });
     }
   }
 );
-watch(
-  () => sms3.value,
-  async (newValue) => {
-    sms.value = sms1.value + sms2.value + newValue + sms4.value;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else if (showDialog.value && newValue && newValue.length > 0) {
-      proxy?.$refs["smsInput4"].focus();
-    }
-  }
-);
-watch(
-  () => sms4.value,
-  async (newValue) => {
-    sms.value = sms1.value + sms2.value + sms3.value + newValue;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    }
-  }
-);
+// watch(
+//   () => sms1.value,
+//   async (newValue) => {
+//     sms.value = newValue + sms2.value + sms3.value + sms4.value;
+//     if (sms.value.length === 4) {
+//       inputCode(sms.value);
+//     } else if (showDialog.value && newValue && newValue.length > 0) {
+//       proxy?.$refs["smsInput2"].focus();
+//     }
+//   }
+// );
+// watch(
+//   () => sms2.value,
+//   async (newValue) => {
+//     sms.value = sms1.value + newValue + sms3.value + sms4.value;
+//     if (sms.value.length === 4) {
+//       inputCode(sms.value);
+//     } else if (showDialog.value && newValue && newValue.length > 0) {
+//       proxy?.$refs["smsInput3"].focus();
+//     }
+//   }
+// );
+// watch(
+//   () => sms3.value,
+//   async (newValue) => {
+//     sms.value = sms1.value + sms2.value + newValue + sms4.value;
+//     if (sms.value.length === 4) {
+//       inputCode(sms.value);
+//     } else if (showDialog.value && newValue && newValue.length > 0) {
+//       proxy?.$refs["smsInput4"].focus();
+//     }
+//   }
+// );
+// watch(
+//   () => sms4.value,
+//   async (newValue) => {
+//     sms.value = sms1.value + sms2.value + sms3.value + newValue;
+//     if (sms.value.length === 4) {
+//       inputCode(sms.value);
+//     }
+//   }
+// );
 // 监听手机号
 // watch(
 //   () => tel.value,
@@ -1216,7 +1359,10 @@ const copy = async () => {
 // sms-code
 const inputCode = async (code: string) => {
   if (code && code.length === 4 && !isNaN(parseInt(code))) {
+    sms.value = code.replace(/\s/g, "");
     if (isCreatedAccount.value) {
+      if (requestLock.value) return;
+      requestLock.value = true;
       // 注册过账号。调登陆接口
       let phone = tel.value.replace(/\s/g, "");
       let query = { code: sms.value, phone };
@@ -1249,6 +1395,7 @@ const inputCode = async (code: string) => {
       } else {
         ElMessage({ type: "error", message: res.data.msg });
       }
+      requestLock.value = false;
     } else {
       // 未注册过。
       setTimeout(() => {
@@ -2420,68 +2567,108 @@ const navQuestion = (blogType: string) => {
     .tel1 {
       width: 66px;
       border: none;
+      // border-bottom: 1px solid #000;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      letter-spacing: 6px;
       // margin: 40px 10px 0;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000000;
-        letter-spacing: 6px;
-      }
+      // :deep(.el-input__wrapper) {
+      //   // border-bottom: 1px solid #000;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   text-align: center;
+      //   font-size: 26px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   color: #000000;
+      //   letter-spacing: 6px;
+      // }
     }
     .tel2 {
       width: 90px;
       border: none;
       // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000000;
-        letter-spacing: 6px;
-      }
+      // :deep(.el-input__wrapper) {
+      //   // border-bottom: 1px solid #000;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   text-align: center;
+      //   font-size: 26px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   color: #000000;
+      //   letter-spacing: 6px;
+      // }
     }
     .tel3 {
       width: 90px;
       border: none;
       // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000000;
-        letter-spacing: 6px;
-      }
+      // :deep(.el-input__wrapper) {
+      //   // border-bottom: 1px solid #000;
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   padding: 0;
+      // }
+      // :deep(.el-input__inner) {
+      //   text-align: center;
+      //   font-size: 26px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 400;
+      //   color: #000000;
+      //   letter-spacing: 6px;
+      // }
     }
     .btm {
       height: 33px;
@@ -2501,26 +2688,41 @@ const navQuestion = (blogType: string) => {
     .tel {
       width: 100%;
       border: none;
-      :deep(.el-input__wrapper) {
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-        position: relative;
-        z-index: 3;
-        background: none;
-        // top: 45px;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      position: relative;
+      z-index: 3;
+      background: none;
+      font-size: 28px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 600;
+      color: #000000;
+      text-align: center;
+      &:focus,
+      & :focus {
+        outline: none;
       }
-      :deep(.el-input__inner) {
-        // padding: 0 22% 0 21%;
-        font-size: 28px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 600;
-        color: #000000;
-        // letter-spacing: 80px;
-        text-align: center;
-        // overflow-x: hidden;
-        // overflow: hidden;
-      }
+      // :deep(.el-input__wrapper) {
+      //   box-shadow: none;
+      //   border-radius: 0;
+      //   padding: 0;
+      //   position: relative;
+      //   z-index: 3;
+      //   background: none;
+      //   // top: 45px;
+      // }
+      // :deep(.el-input__inner) {
+      //   // padding: 0 22% 0 21%;
+      //   font-size: 28px;
+      //   font-family: FUTURA-MEDIUM;
+      //   font-weight: 600;
+      //   color: #000000;
+      //   // letter-spacing: 80px;
+      //   text-align: center;
+      //   // overflow-x: hidden;
+      //   // overflow: hidden;
+      // }
     }
     .bb {
       width: 360px;

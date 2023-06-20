@@ -304,55 +304,45 @@
             </div>
             <!-- 手机号 -->
             <div class="ipt-box" v-if="status === 2">
-              <!-- <el-input
-                type="tel"
-                :maxlength="11"
-                class="tel"
-                v-model="tel"
-                :autofocus="true"
-                placeholder="xxxxxxxxxxx"
-              />
-              <div class="btm"></div>
-              <div class="btm btm2"></div> -->
               <div class="tel-container">
-                <el-input
+                <input
                   ref="telInput1"
                   :maxlength="3"
                   class="tel1"
                   v-model="tel1"
-                  :autofocus="true"
                   :placeholder="telholder1"
                   @focus="telholder1 = ''"
+                  @paste="pasteTel"
                   @blur="telholder1 = 'xxx'"
-                  @input="talInput($event, 0)"
+                  @input="telInput(0)"
                 />
               </div>
               <div class="tel-container">
-                <el-input
+                <input
                   ref="telInput2"
                   :maxlength="4"
                   class="tel2"
                   v-model="tel2"
-                  :autofocus="false"
                   :placeholder="telholder2"
                   @focus="telholder2 = ''"
-                  @blur="telholder2 = 'xxx'"
-                  @input="talInput($event, 1)"
-                  @keyup.delete.native="deleteTel(2)"
+                  @blur="telholder2 = 'xxxx'"
+                  @paste="pasteTel"
+                  @input="telInput(1)"
+                  @keyup.delete.native="deleteTel(1)"
                 />
               </div>
               <div class="tel-container">
-                <el-input
+                <input
                   ref="telInput3"
                   :maxlength="4"
                   class="tel3"
                   v-model="tel3"
-                  :autofocus="false"
                   :placeholder="telholder3"
                   @focus="telholder3 = ''"
-                  @blur="telholder3 = 'xxx'"
-                  @input="talInput($event, 2)"
-                  @keyup.delete.native="deleteTel(3)"
+                  @blur="telholder3 = 'xxxx'"
+                  @paste="pasteTel"
+                  @input="telInput(2)"
+                  @keyup.delete.native="deleteTel(2)"
                 />
               </div>
             </div>
@@ -368,47 +358,55 @@
               /> -->
               <div class="bb">
                 <div class="square">
-                  <el-input
+                  <input
                     type="tel"
                     ref="smsInput1"
                     :maxlength="1"
                     class="tel"
                     v-model="sms1"
-                    :autofocus="true"
                     placeholder=""
+                    @paste="pasteSms"
+                    @input="smsInput(0)"
+                    @keyup.delete.native="deleteSms(0)"
                   />
                 </div>
                 <div class="square square2">
-                  <el-input
+                  <input
                     type="tel"
                     ref="smsInput2"
                     :maxlength="1"
                     class="tel"
                     v-model="sms2"
-                    :autofocus="true"
                     placeholder=""
+                    @paste="pasteSms"
+                    @input="smsInput(1)"
+                    @keyup.delete.native="deleteSms(1)"
                   />
                 </div>
                 <div class="square square3">
-                  <el-input
+                  <input
                     type="tel"
                     ref="smsInput3"
                     :maxlength="1"
                     class="tel"
                     v-model="sms3"
-                    :autofocus="true"
                     placeholder=""
+                    @paste="pasteSms"
+                    @input="smsInput(2)"
+                    @keyup.delete.native="deleteSms(2)"
                   />
                 </div>
                 <div class="square square4">
-                  <el-input
+                  <input
                     type="tel"
                     ref="smsInput4"
                     :maxlength="1"
                     class="tel"
                     v-model="sms4"
-                    :autofocus="true"
                     placeholder=""
+                    @paste="pasteSms"
+                    @input="smsInput(3)"
+                    @keyup.delete.native="deleteSms(3)"
                   />
                 </div>
                 <!-- <div class="square square7"></div> -->
@@ -420,7 +418,6 @@
                 :maxlength="11"
                 class="tel"
                 v-model="nickname"
-                :autofocus="true"
                 placeholder="怎么称呼你？"
                 @keyup.enter="inputNickname"
               />
@@ -792,12 +789,8 @@
   </div>
 </template>
 <script setup lang="ts">
-// import logo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png";
 import { ref, onBeforeMount, watch, nextTick, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
-// import swiper1 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider1.png";
-// import swiper2 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider2.png";
-// import swiper3 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider3.png";
 import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
 import { pinyin } from "pinyin-pro";
 import { TopRight, Back } from "@element-plus/icons-vue";
@@ -848,6 +841,7 @@ const userInfo = ref({
 const nickname = ref("");
 const time = ref(60);
 const loginFlag = ref(false);
+const requestLock = ref(false);
 onBeforeMount(() => {
   if ($router.currentRoute.value.query.blogType) {
     blogType.value = $router.currentRoute.value.query.blogType;
@@ -889,46 +883,57 @@ const deleteTel = (flag: number) => {
     proxy?.$refs["telInput1"].focus();
   }
 };
-const talInput = (e: string, index: number) => {
+const deleteSms = (flag: number) => {
+  if (flag == 3 && sms4.value.length == 0) {
+    proxy?.$refs["smsInput3"].focus();
+  } else if (flag == 2 && sms3.value.length == 0) {
+    proxy?.$refs["smsInput2"].focus();
+  } else if (sms2.value.length == 0) {
+    proxy?.$refs["smsInput1"].focus();
+  }
+};
+const pasteSms = (e: ClipboardEvent) => {
+  const text = e.clipboardData?.getData("text");
+  const arrText = text?.split(/ [(\r\n)\r\n] +/); // 以转行符切割文本字符串
+  if (arrText && arrText.length > 0 && arrText[0].length >= 4) {
+    sms1.value = arrText[0][0];
+    sms2.value = arrText[0][1];
+    sms3.value = arrText[0][2];
+    sms4.value = arrText[0][3];
+    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
+  }
+};
+const pasteTel = (e: ClipboardEvent) => {
+  const text = e.clipboardData?.getData("text");
+  const arrText = text?.split(/ [(\r\n)\r\n] +/);
+  if (arrText && arrText.length > 0 && arrText[0].length >= 11) {
+    tel1.value = arrText[0][0] + arrText[0][1] + arrText[0][2];
+    tel2.value = arrText[0][3] + arrText[0][4] + arrText[0][5] + arrText[0][6];
+    tel3.value = arrText[0][7] + arrText[0][8] + arrText[0][9] + arrText[0][10];
+    getTelCode(tel1.value + tel2.value + tel3.value);
+  }
+};
+const telInput = (index: number) => {
   switch (index) {
     case 0:
-      if (e.length == 3) {
+      if (tel1.value.length == 3) {
         proxy?.$refs["telInput2"].focus();
-      }
-      tel1.value = e;
-      if (
-        tel1.value.length == 3 &&
-        tel2.value.length == 4 &&
-        tel3.value.length == 4
-      ) {
-        getTelCode(tel1.value + tel2.value + tel3.value);
       }
       break;
     case 1:
-      if (e.length == 4) {
+      if (tel2.value.length == 4) {
         proxy?.$refs["telInput3"].focus();
-      }
-      tel2.value = e;
-      if (
-        tel1.value.length == 3 &&
-        tel2.value.length == 4 &&
-        tel3.value.length == 4
-      ) {
-        getTelCode(tel1.value + tel2.value + tel3.value);
-      }
-      break;
-    case 2:
-      tel3.value = e;
-      if (
-        tel1.value.length == 3 &&
-        tel2.value.length == 4 &&
-        tel3.value.length == 4
-      ) {
-        getTelCode(tel1.value + tel2.value + tel3.value);
       }
       break;
     default:
       break;
+  }
+  if (
+    tel1.value.length == 3 &&
+    tel2.value.length == 4 &&
+    tel3.value.length == 4
+  ) {
+    getTelCode(tel1.value + tel2.value + tel3.value);
   }
 };
 const getTelCode = async (val: string) => {
@@ -965,80 +970,92 @@ const getTelCode = async (val: string) => {
     } else ElMessage("请输入正确的手机号");
   }
 };
+const smsInput = (index: number) => {
+  switch (index) {
+    case 0:
+      if (sms1.value.length == 1) {
+        proxy?.$refs["smsInput2"].focus();
+      }
+      break;
+    case 1:
+      if (sms2.value.length == 1) {
+        proxy?.$refs["smsInput3"].focus();
+      }
+      break;
+    case 2:
+      if (sms3.value.length == 1) {
+        proxy?.$refs["smsInput4"].focus();
+      }
+      break;
+    default:
+      break;
+  }
+  if (
+    sms1.value.length == 1 &&
+    sms2.value.length == 1 &&
+    sms3.value.length == 1 &&
+    sms4.value.length == 1
+  ) {
+    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
+  }
+};
 watch(
-  () => sms1.value,
-  async (newValue) => {
-    sms.value = newValue + sms2.value + sms3.value + sms4.value;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else {
-      proxy?.$refs["smsInput2"].focus();
+  () => status.value,
+  (newValue, oldValue) => {
+    if (newValue == 2 && oldValue == 1) {
+      nextTick(() => {
+        proxy?.$refs["telInput1"].focus();
+      });
+    } else if (newValue == 2 && oldValue == 3) {
+      nextTick(() => {
+        proxy?.$refs["telInput3"].focus();
+      });
+    } else if (newValue == 3 && oldValue == 2) {
+      nextTick(() => {
+        proxy?.$refs["smsInput1"].focus();
+      });
     }
   }
 );
 watch(
-  () => sms2.value,
-  async (newValue) => {
-    sms.value = sms1.value + newValue + sms3.value + sms4.value;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else {
-      proxy?.$refs["smsInput3"].focus();
-    }
-  }
-);
-watch(
-  () => sms3.value,
-  async (newValue) => {
-    sms.value = sms1.value + sms2.value + newValue + sms4.value;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    } else {
-      proxy?.$refs["smsInput4"].focus();
-    }
-  }
-);
-watch(
-  () => sms4.value,
-  async (newValue) => {
-    sms.value = sms1.value + sms2.value + sms3.value + newValue;
-    if (sms.value.length === 4) {
-      inputCode(sms.value);
-    }
-  }
-);
-// 监听手机号
-watch(
-  () => tel.value,
-  async (newValue, oldValue) => {
-    tel.value =
-      newValue.length > oldValue.length
-        ? newValue.replace(/\s/g, "")
-        : // .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
-          tel.value.trim();
-    if (tel.value.length === 11) {
-      let mobile = tel.value.replace(/\s/g, "");
-      if (mobile && verifyPhone(mobile)) {
-        if (loginFlag.value) return;
-        loginFlag.value = true;
-        const phoneRegister = await checkPhone({ phone: mobile });
-        let codeRes = null;
-        if (phoneRegister.data.data.register) {
-          // 注册过。登陆验证码
-          codeRes = await doSendCode({ phone: mobile });
-          isCreatedAccount.value = true;
+  () => showDialog.value,
+  (newValue) => {
+    if (newValue && status.value == 2) {
+      nextTick(() => {
+        if (tel3.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["telInput3"].focus();
+          }, 500);
+        } else if (tel2.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["telInput2"].focus();
+          }, 500);
         } else {
-          // 未注册过，注册验证码
-          codeRes = await doRegisterCode({ phone: mobile });
+          setTimeout(() => {
+            proxy?.$refs["telInput1"].focus();
+          }, 500);
         }
-        if (codeRes.data.code === 11000) {
-          ElMessage({ type: "success", message: "验证码已发送" });
-          status.value = 3;
+      });
+    } else if (newValue && status.value == 3) {
+      nextTick(() => {
+        if (sms4.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["smsInput4"].focus();
+          }, 500);
+        } else if (sms3.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["smsInput3"].focus();
+          }, 500);
+        } else if (sms2.value.length > 0) {
+          setTimeout(() => {
+            proxy?.$refs["smsInput2"].focus();
+          }, 500);
         } else {
-          ElMessage({ type: "error", message: codeRes.data.msg });
+          setTimeout(() => {
+            proxy?.$refs["smsInput1"].focus();
+          }, 500);
         }
-        loginFlag.value = false;
-      } else ElMessage("请输入正确的手机号");
+      });
     }
   }
 );
@@ -1090,7 +1107,10 @@ const countDown = async () => {
 // sms-code
 const inputCode = async (code: string) => {
   if (code && code.length === 4 && !isNaN(parseInt(code))) {
+    sms.value = code.replace(/\s/g, "");
     if (isCreatedAccount.value) {
+      if (requestLock.value) return;
+      requestLock.value = true;
       // 注册过账号。调登陆接口
       let phone = tel.value.replace(/\s/g, "");
       let query = { code: sms.value, phone };
@@ -1106,6 +1126,7 @@ const inputCode = async (code: string) => {
       } else {
         ElMessage({ type: "error", message: res.data.msg });
       }
+      requestLock.value = false;
     } else {
       // 未注册过。
       setTimeout(() => {
@@ -1538,14 +1559,11 @@ const skip = (url: string, openNew: boolean) => {
     justify-content: center;
     align-items: center;
     .tel {
-      width: 320px;
+      // width: 320px;
       border: none;
-      margin: 20px 132px 0;
-      ::placeholder {
-        letter-spacing: 9.6px;
-      }
+      // margin: 40px 10px 0;
       :deep(.el-input__wrapper) {
-        border-bottom: 1px solid #000;
+        // border-bottom: 1px solid #000;
         box-shadow: none;
         border-radius: 0;
         padding: 0;
@@ -1555,8 +1573,7 @@ const skip = (url: string, openNew: boolean) => {
         font-size: 26px;
         font-family: FUTURA-MEDIUM;
         font-weight: 400;
-        color: #000000;
-        letter-spacing: 10px;
+        color: #000;
       }
     }
     .tel-container {
@@ -1567,67 +1584,61 @@ const skip = (url: string, openNew: boolean) => {
     .tel1 {
       width: 66px;
       border: none;
-      // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-      }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000000;
-        letter-spacing: 6px;
+      &:focus,
+      & :focus {
+        outline: none;
       }
     }
     .tel2 {
       width: 90px;
       border: none;
-      // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-      }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000000;
-        letter-spacing: 6px;
+      &:focus,
+      & :focus {
+        outline: none;
       }
     }
     .tel3 {
       width: 90px;
       border: none;
-      // margin: 40px 10px 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      text-align: center;
+      font-size: 26px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      letter-spacing: 6px;
       ::placeholder {
         letter-spacing: 9.6px;
       }
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-      }
-      :deep(.el-input__inner) {
-        text-align: center;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000000;
-        letter-spacing: 6px;
+      &:focus,
+      & :focus {
+        outline: none;
       }
     }
     .btm {
@@ -1648,25 +1659,20 @@ const skip = (url: string, openNew: boolean) => {
     .tel {
       width: 100%;
       border: none;
-      :deep(.el-input__wrapper) {
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-        position: relative;
-        z-index: 3;
-        background: none;
-        // top: 45px;
-      }
-      :deep(.el-input__inner) {
-        // padding: 0 22% 0 21%;
-        font-size: 28px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 600;
-        color: #000000;
-        // letter-spacing: 80px;
-        text-align: center;
-        // overflow-x: hidden;
-        // overflow: hidden;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      position: relative;
+      z-index: 3;
+      background: none;
+      font-size: 28px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 600;
+      color: #000000;
+      text-align: center;
+      &:focus,
+      & :focus {
+        outline: none;
       }
     }
     .bb {
