@@ -1,115 +1,320 @@
 <template>
   <div class="px-common-layout px-no-trans">
     <div v-if="!agent">
+      <div class="overlay" v-if="popoverShow"></div>
+      <div
+        class="overlay-1"
+        :style="{
+          animation: fadeName + ' 1s',
+        }"
+        v-if="mpQrcodeShow"
+        @click="hideQrcode"
+      >
+        <img
+          src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/gh_d572d3f7d5db_1280.jpg"
+          class="qrcode"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click.stop="() => {}"
+        />
+        <img
+          src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/mp-content.png"
+          class="content"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click.stop="() => {}"
+        />
+        <div
+          class="back"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click="hideQrcode"
+        >
+          返回
+        </div>
+      </div>
       <el-container>
         <el-aside class="aside">
-          <div class="flex">
-            <img
-              class="logo"
-              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
-              alt=""
-            />
-            <button
-              v-if="userInfo.name"
-              class="button-style gpt-button"
-              @click="skip('https://mchat.mbmzone.com/', true)"
-            >
-              和我的 ChatGPT 聊天
-            </button>
-            <button v-else class="button-style gpt-button" @click="toLogin">
-              登录 MBM OpenAI 账号
-            </button>
-            <div class="default-model">
-              <img
-                class="icon-ai"
-                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png"
-                alt=""
-              />
-              <div class="model-name active">默认模型</div>
-              <el-select
-                v-model="aiVersion"
-                :fit-input-width="false"
-                popper-class="select-down"
-                :popper-append-to-body="false"
-                class="ai-select"
-                :class="{
-                  w128:
-                    aiVersion.value === 'GPT-4' ||
-                    aiVersion.value === 'GPT-3.5',
-                  w171: aiVersion.value === 'GPT-4 32K',
-                }"
-                :placeholder="options[0].label"
-                size="small"
+          <img
+            class="logo"
+            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+            alt=""
+          />
+          <div class="aside-content">
+            <div class="flex">
+              <button
+                v-if="userInfo.name"
+                class="button-style gpt-button"
+                @click="skip('https://mchat.mbmzone.com/', true)"
               >
-                <el-option
-                  class="options"
-                  v-for="item in options"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+                和我的 ChatGPT 聊天
+              </button>
+              <button v-else class="button-style gpt-button" @click="toLogin">
+                登录 MBM OpenAI 账号
+              </button>
+              <div class="default-model">
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png"
+                  alt=""
                 />
-              </el-select>
-            </div>
-            <div class="default-model" @click="skip('http://visus.ai/', true)">
-              <img
-                class="icon-ai"
-                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
-                alt=""
-              />
-              <div class="model-name">训练你自己的 ChatGPT</div>
-            </div>
-            <div class="default-model" @click="train('生成我的GPT4 API Key')">
-              <img
-                class="icon-ai"
-                src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
-                alt=""
-              />
-              <div class="model-name">生成我的 GPT4 API Key</div>
-            </div>
-          </div>
-          <div class="flex">
-            <ul class="question-box">
-              <li
-                class="question"
-                v-for="(item, index) in questionList"
-                :key="index"
-                @click="navQuestion(item.value)"
+                <div class="model-name active">默认模型</div>
+                <el-select
+                  v-model="aiVersion"
+                  :fit-input-width="false"
+                  popper-class="select-down"
+                  :popper-append-to-body="false"
+                  class="ai-select"
+                  :class="{
+                    w128:
+                      aiVersion.value === 'GPT-4' ||
+                      aiVersion.value === 'GPT-3.5',
+                    w171: aiVersion.value === 'GPT-4 32K',
+                  }"
+                  :placeholder="options[0].label"
+                  size="small"
+                >
+                  <el-option
+                    class="options"
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </div>
+              <div
+                class="default-model"
+                @click="skip('http://visus.ai/', true)"
               >
-                {{ item.label }}
-              </li>
-            </ul>
-            <button
-              v-if="userInfo.name"
-              class="gpt-button color-button"
-              @click="recharge"
-            >
-              充值我的账户
-              <div class="my-count-hover"></div>
-              <!-- <div class="block_hoverer"></div>
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
+                  alt=""
+                />
+                <div class="model-name">训练你自己的 ChatGPT</div>
+              </div>
+              <!-- <el-popover
+                placement="right"
+                :width="300"
+                :offset="20"
+                trigger="click"
+                v-if="userInfo.name"
+                v-model:visible="popoverShow"
+              >
+                <template #reference>
+                  <div class="default-model">
+                    <img
+                      class="icon-ai"
+                      src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
+                      alt=""
+                    />
+                    <div class="model-name">生成我的 GPT4 API Key</div>
+                  </div>
+                </template>
+                <div class="popover-container">
+                  <img
+                    class="popover-logo"
+                    src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+                    alt=""
+                  />
+                  <div class="popover-content">
+                    <div
+                      style="
+                        width: 100%;
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+                        flex-direction: column;
+                      "
+                      v-if="isCreatedKey"
+                    >
+                      <div class="popover-title">我的 GPT4 API Key</div>
+                      <div class="popover-part">
+                        <div class="popover-block">
+                          <div class="internal">
+                            <div>个人</div>
+                          </div>
+                        </div>
+                        <div class="popover-right">
+                          <div class="price">升级至</div>
+                          <div class="desc">团队或企业</div>
+                        </div>
+                      </div>
+                      <div class="popover-part-a">
+                        <div class="popover-block-a">
+                          7bc4153d9d66545f86b42a313a1cd676
+                        </div>
+                        <div class="popover-right">
+                          <div class="desc2">复制</div>
+                        </div>
+                      </div>
+                      <div class="popover-part-a">
+                        <div class="popover-block-a">
+                          访问 MBM OpenAI 开发文档
+                        </div>
+                        <div class="popover-right">
+                          <div class="desc2">密码</div>
+                          <div class="desc2">mbm123</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      style="
+                        width: 100%;
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+                        flex-direction: column;
+                      "
+                      v-else
+                    >
+                      <div class="popover-title">生成 GPT4 API Key</div>
+                      <div class="popover-desc">
+                        我们为个人、团队和企业开发者提供了GPT 开发
+                        接口，并集成了内容审查服务。
+                      </div>
+                      <div
+                        class="popover-part"
+                        :class="index == popoverIndex ? '' : 'normal'"
+                        v-for="(item, index) in popoverOptions"
+                        :key="index"
+                        @click="popoverIndex = index"
+                      >
+                        <div class="popover-block">
+                          <div class="internal">
+                            <div>{{ item.title }}</div>
+                          </div>
+                        </div>
+                        <div class="popover-right">
+                          <div class="price">{{ item.price }}元</div>
+                          <div class="desc">{{ item.desc }}</div>
+                        </div>
+                      </div>
+                      <div class="popover-btn">
+                        <div>立即申请</div>
+                      </div>
+                    </div>
+                    <div
+                      style="
+                        width: 100%;
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+                        flex-direction: column;
+                        flex: 1;
+                        padding-top: 20px;
+                      "
+                      v-if="isCreatedKey"
+                    >
+                      <el-divider>开发者社区</el-divider>
+                      <div v-if="isUploadHead"></div>
+                      <div class="popover-ready-upload" v-else>
+                        <div class="popover-upload">
+                          <div>+</div>
+                        </div>
+                        <img
+                          class="popover-head-1"
+                          src="@/assets/images/head1.png"
+                          fit="scale-down"
+                        />
+                        <img
+                          class="popover-head-2"
+                          src="@/assets/images/head2.png"
+                          fit="scale-down"
+                        />
+                        <img
+                          class="popover-head-3"
+                          src="@/assets/images/head3.png"
+                          fit="scale-down"
+                        />
+                        <div class="popover-question-1">
+                          现在，请更新你独一无二的头像。
+                        </div>
+                        <div class="popover-question-2">
+                          Hi 开发者，欢迎加入社区。
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      style="
+                        width: 100%;
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+                        flex-direction: column;
+                      "
+                      v-else
+                    >
+                      <div class="popover-foot-desc">
+                        GPT4 API key 均包含 GPT-4、GPT-4 32K 和 GPT-3.5-Turbo
+                        模型。由于计算资源紧张，GPT-4 模型将优先保证企业和团队
+                        用户的开发调用请求。
+                      </div>
+                      <div class="popover-foot-a">
+                        了解企业级 OpenAI 服务与个人服务的区别
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </el-popover> -->
+              <!-- @click="toLogin" 
+                v-else -->
+              <div class="default-model" @click="train('生成我的GPT4 API Key')">
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
+                  alt=""
+                />
+                <div class="model-name">生成我的 GPT4 API Key</div>
+              </div>
+            </div>
+            <div class="flex">
+              <ul class="question-box">
+                <li
+                  class="question"
+                  v-for="(item, index) in questionList"
+                  :key="index"
+                  @click="navQuestion(item.value)"
+                >
+                  {{ item.label }}
+                </li>
+              </ul>
+              <button
+                v-if="userInfo.name"
+                class="gpt-button color-button"
+                @click="recharge"
+              >
+                充值我的账户
+                <div class="my-count-hover"></div>
+                <!-- <div class="block_hoverer"></div>
               <div class="block_hoverer"></div>
               <div class="block_hoverer"></div>
               <div class="block_hoverer"></div> -->
-              <span class="light iconfont icon-shandian"></span>
-            </button>
-            <button v-else class="gpt-button color-button" @click="toLogin">
-              <!-- 现在领取 1 美元体验金！ -->
-              现在开启你的 AI 时刻！
-              <div class="my-count-hover"></div>
-              <!-- <div class="top"></div>
+                <span class="light iconfont icon-shandian"></span>
+              </button>
+              <button v-else class="gpt-button color-button" @click="toLogin">
+                <!-- 现在领取 1 美元体验金！ -->
+                现在开启你的 AI 时刻！
+                <div class="my-count-hover"></div>
+                <!-- <div class="top"></div>
               <div class="left"></div>
               <div class="right"></div>
               <div class="bottom"></div> -->
-              <!-- <div class="block_hoverer"></div>
+                <!-- <div class="block_hoverer"></div>
               <div class="block_hoverer"></div>
               <div class="block_hoverer"></div>
               <div class="block_hoverer"></div> -->
-            </button>
-            <div v-if="userInfo.name" class="share-my-code">
-              分享我的推荐码：
-              <span class="code" @click="copy">
-                {{ userInfo.inviteCode }}
-              </span>
-              <!-- <el-popover placement="right-end" :width="200" trigger="click">
+              </button>
+              <div v-if="userInfo.name" class="share-my-code">
+                分享我的推荐码：
+                <span class="code" @click="copy">
+                  {{ userInfo.inviteCode }}
+                </span>
+                <!-- <el-popover placement="right-end" :width="200" trigger="click">
                 <template #reference>
                   <span class="code" @click="copy">
                     {{ userInfo.inviteCode }}
@@ -127,6 +332,7 @@
                   <div class="popover-bottom"></div>
                 </div>
               </el-popover> -->
+              </div>
             </div>
           </div>
         </el-aside>
@@ -234,9 +440,12 @@
           <el-main class="main">
             <h1 class="title">
               当下热门 AI 应用
-              <span class="app-num">(6)</span>
+              <span class="app-num">(7)</span>
             </h1>
-            <collect-item :ai-version="aiVersion"></collect-item>
+            <collect-item
+              :ai-version="aiVersion"
+              @open-overlay="mpQrcodeShow = true"
+            ></collect-item>
           </el-main>
         </el-container>
       </el-container>
@@ -867,16 +1076,32 @@ type Option = {
   value: string;
   label: string;
 };
+type popoverOption = {
+  title: string;
+  price: number;
+  desc: string;
+};
 // select opetion
 const options = ref<Option[]>([
   { value: "gpt4", label: "GPT-4" },
   { value: "gpt432", label: "GPT-4 32K" },
   { value: "gpt3.5", label: "GPT-3.5" },
 ]);
-const aiVersion = ref<{ value: string; label: string }>(options.value[0]);
+const popoverOptions = ref<popoverOption[]>([
+  { title: "个人", price: 99, desc: "内含5美金" },
+  { title: "团队(10人以内)", price: 199, desc: "内含10美金" },
+  { title: "企业", price: 1500, desc: "内含100美金" },
+]);
+const popoverIndex = ref(0);
+const aiVersion = ref<Option>(options.value[0]);
 const showDialog = ref(false);
+const popoverShow = ref(false);
 // 是否注册过
 const isCreatedAccount = ref(false);
+const isCreatedKey = ref(true);
+const isUploadHead = ref(false);
+const mpQrcodeShow = ref(false);
+const fadeName = ref("fadeIn");
 const status = ref(1);
 const tel = ref("");
 const tel1 = ref("");
@@ -1545,6 +1770,13 @@ const logout = () => {
 const navQuestion = (blogType: string) => {
   $router.push({ name: "blog", query: { blogType } });
 };
+const hideQrcode = () => {
+  fadeName.value = "fadeOut";
+  setTimeout(() => {
+    mpQrcodeShow.value = false;
+    fadeName.value = "fadeIn";
+  }, 1000);
+};
 </script>
 <style lang="scss" scoped>
 @mixin hover2Style {
@@ -1595,9 +1827,64 @@ const navQuestion = (blogType: string) => {
     color: rgba(255, 255, 255, 0.5);
   }
 }
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 .px-common-layout {
   // height: 100vh;
   //   min-width: 1200px;
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+  }
+  .overlay-1 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 200;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    .qrcode {
+      width: 300px;
+      height: 300px;
+    }
+    .content {
+      width: 200px;
+      margin-top: 20px;
+    }
+    .back {
+      color: #fff;
+      opacity: 0.6;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 20px;
+    }
+  }
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -1639,16 +1926,26 @@ const navQuestion = (blogType: string) => {
     box-sizing: border-box;
     padding: 33px 2vw 33px 2vw;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
+    z-index: 100;
+    .aside-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-direction: column;
+      width: 100%;
+      flex: 1;
+    }
     .flex {
       width: 100%;
     }
     .logo {
       //   height: 33px;
       // height: 5vh;
-      width: 8.3vw;
+      width: 10vw;
+      min-width: 140px;
     }
     .gpt-button {
       width: 100%;
@@ -1660,7 +1957,7 @@ const navQuestion = (blogType: string) => {
       font-weight: bold;
       color: #ffffff;
       text-align: center;
-      margin: 11vh auto 4vh;
+      margin: 4vh auto;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -1905,6 +2202,7 @@ const navQuestion = (blogType: string) => {
           color: #ffffff;
           min-height: 3vh;
           max-width: 7vw;
+          min-width: 100px;
           box-shadow: none !important;
           border: 1px dashed rgba(255, 255, 255, 0.6);
           box-sizing: border-box;
@@ -1923,9 +2221,9 @@ const navQuestion = (blogType: string) => {
       //     width: 171px;
       //   }
     }
-    .default-model:nth-last-child(1) {
-      margin-bottom: 21.5vh;
-    }
+    // .default-model:nth-last-child(1) {
+    //   margin-bottom: 21.5vh;
+    // }
     .question-box {
       width: 100%;
       list-style: none;
@@ -3230,20 +3528,292 @@ const navQuestion = (blogType: string) => {
   overflow: auto;
 }
 .popover-container {
-  width: 200px;
-  height: 300px;
-  background: #ffffff;
-  .popover-top {
-    width: 200px;
-    height: 200px;
+  width: 30vw;
+  min-width: 300px;
+  height: 100vh;
+  background: #07070d;
+  box-sizing: border-box;
+  padding: 33px 2vw 33px 2vw;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+  .popover-logo {
+    width: 10vw;
+    min-width: 140px;
+    visibility: hidden;
+    margin-bottom: 4vh;
   }
-  .qrCode {
-    width: 150px;
-    height: 150px;
+  .popover-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: column;
+    .popover-title {
+      font-size: 1.5rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 500;
+      color: #ffffff;
+      opacity: 1;
+    }
+    .popover-desc {
+      font-size: 1rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 500;
+      color: #89919e;
+      opacity: 1;
+      margin-top: 10px;
+    }
+    .popover-part {
+      width: 100%;
+      height: 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-direction: row;
+      margin: 14px 0;
+      opacity: 1;
+      cursor: pointer;
+      &.normal {
+        opacity: 0.6;
+      }
+      .popover-block {
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(
+          23deg,
+          #4383ea 0%,
+          #4861eb 49%,
+          #8748eb 100%
+        );
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: row;
+        .internal {
+          width: calc(100% - 4px);
+          height: calc(100% - 4px);
+          box-sizing: border-box;
+          border-radius: 12px;
+          background: #07070d;
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          flex-direction: row;
+          font-size: 1rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #ffffff;
+          padding: 0 20px;
+        }
+      }
+      .popover-block-a {
+        font-size: 0.6rem;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: #ffffff;
+        text-decoration: underline;
+        opacity: 0.9;
+      }
+      .popover-right {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        flex-direction: column;
+        .price {
+          font-size: 1rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #ffffff;
+        }
+        .desc {
+          font-size: 1rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #89919e;
+        }
+        .desc2 {
+          font-size: 0.6rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #ffffff;
+          opacity: 0.6;
+        }
+      }
+    }
+    .popover-part-a {
+      width: 100%;
+      height: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-direction: row;
+      margin: 14px 0;
+      cursor: pointer;
+      .popover-block-a {
+        font-size: 0.6rem;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: #ffffff;
+        text-decoration: underline;
+        opacity: 0.9;
+      }
+      .popover-right {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        flex-direction: column;
+        .price {
+          font-size: 1rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #ffffff;
+        }
+        .desc {
+          font-size: 1rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #89919e;
+        }
+        .desc2 {
+          font-size: 0.6rem;
+          font-family: FUTURA-MEDIUM;
+          font-weight: 500;
+          color: #ffffff;
+          opacity: 0.6;
+        }
+      }
+    }
+    .popover-btn {
+      width: 60%;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ffffff;
+      opacity: 1;
+      font-size: 1.2rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 500;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+      margin-top: 14px;
+    }
+  }
+  .popover-foot-desc {
+    font-size: 0.8rem;
+    font-family: FUTURA-MEDIUM;
+    font-weight: 500;
+    line-height: 1.2rem;
+    color: #ffffff;
+    opacity: 0.7;
+  }
+  .popover-foot-a {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    font-family: FUTURA-MEDIUM;
+    font-weight: 500;
+    color: #fff;
+    opacity: 0.7;
+    text-decoration: underline;
+    cursor: pointer;
+    &:hover {
+      opacity: 1;
+    }
+    &:active {
+      opacity: 0.5;
+    }
+  }
+  .popover-ready-upload {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
+    .popover-upload {
+      width: 70px;
+      height: 70px;
+      background: url("@/assets/images/head-upload.png") center / 100% 100%
+        no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+      font-size: 1.4rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 500;
+      color: #ffffff;
+    }
+    .popover-head-1 {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      left: 10px;
+      top: 30px;
+    }
+    .popover-head-2 {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      right: 10px;
+      top: 0;
+    }
+    .popover-head-3 {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      right: 30px;
+      bottom: 0;
+    }
+    .popover-question-1 {
+      background: linear-gradient(
+        352deg,
+        #2680eb 0%,
+        #276ec3 42%,
+        #bfd5f0 100%
+      );
+      border-radius: 22px;
+      font-size: 0.4rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 500;
+      color: #ffffff;
+      padding: 4px 8px;
+      position: absolute;
+      left: 10px;
+      bottom: 40px;
+    }
+    .popover-question-2 {
+      background: linear-gradient(
+        352deg,
+        #2680eb 0%,
+        #276ec3 42%,
+        #bfd5f0 100%
+      );
+      border-radius: 22px;
+      font-size: 0.4rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 500;
+      color: #ffffff;
+      padding: 4px 8px;
+      position: absolute;
+      left: 10px;
+      bottom: 0;
+    }
   }
 }
 :global(.el-popper.is-light.el-popover) {
-  background: #ffffff !important;
+  background: transparent !important;
   border: none;
+  height: 100vh;
+}
+:global(.el-divider__text) {
+  background: #07070d;
+  color: #fff;
 }
 </style>

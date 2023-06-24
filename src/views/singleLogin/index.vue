@@ -268,7 +268,10 @@
             @input="inputCode"
           /> -->
           <div class="bb">
-            <form style="position: absolute; left: 0; top: 0">
+            <form
+              @submit.prevent="() => {}"
+              style="position: absolute; left: 0; top: 0"
+            >
               <input
                 type="tel"
                 ref="smsInput1"
@@ -375,9 +378,9 @@
           {{ status === 1 ? "发送验证码" : "重新发送" }}
           <span class="countdown" v-if="time < 60"> ({{ time }}s) </span>
         </div>
-        <div class="back" v-if="status === 2" @click="status = 1">
-          <el-icon><Back /></el-icon>
-          <div style="margin-left: 8px">返回</div>
+        <div class="back" v-if="status === 2">
+          <el-icon @click="status = 1"><Back /></el-icon>
+          <div style="margin-left: 8px" @click="status = 1">返回</div>
         </div>
       </div>
       <div class="tip" v-show="!nickNameFocus">
@@ -851,6 +854,8 @@ const inputCode = async (code: string) => {
         sms4.value = "";
         if (redirectUrl.value) {
           skip(redirectUrl.value, false);
+        } else {
+          $router.replace({ name: "home" });
         }
       } else {
         ElMessage({ type: "error", message: res.data.msg });
@@ -928,6 +933,8 @@ const inputNickname = async () => {
     sms4.value = "";
     if (redirectUrl.value) {
       skip(redirectUrl.value, false);
+    } else {
+      $router.replace({ name: "home" });
     }
   } else {
     ElMessage({ type: "error", message: res.data.msg });
@@ -1825,5 +1832,16 @@ const skip = (url: string, openNew: boolean) => {
   100% {
     opacity: 0.15;
   }
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: transparent !important;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  background-color: transparent !important;
+  background-clip: content-box !important;
+  box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s;
 }
 </style>

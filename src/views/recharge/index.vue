@@ -1,8 +1,10 @@
 <template>
   <div>
-    <div class="recharge" v-if="!agent">
+    <!-- <div class="recharge" v-if="!agent">
       <div class="recharge-icon iconfont icon-shandian"></div>
-      <div class="recharge-count">充值到{{ userInfo.mobile }}</div>
+      <div class="recharge-count">
+        充值到{{ userInfo && userInfo.mobile ? userInfo.mobile : "" }}
+      </div>
       <p class="tip">充值到个人账户</p>
       <div class="charge-box">
         <div class="left">
@@ -68,8 +70,8 @@
           </div>
         </div>
       </div>
-    </div>
-    <!-- <div class="recharge" v-if="!agent">
+    </div> -->
+    <div class="recharge" v-if="!agent">
       <div class="charge-box">
         <div class="recharge-icon iconfont icon-shandian"></div>
         <div class="recharge-count">充值到{{ userInfo.mobile }}</div>
@@ -80,7 +82,11 @@
           <div class="slogan-logo">
             <div class="slogan">安全、可靠、企业级</div>
             <div class="line"></div>
-            <img class="logo" src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png" alt="" />
+            <img
+              class="logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
+              alt=""
+            />
           </div>
         </div>
       </div>
@@ -133,10 +139,12 @@
           <div class="do-pay" @click="onPay" v-if="!paying">确认支付</div>
         </div>
       </div>
-    </div> -->
+    </div>
     <div class="phone-recharge" v-else>
       <div class="recharge-icon iconfont icon-shandian"></div>
-      <div class="recharge-count">充值到{{ userInfo.mobile }}</div>
+      <div class="recharge-count">
+        充值到{{ userInfo && userInfo.mobile ? userInfo.mobile : "" }}
+      </div>
       <p class="tip">充值到个人账户</p>
       <div class="charge-box">
         <!-- <div class="left">
@@ -205,14 +213,16 @@
 import QRCode from "qrcode";
 import { onBeforeMount, ref, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
-import { wechatPay, orderDetail } from "@/api/index";
+import { wechatPay, orderDetail, doGetInfo } from "@/api/index";
 import { isWeiXinBrowser } from "@/utils/utils";
 import { useRouter } from "vue-router";
 import useClipboard from "vue-clipboard3";
+import { pinyin } from "pinyin-pro";
 const selectIndex = ref(10);
 const showUnit = ref(false);
 const model = ref<any>();
 const userInfo = ref();
+const nickname = ref("");
 const qrCodeImgUrl = ref();
 const holder = ref("自定义充值");
 const list = [10, 30, 50, 100, 200, 300];
@@ -229,9 +239,35 @@ const agent = ref(
 onBeforeMount(() => {
   let usr = localStorage.getItem("userInfo");
   if (usr) {
-    userInfo.value = JSON.parse(usr);
+    const info = JSON.parse(usr);
+    getUserInfo(info.token, info.accessKey);
+  } else {
+    $router.replace({
+      name: "singleLogin",
+      query: {
+        redirectUrl: window.location.href,
+      },
+    });
   }
 });
+//请求接口获取用户信息
+const getUserInfo = async (token: string, accessKey: string) => {
+  const res = await doGetInfo({ token, accessKey });
+  if (res.data.code === 11000) {
+    userInfo.value = res.data.data;
+    const firstC = getFirstChar(userInfo.value.name);
+    nickname.value = firstC;
+  } else if (res.data.code === 12004) {
+    localStorage.removeItem("userInfo");
+    $router.replace({
+      name: "singleLogin",
+      query: {
+        redirectUrl: window.location.href,
+      },
+    });
+    nickname.value = "";
+  }
+};
 onUnmounted(() => {
   clearTimeout(timer.value);
   timer.value = "";
@@ -323,6 +359,18 @@ const loopOrderDetail = async (orderNo: string) => {
     }, 3000);
   }
 };
+// 处理首字母nickname
+const getFirstChar = (str: string) => {
+  let firstChar = str.slice(0, 1);
+  // 首字母是英文
+  let reg = /^[a-zA-Z]/;
+  if (reg.test(str)) {
+    return firstChar.toUpperCase();
+  } else {
+    const s = pinyin(firstChar, { pattern: "first" });
+    return s.toUpperCase();
+  }
+};
 </script>
 <style lang="scss" scoped>
 @mixin hover5Style {
@@ -333,240 +381,19 @@ const loopOrderDetail = async (orderNo: string) => {
     color: rgba(0, 0, 0, 0.5);
   }
 }
-// .recharge {
-//   height: 100vh;
-//   width: 100vw;
-//   // min-width: 1200px;
-//   box-sizing: border-box;
-//   background: #fff;
-//   overflow: hidden;
-//   margin: 0 auto;
-//   padding: 60px 90px 0 55px;
-//   display: flex;
-//   justify-content: flex-start;
-//   align-items: flex-start;
-//   flex-direction: row;
-//   input::-webkit-outer-spin-button,
-//   input::-webkit-inner-spin-button {
-//     -webkit-appearance: none;
-//   }
-//   input[type="number"] {
-//     -moz-appearance: textfield;
-//   }
-
-//   .charge-box {
-//     width: 100%;
-//     display: flex;
-//     justify-content: space-between;
-//     align-items: flex-start;
-//     flex-wrap: nowrap;
-//     flex-direction: column;
-//     .recharge-icon {
-//       color: #447eea;
-//       font-size: 3rem;
-//       height: 61px;
-//       line-height: 3rem;
-//     }
-//     .recharge-count {
-//       font-size: 2rem;
-//       font-family: FUTURA-MEDIUM;
-//       font-weight: bold;
-//       color: #161618;
-//     }
-//     .tip {
-//       font-size: 1rem;
-//       font-family: FUTURA-MEDIUM;
-//       font-weight: 400;
-//       color: #000000;
-//       margin-top: 25px;
-//     }
-//     .left {
-//       flex: 1 0 auto;
-//       height: 500px;
-//       background: #f2f2f5;
-//       border-radius: 26px;
-//       display: flex;
-//       justify-content: space-between;
-//       align-items: flex-start;
-//       flex-direction: column;
-//       padding: 39px 59px;
-//       box-sizing: border-box;
-//       margin-top: 30px;
-
-//       .mbm {
-//         font-size: 2.5rem;
-//         font-family: FUTURA-MEDIUM;
-//         line-height: 102px;
-//         color: #221815;
-//       }
-//       .slogan-logo {
-//         width: 100%;
-//         height: 46px;
-//         display: flex;
-//         justify-content: flex-end;
-//         align-items: center;
-//         flex-wrap: wrap;
-//         .slogan {
-//           height: 36px;
-//           font-size: 20px;
-//           font-family: FUTURA-MEDIUM;
-//           font-weight: bold;
-//           color: #000000;
-//         }
-//         .line {
-//           width: 0px;
-//           height: 33px;
-//           border-left: 1px solid #707070;
-//           margin: 0 28px;
-//         }
-//         .logo {
-//           display: block;
-//           height: 100%;
-//         }
-//       }
-//     }
-//   }
-//   .right {
-//     // width: 345px;
-//     height: 100vh;
-//     display: flex;
-//     justify-content: center;
-//     align-items: center;
-//     flex-direction: column;
-//     .compute {
-//       width: 100%;
-//       font-size: 24px;
-//       font-family: FUTURA-MEDIUM;
-//       font-weight: bold;
-//       color: #737379;
-//       .d {
-//         color: #000;
-//       }
-//     }
-//     .money-list {
-//       width: 100%;
-//       display: flex;
-//       justify-content: space-between;
-//       align-items: center;
-//       flex-wrap: wrap;
-//       list-style: none;
-//       padding: 0;
-//       margin-top: 16px;
-//       .money-item {
-//         width: 30%;
-//         height: 72px;
-//         background: #f2f2f5;
-//         border-radius: 16px;
-//         display: flex;
-//         justify-content: center;
-//         align-items: center;
-//         flex-wrap: wrap;
-//         margin-top: 16px;
-//         font-size: 22px;
-//         font-family: FUTURA-MEDIUM;
-//         font-weight: 500;
-//         color: #000000;
-//         cursor: pointer;
-//         box-sizing: border-box;
-//       }
-//       .select-money {
-//         border: 1px solid #000000;
-//         background: none;
-//       }
-//       .ipt-money {
-//         font-size: 28px;
-//         font-family: FUTURA-MEDIUM;
-//         font-weight: 500;
-//         color: #000000;
-//         width: 100%;
-//         height: 74px;
-//         background: #f2f2f5;
-//         border-radius: 16px;
-//         margin-top: 16px;
-//         display: flex;
-//         justify-content: center;
-//         align-items: center;
-//         flex-wrap: wrap;
-//         position: relative;
-//         .self-money {
-//           border: none;
-//           outline: none;
-//           display: block;
-//           height: 100%;
-//           width: 100%;
-//           background: transparent;
-//           text-align: center;
-//           font-size: 22px;
-//           padding: 0 20px;
-//           box-sizing: border-box;
-//           &::placeholder {
-//             color: #000000;
-//           }
-//         }
-//         .yuan {
-//           width: 50px;
-//           height: 100%;
-//           position: absolute;
-//           right: 0;
-//           top: 0;
-//           background: #f2f2f5;
-//           display: flex;
-//           justify-content: space-between;
-//           align-items: center;
-//           flex-wrap: wrap;
-//         }
-//       }
-//     }
-//     .weChat-pay-code {
-//       width: 100%;
-//       display: flex;
-//       justify-content: space-between;
-//       align-items: center;
-//       flex-direction: column;
-//       .code {
-//         width: 204px;
-//         height: 204px;
-//         margin-top: 40px;
-//       }
-//       .icon-weChat {
-//         font-size: 26px;
-//         height: 45px;
-//         line-height: 45px;
-//         background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/wechat-pay-icon.png") center left /
-//           contain no-repeat;
-//         padding-left: 55px;
-//         margin-top: 20px;
-//       }
-//       .do-pay {
-//         width: 100%;
-//         height: 70px;
-//         line-height: 70px;
-//         border: 1px solid #000;
-//         font-size: 24px;
-//         font-family: FUTURA-MEDIUM;
-//         font-weight: 500;
-//         color: rgba(0, 0, 0, 0.95);
-//         text-align: center;
-//         margin: 30px auto 0;
-//         cursor: pointer;
-//         @include hover5Style;
-//       }
-//     }
-//   }
-// }
 .recharge {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  min-width: 100vw;
   // min-width: 1200px;
   box-sizing: border-box;
   background: #fff;
   overflow: hidden;
   margin: 0 auto;
-  padding: 60px 90px 0 55px;
+  padding: 0 90px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
-  flex-direction: column;
+  flex-direction: row;
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -574,35 +401,42 @@ const loopOrderDetail = async (orderNo: string) => {
   input[type="number"] {
     -moz-appearance: textfield;
   }
-  .recharge-icon {
-    color: #447eea;
-    font-size: 3rem;
-    height: 61px;
-    line-height: 3rem;
-  }
-  .recharge-count {
-    font-size: 2rem;
-    font-family: FUTURA-MEDIUM;
-    font-weight: bold;
-    color: #161618;
-  }
-  .tip {
-    font-size: 1rem;
-    font-family: FUTURA-MEDIUM;
-    font-weight: 400;
-    color: #000000;
-    margin-top: 25px;
-  }
+
   .charge-box {
     width: 100%;
+    max-width: 1000px;
+    min-width: 600px;
+    min-height: 100vh;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center;
+    align-items: flex-start;
     flex-wrap: nowrap;
-    margin-top: 20px;
+    flex-direction: column;
+    .recharge-icon {
+      color: #447eea;
+      font-size: 3rem;
+      height: 61px;
+      line-height: 3rem;
+      margin-top: 30px;
+    }
+    .recharge-count {
+      font-size: 2rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: bold;
+      color: #161618;
+    }
+    .tip {
+      font-size: 1rem;
+      font-family: FUTURA-MEDIUM;
+      font-weight: 400;
+      color: #000000;
+      margin-top: 25px;
+    }
     .left {
       flex: 1 0 auto;
-      height: 500px;
+      max-height: 500px;
+      max-width: 900px;
+      width: 90%;
       background: #f2f2f5;
       border-radius: 26px;
       display: flex;
@@ -611,8 +445,7 @@ const loopOrderDetail = async (orderNo: string) => {
       flex-direction: column;
       padding: 39px 59px;
       box-sizing: border-box;
-      margin-right: 50px;
-      box-sizing: border-box;
+      margin: 30px 0;
 
       .mbm {
         font-size: 2.5rem;
@@ -646,133 +479,356 @@ const loopOrderDetail = async (orderNo: string) => {
         }
       }
     }
-    .right {
-      width: 345px;
-      .compute {
-        width: 100%;
-        font-size: 24px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: bold;
-        color: #737379;
-        .d {
-          color: #000;
-          font-weight: bold;
-          font-family: FUTURA-MEDIUM;
-        }
+  }
+  .right {
+    // width: 345px;
+    max-width: 360px;
+    min-width: 300px;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    .compute {
+      width: 100%;
+      font-size: 24px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: bold;
+      color: #737379;
+      .d {
+        color: #000;
       }
-      .money-list {
-        width: 100%;
+    }
+    .money-list {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      list-style: none;
+      padding: 0;
+      margin-top: 16px;
+      .money-item {
+        width: 30%;
+        height: 72px;
+        background: #f2f2f5;
+        border-radius: 16px;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
         flex-wrap: wrap;
-        list-style: none;
-        padding: 0;
-        // margin-top: 5px;
-        .money-item {
-          width: 30%;
-          height: 72px;
-          background: #f2f2f5;
-          border-radius: 16px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-wrap: wrap;
-          margin-top: 16px;
-          font-size: 22px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 500;
-          color: #000000;
-          cursor: pointer;
-          box-sizing: border-box;
-        }
-        .select-money {
-          border: 1px solid #000000;
-          background: none;
-        }
-        .ipt-money {
-          font-size: 28px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 500;
-          color: #000000;
+        margin-top: 16px;
+        font-size: 22px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: #000000;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
+      .select-money {
+        border: 1px solid #000000;
+        background: none;
+      }
+      .ipt-money {
+        font-size: 28px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: #000000;
+        width: 100%;
+        height: 74px;
+        background: #f2f2f5;
+        border-radius: 16px;
+        margin-top: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        position: relative;
+        .self-money {
+          border: none;
+          outline: none;
+          display: block;
+          height: 100%;
           width: 100%;
-          height: 74px;
+          background: transparent;
+          text-align: center;
+          font-size: 22px;
+          padding: 0 20px;
+          box-sizing: border-box;
+          &::placeholder {
+            color: #000000;
+          }
+        }
+        .yuan {
+          width: 50px;
+          height: 100%;
+          position: absolute;
+          right: 0;
+          top: 0;
           background: #f2f2f5;
-          border-radius: 16px;
-          margin-top: 16px;
           display: flex;
-          justify-content: center;
+          justify-content: space-between;
           align-items: center;
           flex-wrap: wrap;
-          position: relative;
-          .self-money {
-            border: none;
-            outline: none;
-            display: block;
-            height: 100%;
-            width: 100%;
-            background: transparent;
-            text-align: center;
-            font-size: 22px;
-            padding: 0 20px;
-            box-sizing: border-box;
-            &::placeholder {
-              color: #000000;
-            }
-          }
-          .yuan {
-            width: 50px;
-            height: 100%;
-            position: absolute;
-            right: 0;
-            top: 0;
-            background: #f2f2f5;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-          }
         }
       }
-      .weChat-pay-code {
+    }
+    .weChat-pay-code {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-direction: column;
+      .code {
+        width: 204px;
+        height: 204px;
+        margin-top: 40px;
+      }
+      .icon-weChat {
+        font-size: 26px;
+        height: 45px;
+        line-height: 45px;
+        background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/wechat-pay-icon.png")
+          center left / contain no-repeat;
+        padding-left: 55px;
+        margin-top: 20px;
+      }
+      .do-pay {
         width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-direction: column;
-        .code {
-          width: 204px;
-          height: 204px;
-          margin-top: 40px;
-        }
-        .icon-weChat {
-          font-size: 26px;
-          height: 45px;
-          line-height: 45px;
-          background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/wechat-pay-icon.png")
-            center left / contain no-repeat;
-          padding-left: 55px;
-          margin-top: 20px;
-          color: #000;
-        }
-        .do-pay {
-          width: 100%;
-          height: 70px;
-          line-height: 70px;
-          border: 1px solid #000;
-          font-size: 24px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: 500;
-          color: rgba(0, 0, 0, 0.95);
-          text-align: center;
-          margin: 20px auto 0;
-          cursor: pointer;
-          @include hover5Style;
-        }
+        height: 70px;
+        line-height: 70px;
+        border: 1px solid #000;
+        font-size: 24px;
+        font-family: FUTURA-MEDIUM;
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.95);
+        text-align: center;
+        margin: 30px auto 0;
+        cursor: pointer;
+        @include hover5Style;
       }
     }
   }
 }
+// .recharge {
+//   height: 100vh;
+//   width: 100vw;
+//   // min-width: 1200px;
+//   box-sizing: border-box;
+//   background: #fff;
+//   overflow: hidden;
+//   margin: 0 auto;
+//   padding: 60px 90px 0 55px;
+//   display: flex;
+//   justify-content: flex-start;
+//   align-items: flex-start;
+//   flex-direction: column;
+//   input::-webkit-outer-spin-button,
+//   input::-webkit-inner-spin-button {
+//     -webkit-appearance: none;
+//   }
+//   input[type="number"] {
+//     -moz-appearance: textfield;
+//   }
+//   .recharge-icon {
+//     color: #447eea;
+//     font-size: 3rem;
+//     height: 61px;
+//     line-height: 3rem;
+//   }
+//   .recharge-count {
+//     font-size: 2rem;
+//     font-family: FUTURA-MEDIUM;
+//     font-weight: bold;
+//     color: #161618;
+//   }
+//   .tip {
+//     font-size: 1rem;
+//     font-family: FUTURA-MEDIUM;
+//     font-weight: 400;
+//     color: #000000;
+//     margin-top: 25px;
+//   }
+//   .charge-box {
+//     width: 100%;
+//     display: flex;
+//     justify-content: space-between;
+//     align-items: center;
+//     flex-wrap: nowrap;
+//     margin-top: 20px;
+//     .left {
+//       flex: 1 0 auto;
+//       height: 500px;
+//       background: #f2f2f5;
+//       border-radius: 26px;
+//       display: flex;
+//       justify-content: space-between;
+//       align-items: flex-start;
+//       flex-direction: column;
+//       padding: 39px 59px;
+//       box-sizing: border-box;
+//       margin-right: 50px;
+//       box-sizing: border-box;
+
+//       .mbm {
+//         font-size: 2.5rem;
+//         font-family: FUTURA-MEDIUM;
+//         line-height: 102px;
+//         color: #221815;
+//       }
+//       .slogan-logo {
+//         width: 100%;
+//         height: 46px;
+//         display: flex;
+//         justify-content: flex-end;
+//         align-items: center;
+//         flex-wrap: wrap;
+//         .slogan {
+//           height: 36px;
+//           font-size: 20px;
+//           font-family: FUTURA-MEDIUM;
+//           font-weight: bold;
+//           color: #000000;
+//         }
+//         .line {
+//           width: 0px;
+//           height: 33px;
+//           border-left: 1px solid #707070;
+//           margin: 0 28px;
+//         }
+//         .logo {
+//           display: block;
+//           height: 100%;
+//         }
+//       }
+//     }
+//     .right {
+//       width: 345px;
+//       .compute {
+//         width: 100%;
+//         font-size: 24px;
+//         font-family: FUTURA-MEDIUM;
+//         font-weight: bold;
+//         color: #737379;
+//         .d {
+//           color: #000;
+//           font-weight: bold;
+//           font-family: FUTURA-MEDIUM;
+//         }
+//       }
+//       .money-list {
+//         width: 100%;
+//         display: flex;
+//         justify-content: space-between;
+//         align-items: center;
+//         flex-wrap: wrap;
+//         list-style: none;
+//         padding: 0;
+//         // margin-top: 5px;
+//         .money-item {
+//           width: 30%;
+//           height: 72px;
+//           background: #f2f2f5;
+//           border-radius: 16px;
+//           display: flex;
+//           justify-content: center;
+//           align-items: center;
+//           flex-wrap: wrap;
+//           margin-top: 16px;
+//           font-size: 22px;
+//           font-family: FUTURA-MEDIUM;
+//           font-weight: 500;
+//           color: #000000;
+//           cursor: pointer;
+//           box-sizing: border-box;
+//         }
+//         .select-money {
+//           border: 1px solid #000000;
+//           background: none;
+//         }
+//         .ipt-money {
+//           font-size: 28px;
+//           font-family: FUTURA-MEDIUM;
+//           font-weight: 500;
+//           color: #000000;
+//           width: 100%;
+//           height: 74px;
+//           background: #f2f2f5;
+//           border-radius: 16px;
+//           margin-top: 16px;
+//           display: flex;
+//           justify-content: center;
+//           align-items: center;
+//           flex-wrap: wrap;
+//           position: relative;
+//           .self-money {
+//             border: none;
+//             outline: none;
+//             display: block;
+//             height: 100%;
+//             width: 100%;
+//             background: transparent;
+//             text-align: center;
+//             font-size: 22px;
+//             padding: 0 20px;
+//             box-sizing: border-box;
+//             &::placeholder {
+//               color: #000000;
+//             }
+//           }
+//           .yuan {
+//             width: 50px;
+//             height: 100%;
+//             position: absolute;
+//             right: 0;
+//             top: 0;
+//             background: #f2f2f5;
+//             display: flex;
+//             justify-content: space-between;
+//             align-items: center;
+//             flex-wrap: wrap;
+//           }
+//         }
+//       }
+//       .weChat-pay-code {
+//         width: 100%;
+//         display: flex;
+//         justify-content: space-between;
+//         align-items: center;
+//         flex-direction: column;
+//         .code {
+//           width: 204px;
+//           height: 204px;
+//           margin-top: 40px;
+//         }
+//         .icon-weChat {
+//           font-size: 26px;
+//           height: 45px;
+//           line-height: 45px;
+//           background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/wechat-pay-icon.png")
+//             center left / contain no-repeat;
+//           padding-left: 55px;
+//           margin-top: 20px;
+//           color: #000;
+//         }
+//         .do-pay {
+//           width: 100%;
+//           height: 70px;
+//           line-height: 70px;
+//           border: 1px solid #000;
+//           font-size: 24px;
+//           font-family: FUTURA-MEDIUM;
+//           font-weight: 500;
+//           color: rgba(0, 0, 0, 0.95);
+//           text-align: center;
+//           margin: 20px auto 0;
+//           cursor: pointer;
+//           @include hover5Style;
+//         }
+//       }
+//     }
+//   }
+// }
 .phone-recharge {
   height: 100vh;
   width: 100%;
@@ -993,15 +1049,15 @@ const loopOrderDetail = async (orderNo: string) => {
 }
 @media screen and (max-width: 1600px) {
   .recharge {
-    padding-top: 20px;
+    // padding-top: 20px;
     .charge-box {
       overflow: hidden;
       .left {
-        height: 400px;
+        // height: 400px;
         padding: 39px 29px;
       }
       .right {
-        width: 300px;
+        // width: 300px;
         .compute {
           font-size: 21px;
         }

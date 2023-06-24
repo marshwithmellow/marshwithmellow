@@ -86,9 +86,11 @@
 // import autoIcon from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/gpt-auto-icon.png";
 // import paperIcon from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/paper-icon.png";
 // import lawIcon from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/law-icon.png";
+import fusionIcon from "@/assets/images/mbm-fusion-icon.jpg";
 import { ref } from "vue";
 import { ElNotification } from "element-plus";
 import { StarFilled } from "@element-plus/icons-vue";
+const emits = defineEmits(["openOverlay"]);
 const props = defineProps({
   aiVersion: {
     type: Object,
@@ -106,6 +108,16 @@ const appList = ref([
     useToken: true,
     btnType: 0,
     btnText: "立即体验",
+    collect: false,
+  },
+  {
+    name: "MBM Fusion",
+    desc: "用超乎视觉的光影，流淌你与生俱来的灵感。\n快来体验专为建筑和室内设计师准备的 MBM 应用。\n目前支持小程序体验。",
+    img: fusionIcon,
+    url: "",
+    useToken: false,
+    btnType: 3,
+    btnText: "免费体验",
     collect: false,
   },
   // {
@@ -178,6 +190,9 @@ const appList = ref([
     btnText: "立即体验",
     collect: false,
   },
+  {
+    name: "",
+  },
 ]);
 // do collect / uncollect
 const doCollect = (item: any) => {
@@ -217,7 +232,11 @@ const skip = (url: string, openNew: boolean, useToken: boolean) => {
   }
 };
 const nav = (item: any) => {
-  skip(item.url, true, item.useToken);
+  if (item.btnType == 3) {
+    emits("openOverlay");
+  } else {
+    skip(item.url, true, item.useToken);
+  }
 };
 </script>
 <style lang="scss" scoped>
