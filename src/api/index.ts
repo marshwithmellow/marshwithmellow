@@ -1,4 +1,5 @@
 import axios from "../utils/request";
+import { filterForm } from "../utils/utils";
 
 export const doRegisterCode = (data: { phone: string }) =>
   axios({ url: `/user/doRegisterCode`, method: "post", data });
@@ -27,6 +28,12 @@ export const wechatPay = (data: {
   osType: number;
   accessKey: number;
 }) => axios({ url: `/wechatPay`, method: "post", data });
+// 充值
+export const wechatPayAuth = (data: {
+  payAmount: number;
+  osType: number;
+  accessKey: number;
+}) => axios({ url: `/wechatPayAuth`, method: "post", data });
 // 订单详情
 export const orderDetail = (data: { orderNo: string; accessKey: string }) =>
   axios({
@@ -42,5 +49,161 @@ export const doGetInfo = (data: { token: string; accessKey: string }) =>
       "Content-Type": "application/json",
       Authorization: data.token,
       accessKey: data.accessKey,
+    },
+  });
+export const getBillSum = (data: {
+  token: string;
+  accessKey: string;
+  createTime: string;
+}) =>
+  axios({
+    url: `/listBillSum`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    params: {
+      accessKey: data.accessKey,
+      createTime: data.createTime,
+    },
+  });
+export const getBillDetails = (data: {
+  token: string;
+  accessKey: string;
+  createTime: string;
+  pageNo: number;
+  pageSize: number;
+}) =>
+  axios({
+    url: `/listBillDetail`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    params: {
+      accessKey: data.accessKey,
+      createTime: data.createTime,
+      pageNo: data.pageNo,
+      pageSize: data.pageSize,
+    },
+  });
+export const queryInfo = (data: { token: string; accessKey: string }) =>
+  axios({
+    url: `/visitor/queryInfo`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      accessKey: data.accessKey,
+    },
+  });
+export const updateUserInfo = (data: {
+  token: string;
+  accessKey: string;
+  birthday?: string;
+  province?: string;
+  city?: string;
+  email?: string;
+  dailyReminder?: number;
+  sex?: number;
+}) =>
+  axios({
+    url: `/user/doUpdateInfo`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: filterForm(data),
+  });
+export const doLogout = (data: { token: string; accessKey: string }) =>
+  axios({
+    url: `/user/doLogout`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+  });
+export const getCashPage = (data: {
+  token: string;
+  accessKey: string;
+  pageNo: number;
+  pageSize: number;
+}) =>
+  axios({
+    url: `/cashPage`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      accessKey: data.accessKey,
+      pageNo: data.pageNo,
+      pageSize: data.pageSize,
+    },
+  });
+export const getValidatyTime = (data: {
+  token: string;
+  accessKey: string;
+  accountId: string;
+}) =>
+  axios({
+    url: `/visitor/getValidatyTime`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    params: {
+      accountId: data.accountId,
+    },
+  });
+export const doExchangeCode = (data: {
+  token: string;
+  accessKey: string;
+  accountId: string;
+  code: string;
+}) =>
+  axios({
+    url: `/visitor/doExchangeCode`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      accountId: data.accountId,
+      code: data.code,
+    },
+  });
+export const getSerialNumber = (data: {
+  token: string;
+  accessKey: string;
+  code: string;
+}) =>
+  axios({
+    url: `/visitor/getSerialNumber`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    params: {
+      code: data.code,
     },
   });

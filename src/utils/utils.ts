@@ -143,3 +143,120 @@ export function throttle(func: Function, wait = 500, immediate = true) {
     }
   }
 }
+
+/**
+ * rdix 随机因子,
+ * length 取的长度.
+ */
+export function getUid(rdix = 1, length = 12, isAddStr = false) {
+  return Math.floor(
+    Math.random() * rdix * Math.floor(Math.random() * Date.now())
+  )
+    .toString(isAddStr ? 16 : 10)
+    .substring(0, length);
+}
+/*
+防抖
+防抖原理：在一定时间内，只有最后一次操作，再过wait毫秒后才执行函数
+	@param {Function} func 要执行的回调函数
+	@param {Number} wait 延迟的时间
+	@param{Boolean} immediate 是否要立即执行
+*/
+var timeout: any = getUid(1);
+export function debounce(func: Function, wait = 500, immediate = false) {
+  // 清除定时器
+  if (timeout !== null) clearTimeout(timeout);
+  // 立即执行，此类情况一般用不到
+  if (immediate) {
+    var callNow = !timeout;
+    timeout = setTimeout(() => {
+      timeout = null;
+    }, wait);
+    if (callNow) typeof func === "function" && func();
+  } else {
+    // 设置定时器，当最后一次操作后，timeout不会再被清除，所以在延时wait毫秒后执行func回调方法
+    timeout = getUid(1);
+    timeout = setTimeout(() => {
+      typeof func === "function" && func();
+    }, wait);
+  }
+}
+
+//空值过滤器
+export const filterForm = (form: any) => {
+  let obj: any = {};
+  Object.keys(form).forEach((ele) => {
+    if (!validatenull(form[ele])) {
+      obj[ele] = form[ele];
+    }
+  });
+  return obj;
+};
+
+/**
+ * 判断是否为空
+ */
+
+export const validatenull = (val: any) => {
+  if (typeof val === "boolean") {
+    return false;
+  }
+  if (typeof val === "number") {
+    return false;
+  }
+  if (val instanceof Array) {
+    if (val.length == 0) return true;
+  } else if (val instanceof Object) {
+    if (JSON.stringify(val) === "{}") return true;
+  } else {
+    if (
+      val == "null" ||
+      val == null ||
+      val == "undefined" ||
+      val == undefined ||
+      val == ""
+    )
+      return true;
+    return false;
+  }
+  return false;
+};
+
+/**
+ * 是否邮箱
+ * @param s 字符串
+ * @returns Boolean
+ */
+export function isEmail(s: string) {
+  let reg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
+  return !!s.match(reg);
+}
+
+/**
+ * 路由模式判断
+ * @param base 路由路径
+ * @returns 返回判断
+ */
+export function isHashMode(base: string) {
+  return base.indexOf("#") > -1;
+}
+
+/**
+ * 向地址连接追加参数。
+ * @param {string} uri 网址
+ * @param {string} key 字段
+ * @param {string} value 字段值
+ * @returns
+ */
+export function httpUrlAddKey(uri: string, key: string, value: string) {
+  if (!value) {
+    return uri;
+  }
+  var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+  var separator = uri.indexOf("?") !== -1 ? "&" : "?";
+  if (uri.match(re)) {
+    return uri.replace(re, "$1" + key + "=" + value + "$2");
+  } else {
+    return uri + separator + key + "=" + value;
+  }
+}

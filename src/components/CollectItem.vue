@@ -90,6 +90,7 @@ import fusionIcon from "@/assets/images/mbm-fusion-icon.jpg";
 import { ref } from "vue";
 import { ElNotification } from "element-plus";
 import { StarFilled } from "@element-plus/icons-vue";
+import { httpUrlAddKey } from "@/utils/utils";
 const emits = defineEmits(["openOverlay"]);
 const props = defineProps({
   aiVersion: {
@@ -212,17 +213,22 @@ const skip = (url: string, openNew: boolean, useToken: boolean) => {
     let usr = localStorage.getItem("userInfo");
     if (usr) {
       const user = JSON.parse(usr);
-      urlString += `?token=${user.token}&version=${
+      urlString = httpUrlAddKey(urlString, "token", user.token);
+      urlString = httpUrlAddKey(
+        urlString,
+        "version",
         typeof props.aiVersion === "object"
           ? props.aiVersion.value
           : props.aiVersion
-      }`;
+      );
     } else {
-      urlString += `?version=${
+      urlString = httpUrlAddKey(
+        urlString,
+        "version",
         typeof props.aiVersion === "object"
           ? props.aiVersion.value
           : props.aiVersion
-      }`;
+      );
     }
   }
   if (openNew) {

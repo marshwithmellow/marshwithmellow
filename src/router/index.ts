@@ -1,7 +1,14 @@
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+} from "vue-router";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history:
+    import.meta.env.VITE_PUBLIC_BASE == "/mbm-gpt"
+      ? createWebHistory(import.meta.env.BASE_URL)
+      : createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: "/",
@@ -42,6 +49,21 @@ const router = createRouter({
       path: "/miniLogin",
       name: "miniLogin",
       component: () => import("../views/miniLogin/index.vue"),
+    },
+    {
+      path: "/share",
+      name: "share",
+      component: () => import("../views/share/index.vue"),
+    },
+    {
+      path: "/keycharge",
+      name: "keycharge",
+      component: () => import("../views/keycharge/index.vue"),
+    },
+    {
+      path: "/setting",
+      name: "setting",
+      component: () => import("../views/setting/index.vue"),
     },
   ],
 });

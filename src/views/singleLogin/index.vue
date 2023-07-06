@@ -412,6 +412,7 @@ import {
 // import logoBg from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/single-bg.png";
 import { useRouter } from "vue-router";
 import { Back } from "@element-plus/icons-vue";
+import { httpUrlAddKey } from "@/utils/utils";
 const requestLock = ref(false);
 const proxy: any = getCurrentInstance()?.proxy ?? null;
 const tel = ref("");
@@ -536,17 +537,23 @@ const deleteSms = (e: KeyboardEvent) => {
 };
 const deleteSms2 = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
-    proxy?.$refs["smsInput1"].focus();
+    setTimeout(() => {
+      proxy?.$refs["smsInput1"].focus();
+    }, 50);
   }
 };
 const deleteSms3 = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
-    proxy?.$refs["smsInput2"].focus();
+    setTimeout(() => {
+      proxy?.$refs["smsInput2"].focus();
+    }, 50);
   }
 };
 const deleteSms4 = (e: KeyboardEvent) => {
   if (e.key === "Backspace") {
-    proxy?.$refs["smsInput3"].focus();
+    setTimeout(() => {
+      proxy?.$refs["smsInput3"].focus();
+    }, 50);
   }
 };
 const pasteSms = (e: ClipboardEvent) => {
@@ -942,10 +949,11 @@ const inputNickname = async () => {
 };
 // 跳转url
 const skip = (url: string, openNew: boolean) => {
+  let urlString = httpUrlAddKey(url, "token", userInfo.value.token);
   if (openNew) {
-    window.open(`${url}?token=${userInfo.value.token}`);
+    window.open(urlString);
   } else {
-    window.location.href = `${url}?token=${userInfo.value.token}`;
+    window.location.href = urlString;
   }
 };
 </script>

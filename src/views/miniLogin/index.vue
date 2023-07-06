@@ -413,6 +413,7 @@ import {
 // import logoBg from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/single-bg.png";
 import { useRouter } from "vue-router";
 import { Back } from "@element-plus/icons-vue";
+import { httpUrlAddKey } from "@/utils/utils";
 const requestLock = ref(false);
 const proxy: any = getCurrentInstance()?.proxy ?? null;
 const tel = ref("");

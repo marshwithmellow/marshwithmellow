@@ -1,7 +1,7 @@
 <template>
   <div class="px-common-layout px-no-trans">
     <div v-if="!agent">
-      <div class="overlay" v-if="popoverShow"></div>
+      <div class="overlay" v-if="popoverShow || exchangeShow"></div>
       <div
         class="overlay-1"
         :style="{
@@ -38,303 +38,19 @@
       </div>
       <el-container>
         <el-aside class="aside">
-          <img
-            class="logo"
-            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
-            alt=""
-          />
-          <div class="aside-content">
-            <div class="flex">
-              <button
-                v-if="userInfo.name"
-                class="button-style gpt-button"
-                @click="skip('https://mchat.mbmzone.com/', true)"
-              >
-                和我的 ChatGPT 聊天
-              </button>
-              <button v-else class="button-style gpt-button" @click="toLogin">
-                登录 MBM OpenAI 账号
-              </button>
-              <div class="default-model">
-                <img
-                  class="icon-ai"
-                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png"
-                  alt=""
-                />
-                <div class="model-name active">默认模型</div>
-                <el-select
-                  v-model="aiVersion"
-                  :fit-input-width="false"
-                  popper-class="select-down"
-                  :popper-append-to-body="false"
-                  class="ai-select"
-                  :class="{
-                    w128:
-                      aiVersion.value === 'GPT-4' ||
-                      aiVersion.value === 'GPT-3.5',
-                    w171: aiVersion.value === 'GPT-4 32K',
-                  }"
-                  :placeholder="options[0].label"
-                  size="small"
-                >
-                  <el-option
-                    class="options"
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-              </div>
-              <div
-                class="default-model"
-                @click="skip('http://visus.ai/', true)"
-              >
-                <img
-                  class="icon-ai"
-                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
-                  alt=""
-                />
-                <div class="model-name">训练你自己的 ChatGPT</div>
-              </div>
-              <!-- <el-popover
-                placement="right"
-                :width="300"
-                :offset="20"
-                trigger="click"
-                v-if="userInfo.name"
-                v-model:visible="popoverShow"
-              >
-                <template #reference>
-                  <div class="default-model">
-                    <img
-                      class="icon-ai"
-                      src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
-                      alt=""
-                    />
-                    <div class="model-name">生成我的 GPT4 API Key</div>
-                  </div>
-                </template>
-                <div class="popover-container">
-                  <img
-                    class="popover-logo"
-                    src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
-                    alt=""
-                  />
-                  <div class="popover-content">
-                    <div
-                      style="
-                        width: 100%;
-                        display: flex;
-                        justify-content: flex-start;
-                        align-items: flex-start;
-                        flex-direction: column;
-                      "
-                      v-if="isCreatedKey"
-                    >
-                      <div class="popover-title">我的 GPT4 API Key</div>
-                      <div class="popover-part">
-                        <div class="popover-block">
-                          <div class="internal">
-                            <div>个人</div>
-                          </div>
-                        </div>
-                        <div class="popover-right">
-                          <div class="price">升级至</div>
-                          <div class="desc">团队或企业</div>
-                        </div>
-                      </div>
-                      <div class="popover-part-a">
-                        <div class="popover-block-a">
-                          7bc4153d9d66545f86b42a313a1cd676
-                        </div>
-                        <div class="popover-right">
-                          <div class="desc2">复制</div>
-                        </div>
-                      </div>
-                      <div class="popover-part-a">
-                        <div class="popover-block-a">
-                          访问 MBM OpenAI 开发文档
-                        </div>
-                        <div class="popover-right">
-                          <div class="desc2">密码</div>
-                          <div class="desc2">mbm123</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      style="
-                        width: 100%;
-                        display: flex;
-                        justify-content: flex-start;
-                        align-items: flex-start;
-                        flex-direction: column;
-                      "
-                      v-else
-                    >
-                      <div class="popover-title">生成 GPT4 API Key</div>
-                      <div class="popover-desc">
-                        我们为个人、团队和企业开发者提供了GPT 开发
-                        接口，并集成了内容审查服务。
-                      </div>
-                      <div
-                        class="popover-part"
-                        :class="index == popoverIndex ? '' : 'normal'"
-                        v-for="(item, index) in popoverOptions"
-                        :key="index"
-                        @click="popoverIndex = index"
-                      >
-                        <div class="popover-block">
-                          <div class="internal">
-                            <div>{{ item.title }}</div>
-                          </div>
-                        </div>
-                        <div class="popover-right">
-                          <div class="price">{{ item.price }}元</div>
-                          <div class="desc">{{ item.desc }}</div>
-                        </div>
-                      </div>
-                      <div class="popover-btn">
-                        <div>立即申请</div>
-                      </div>
-                    </div>
-                    <div
-                      style="
-                        width: 100%;
-                        display: flex;
-                        justify-content: flex-start;
-                        align-items: flex-start;
-                        flex-direction: column;
-                        flex: 1;
-                        padding-top: 20px;
-                      "
-                      v-if="isCreatedKey"
-                    >
-                      <el-divider>开发者社区</el-divider>
-                      <div v-if="isUploadHead"></div>
-                      <div class="popover-ready-upload" v-else>
-                        <div class="popover-upload">
-                          <div>+</div>
-                        </div>
-                        <img
-                          class="popover-head-1"
-                          src="@/assets/images/head1.png"
-                          fit="scale-down"
-                        />
-                        <img
-                          class="popover-head-2"
-                          src="@/assets/images/head2.png"
-                          fit="scale-down"
-                        />
-                        <img
-                          class="popover-head-3"
-                          src="@/assets/images/head3.png"
-                          fit="scale-down"
-                        />
-                        <div class="popover-question-1">
-                          现在，请更新你独一无二的头像。
-                        </div>
-                        <div class="popover-question-2">
-                          Hi 开发者，欢迎加入社区。
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      style="
-                        width: 100%;
-                        display: flex;
-                        justify-content: flex-start;
-                        align-items: flex-start;
-                        flex-direction: column;
-                      "
-                      v-else
-                    >
-                      <div class="popover-foot-desc">
-                        GPT4 API key 均包含 GPT-4、GPT-4 32K 和 GPT-3.5-Turbo
-                        模型。由于计算资源紧张，GPT-4 模型将优先保证企业和团队
-                        用户的开发调用请求。
-                      </div>
-                      <div class="popover-foot-a">
-                        了解企业级 OpenAI 服务与个人服务的区别
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-popover> -->
-              <!-- @click="toLogin" 
-                v-else -->
-              <div class="default-model" @click="train('生成我的GPT4 API Key')">
-                <img
-                  class="icon-ai"
-                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png"
-                  alt=""
-                />
-                <div class="model-name">生成我的 GPT4 API Key</div>
-              </div>
-            </div>
-            <div class="flex">
-              <ul class="question-box">
-                <li
-                  class="question"
-                  v-for="(item, index) in questionList"
-                  :key="index"
-                  @click="navQuestion(item.value)"
-                >
-                  {{ item.label }}
-                </li>
-              </ul>
-              <button
-                v-if="userInfo.name"
-                class="gpt-button color-button"
-                @click="recharge"
-              >
-                充值我的账户
-                <div class="my-count-hover"></div>
-                <!-- <div class="block_hoverer"></div>
-              <div class="block_hoverer"></div>
-              <div class="block_hoverer"></div>
-              <div class="block_hoverer"></div> -->
-                <span class="light iconfont icon-shandian"></span>
-              </button>
-              <button v-else class="gpt-button color-button" @click="toLogin">
-                <!-- 现在领取 1 美元体验金！ -->
-                现在开启你的 AI 时刻！
-                <div class="my-count-hover"></div>
-                <!-- <div class="top"></div>
-              <div class="left"></div>
-              <div class="right"></div>
-              <div class="bottom"></div> -->
-                <!-- <div class="block_hoverer"></div>
-              <div class="block_hoverer"></div>
-              <div class="block_hoverer"></div>
-              <div class="block_hoverer"></div> -->
-              </button>
-              <div v-if="userInfo.name" class="share-my-code">
-                分享我的推荐码：
-                <span class="code" @click="copy">
-                  {{ userInfo.inviteCode }}
-                </span>
-                <!-- <el-popover placement="right-end" :width="200" trigger="click">
-                <template #reference>
-                  <span class="code" @click="copy">
-                    {{ userInfo.inviteCode }}
-                  </span>
-                </template>
-                <div class="popover-container">
-                  <div class="popover-top">
-                    <img
-                      v-if="qrCodeImgUrl"
-                      class="qrCode"
-                      :src="qrCodeImgUrl"
-                      alt=""
-                    />
-                  </div>
-                  <div class="popover-bottom"></div>
-                </div>
-              </el-popover> -->
-              </div>
-            </div>
-          </div>
+          <left-aside
+            ref="lf-side"
+            @to-login="toLogin"
+            @show-message="showMessage"
+            @skip="toSkip"
+            @recharge="recharge"
+            @nav-question="toNavQuestion"
+            @popover-confirm="toPopoverConfirm"
+            @set-popover-show="setPopoverShow"
+            @clip-text="copyShare"
+            @exchange-confirm="toExchangeConfirm"
+            @set-exchange-show="setExchangeShow"
+          ></left-aside>
         </el-aside>
         <el-container>
           <el-header class="header">
@@ -385,17 +101,79 @@
                 </button>
               </el-carousel-item>
             </el-carousel>
-            <div
+            <el-popover
+              placement="bottom"
+              :width="344"
+              trigger="hover"
+              v-if="userInfo.name"
+              popper-class="user"
+              v-model:visible="showUserInfo"
+            >
+              <template #reference>
+                <div
+                  v-if="userInfo.name"
+                  class="avatar"
+                  @click="
+                    updateUserInfo();
+                    navSetting();
+                  "
+                >
+                  {{ nickname }}
+                </div>
+              </template>
+              <div
+                v-if="userInfo.name"
+                class="popover-user-info"
+                :class="{ 'popover-show-user': showUserInfo }"
+              >
+                <p class="nickname">
+                  Hello,
+                  <span class="underline">{{ userInfo.name }}！</span>
+                </p>
+                <div class="info-item">
+                  <span class="label">手机号：</span>
+                  {{ userInfo.mobile }}
+                </div>
+                <div class="info-item">
+                  <span class="label">剩余金额：</span>
+                  {{ userInfo.remainAmount }}美元
+                </div>
+                <div class="info-item">
+                  <span class="label">请求次数：</span>
+                  {{ userInfo.requestCount }}次
+                </div>
+                <div class="info-item">
+                  <span class="label">推荐码：</span>
+                  <span class="code underline" @click="copyShare">
+                    {{ userInfo.inviteCode }}
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="label">AI时刻：</span>
+                  {{ userInfo.createTime }}
+                </div>
+                <div class="info-item">
+                  <span
+                    class="label underline"
+                    style="cursor: pointer"
+                    @click="logout()"
+                  >
+                    退出登录
+                  </span>
+                </div>
+              </div>
+            </el-popover>
+            <!-- <div
               v-if="userInfo.name"
               class="avatar"
               @click="
                 updateUserInfo();
-                showUserInfo = !showUserInfo;
+                navSetting();
               "
             >
               {{ nickname }}
-            </div>
-            <div
+            </div> -->
+            <!-- <div
               v-if="userInfo.name"
               class="user-info"
               :class="{ 'show-user': showUserInfo }"
@@ -435,17 +213,69 @@
                   退出登录
                 </span>
               </div>
-            </div>
+            </div> -->
           </el-header>
           <el-main class="main">
-            <h1 class="title">
-              当下热门 AI 应用
-              <span class="app-num">(7)</span>
-            </h1>
-            <collect-item
-              :ai-version="aiVersion"
-              @open-overlay="mpQrcodeShow = true"
-            ></collect-item>
+            <div style="padding: 40px 50px">
+              <h1 class="title">
+                当下热门 AI 应用
+                <span class="app-num">(7)</span>
+              </h1>
+              <collect-item
+                :ai-version="aiVersion"
+                @open-overlay="mpQrcodeShow = true"
+              ></collect-item>
+            </div>
+            <div class="foot">
+              <div style="display: flex; flex-direction: row">
+                <div class="txt">Copyright©2016-2023 MBM</div>
+                <div class="txt" style="margin-left: 10px">
+                  访问我们：
+                  <a href="https://www.mbmzone.com" style="margin-left: 10px">
+                    MBM环境音乐
+                  </a>
+                  <a
+                    href="https://www.mbmzone.com/openai"
+                    style="margin-left: 10px"
+                  >
+                    MBMOpenAI 服务
+                  </a>
+                  <a
+                    href="https://www.mustlisten.com"
+                    style="margin-left: 10px"
+                  >
+                    Mustlisten
+                  </a>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: row">
+                <div class="txt">
+                  地址：上海静安区南京西路1515号静安嘉里中心办公楼1座29楼
+                </div>
+                <div class="txt" style="margin-left: 10px">
+                  电话：+86 4008316028
+                </div>
+                <div class="txt" style="margin-left: 10px">
+                  咨询邮箱：<a href="mailto:help@mustlisten.com" target="_top">
+                    help@mustlisten.com
+                  </a>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: row">
+                <div class="txt">
+                  关于我们：上海希荧信息科技有限公司提供 MBM OpenAI GPT-4
+                  服务，为中国大陆企业及团体提供安全、可靠、企业级的 GPT
+                  服务。与世界，更进一步。
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: row">
+                <div class="txt">
+                  <a href="https://beian.miit.gov.cn/#/Integrated/index">
+                    沪ICP备17030457号-1
+                  </a>
+                </div>
+              </div>
+            </div>
           </el-main>
         </el-container>
       </el-container>
@@ -457,303 +287,15 @@
         :show-close="false"
         title=""
       >
-        <div class="dialog">
-          <div class="type-word">
-            <chat-gpt-typewriter
-              exampleText="进入你的AI时刻"
-            ></chat-gpt-typewriter>
-            <div class="mask"></div>
-          </div>
-          <div class="avatar">M</div>
-          <div v-if="status === 1" class="one-key" @click="status = 2">
-            本机号码一键登录
-          </div>
-          <!-- 手机号 -->
-          <div class="ipt-box" v-if="status === 2">
-            <!-- <el-input
-              type="tel"
-              :maxlength="11"
-              class="tel"
-              v-model="tel"
-              :autofocus="true"
-              placeholder="xxxxxxxxxxx"
-            />
-            <div class="btm"></div>
-            <div class="btm btm2"></div> -->
-            <div class="tel-container" style="width: 78px">
-              <!-- <el-input
-                ref="telInput1"
-                :maxlength="3"
-                class="tel1"
-                v-model="tel1"
-                :autofocus="true"
-                :placeholder="telholder1"
-                @focus="telholder1 = ''"
-                @blur="telholder1 = 'xxx'"
-                @input="talInput($event, 0)"
-              /> -->
-              <input
-                ref="telInput1"
-                :maxlength="3"
-                class="tel1"
-                v-model="tel1"
-                :placeholder="telholder1"
-                @focus="telholder1 = ''"
-                @paste="pasteTel"
-                @blur="telholder1 = 'xxx'"
-                @input="telInput(0)"
-              />
-            </div>
-            <div class="tel-container" style="width: 102px">
-              <!-- <el-input
-                ref="telInput2"
-                :maxlength="4"
-                class="tel2"
-                v-model="tel2"
-                :autofocus="false"
-                :placeholder="telholder2"
-                @focus="telholder2 = ''"
-                @blur="telholder2 = 'xxxx'"
-                @input="talInput($event, 1)"
-                @keyup.delete.native="deleteTel(2)"
-              /> -->
-              <input
-                ref="telInput2"
-                :maxlength="4"
-                class="tel2"
-                v-model="tel2"
-                :placeholder="telholder2"
-                @focus="telholder2 = ''"
-                @blur="telholder2 = 'xxxx'"
-                @paste="pasteTel"
-                @input="telInput(1)"
-                @keyup.delete.native="deleteTel(1)"
-              />
-            </div>
-            <div class="tel-container" style="width: 102px">
-              <!-- <el-input
-                ref="telInput3"
-                :maxlength="4"
-                class="tel3"
-                v-model="tel3"
-                :autofocus="false"
-                :placeholder="telholder3"
-                @focus="telholder3 = ''"
-                @blur="telholder3 = 'xxxx'"
-                @input="talInput($event, 2)"
-                @keyup.delete.native="deleteTel(3)"
-              /> -->
-              <input
-                ref="telInput3"
-                :maxlength="4"
-                class="tel3"
-                v-model="tel3"
-                :placeholder="telholder3"
-                @focus="telholder3 = ''"
-                @blur="telholder3 = 'xxxx'"
-                @paste="pasteTel"
-                @input="telInput(2)"
-                @keyup.delete.native="deleteTel(2)"
-              />
-            </div>
-            <!-- <div class="tel-big" :class="telFocus ? 'focus' : ''">
-              <div class="tel-contain" :class="telFocus ? 'focus' : ''">
-                <el-input
-                  ref="telInput1"
-                  :maxlength="13"
-                  class="tel"
-                  v-model="tel"
-                  :placeholder="telholder"
-                  @focus="
-                    telFocus = true;
-                    telholder = '';
-                  "
-                  @blur="
-                    telFocus = false;
-                    telholder = '请输入手机号码';
-                  "
-                />
-              </div>
-            </div> -->
-          </div>
-          <!-- 验证码 -->
-          <div class="square-box" v-if="status === 3">
-            <!-- <el-input
-              :maxlength="4"
-              class="tel"
-              v-model="sms"
-              :autofocus="true"
-              placeholder=""
-              @input="inputCode"
-            /> -->
-            <div class="bb">
-              <div class="square">
-                <input
-                  type="tel"
-                  ref="smsInput1"
-                  :maxlength="1"
-                  class="tel"
-                  v-model="sms1"
-                  placeholder=""
-                  @paste="pasteSms"
-                  @input="smsInput(0)"
-                  @keyup.delete.native="deleteSms(0)"
-                />
-              </div>
-              <div class="square square2">
-                <input
-                  type="tel"
-                  ref="smsInput2"
-                  :maxlength="1"
-                  class="tel"
-                  v-model="sms2"
-                  placeholder=""
-                  @paste="pasteSms"
-                  @input="smsInput(1)"
-                  @keyup.delete.native="deleteSms(1)"
-                />
-              </div>
-              <div class="square square3">
-                <input
-                  type="tel"
-                  ref="smsInput3"
-                  :maxlength="1"
-                  class="tel"
-                  v-model="sms3"
-                  placeholder=""
-                  @paste="pasteSms"
-                  @input="smsInput(2)"
-                  @keyup.delete.native="deleteSms(2)"
-                />
-              </div>
-              <div class="square square4">
-                <input
-                  type="tel"
-                  ref="smsInput4"
-                  :maxlength="1"
-                  class="tel"
-                  v-model="sms4"
-                  placeholder=""
-                  @paste="pasteSms"
-                  @input="smsInput(3)"
-                  @keyup.delete.native="deleteSms(3)"
-                />
-              </div>
-              <!-- <div class="square square7"></div> -->
-            </div>
-          </div>
-          <!-- 昵称 -->
-          <div class="nickname-box" v-if="status === 4">
-            <el-input
-              :maxlength="13"
-              class="tel"
-              v-model="nickname"
-              placeholder="怎么称呼你？"
-              @keyup.enter="inputNickname"
-            />
-            <div class="btm"></div>
-          </div>
-          <div
-            class="resend"
-            :class="time < 60 ? 'disable' : ''"
-            v-if="status === 3 || status === 2"
-            @click="countDown"
-          >
-            {{ status === 2 ? "发送验证码" : "重新发送" }}
-            <span class="countdown" v-if="time < 60"> ({{ time }}s) </span>
-          </div>
-          <div class="back" v-if="status === 3" @click="status = 2">
-            <el-icon><Back /></el-icon>
-            <div style="margin-left: 8px">返回</div>
-          </div>
-          <div class="tip" v-if="status !== 4 && status !== 3">
-            <div class="point"><div class="in-circle"></div></div>
-            首次登录将自动注册您的 MBM 账号
-            <a class="underline">隐私政策</a>
-          </div>
-        </div>
+        <login-modal
+          ref="login"
+          :inviteCode="inviteCode"
+          @show-message="showMessage"
+          @complete="loginComplete"
+        ></login-modal>
       </el-dialog>
     </div>
     <div v-else>
-      <el-dialog
-        v-model="showDialog"
-        :close-on-click-modal="true"
-        :close-on-press-escape="false"
-        class="phone-wrap-dialog"
-        :show-close="false"
-        title=""
-      >
-        <div class="phone-dialog">
-          <div class="type-word">
-            <chat-gpt-typewriter-small
-              exampleText="进入你的AI时刻"
-            ></chat-gpt-typewriter-small>
-            <div class="mask"></div>
-          </div>
-          <div class="avatar">M</div>
-          <div v-if="status === 1" class="one-key" @click="status = 2">
-            本机号码一键登录
-          </div>
-          <!-- 手机号 -->
-          <div class="ipt-box" v-if="status === 2">
-            <el-input
-              type="tel"
-              :maxlength="11"
-              class="tel"
-              v-model="tel"
-              :autofocus="true"
-              placeholder="xxx xxxx  xxxx"
-            />
-            <div class="btm"></div>
-            <div class="btm btm2"></div>
-          </div>
-          <!-- 验证码 -->
-          <div class="square-box" v-if="status === 3">
-            <el-input
-              type="tel"
-              :maxlength="4"
-              class="tel"
-              v-model="sms"
-              :autofocus="true"
-              placeholder=""
-              @input="inputCode"
-            />
-            <div class="bb">
-              <div class="square"></div>
-              <div class="square square2"></div>
-              <div class="square square3"></div>
-              <div class="square square4"></div>
-              <div class="square square7"></div>
-            </div>
-          </div>
-          <!-- 昵称 -->
-          <div class="nickname-box" v-if="status === 4">
-            <el-input
-              :maxlength="11"
-              class="tel"
-              v-model="nickname"
-              :autofocus="true"
-              placeholder="怎么称呼你？"
-              @keyup.enter="inputNickname"
-            />
-            <div class="btm"></div>
-          </div>
-          <div
-            class="resend"
-            :class="time < 60 ? 'disable' : ''"
-            v-if="status === 3"
-            @click="countDown"
-          >
-            {{ time < 60 ? "验证码已发送" : "重新发送" }}
-            <span class="countdown">({{ time }}s)</span>
-          </div>
-          <div class="tip" v-if="status !== 4 && status !== 3">
-            <div class="point"><div class="in-circle"></div></div>
-            首次登录将自动注册您的 MBM 账号
-            <a class="underline">隐私政策</a>
-          </div>
-        </div>
-      </el-dialog>
       <el-container>
         <el-header class="toolbar">
           <img
@@ -885,11 +427,32 @@
             <span class="app-num">(2)</span>
           </h1>
           <collect-item></collect-item> -->
-            <h1 class="title">
-              当下热门 AI 应用
-              <span class="app-num">(6)</span>
-            </h1>
-            <collect-item-small :ai-version="aiVersion"></collect-item-small>
+            <div style="padding: 20px 25px">
+              <h1 class="title">
+                当下热门 AI 应用
+                <span class="app-num">(6)</span>
+              </h1>
+              <collect-item-small :ai-version="aiVersion"></collect-item-small>
+            </div>
+            <!-- <div class="foot">
+              <div class="txt">
+                地址：上海静安区南京西路1515号静安嘉里中心办公楼1座29楼
+              </div>
+              <div class="txt" style="margin-left: 10px">
+                咨询邮箱：<a href="mailto:help@mustlisten.com" target="_top">
+                  help@mustlisten.com
+                </a>
+              </div>
+              <div class="txt" style="margin-left: 10px">
+                电话：+86 4008316028
+              </div>
+              <div class="txt">2016-2023©上海希荧信息科技有限公司</div>
+              <div class="txt" style="margin-left: 10px">
+                <a href="https://beian.miit.gov.cn/#/Integrated/index">
+                  沪ICP备17030457号-1
+                </a>
+              </div>
+            </div> -->
           </el-main>
         </el-container>
         <el-drawer
@@ -973,7 +536,21 @@
               <div
                 class="default-model"
                 @click="
-                  train('生成我的GPT4 API Key');
+                  exchangeDrawer = true;
+                  drawer = false;
+                "
+              >
+                <img
+                  class="icon-ai"
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/setting-documents.png"
+                  alt=""
+                />
+                <div class="model-name">兑换无限次对话周卡</div>
+              </div>
+              <div
+                class="default-model"
+                @click="
+                  keyDrawer = true;
                   drawer = false;
                 "
               >
@@ -1032,21 +609,390 @@
             </div>
           </el-aside>
         </el-drawer>
+        <el-drawer
+          v-model="exchangeDrawer"
+          direction="ltr"
+          size="80%"
+          :with-header="false"
+        >
+          <div class="popover-container">
+            <img
+              class="popover-logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+              alt=""
+            />
+            <div
+              class="popover-content"
+              v-if="!exchangeItem || exchangeContinue"
+            >
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  flex-direction: column;
+                "
+              >
+                <div class="popover-title">兑换我的无限次周卡</div>
+                <img
+                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-default.png"
+                  style="width: 100%; margin-top: 30px"
+                />
+                <div
+                  style="
+                    width: 100%;
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    flex-direction: column;
+                  "
+                >
+                  <el-input
+                    v-model="exchangeCode"
+                    class="exchange-input"
+                    placeholder="在此填入兑换码"
+                  >
+                    <template #suffix>
+                      <div
+                        class="clear"
+                        v-if="exchangeCode.length > 0"
+                        @click="exchangeCode = ''"
+                      >
+                        清空
+                      </div>
+                    </template>
+                  </el-input>
+                  <div
+                    style="
+                      width: 90%;
+                      display: flex;
+                      justify-content: flex-start;
+                      align-items: flex-start;
+                      flex-direction: row;
+                    "
+                  >
+                    <div
+                      class="exchange-confirm"
+                      @click="toExchangeConfirm({ code: exchangeCode })"
+                    >
+                      立即兑换
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  flex-direction: column;
+                "
+              >
+                <div class="description">
+                  ChatGPT 每张周卡兑换码仅可使用一次；
+                </div>
+                <div class="description" style="margin-bottom: 60px">
+                  您可在激活后的 7 天内无限次使用 GPT3.5 模型进行回答。
+                </div>
+              </div>
+            </div>
+            <div class="popover-content" v-else>
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  flex-direction: column;
+                "
+              >
+                <div class="popover-title">兑换我的无限次周卡</div>
+                <img
+                  :src="
+                    exchangeItem?.cardType == 2
+                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-black.png'
+                      : 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-red.png'
+                  "
+                  style="width: 100%; margin-top: 30px"
+                />
+                <div
+                  style="
+                    width: 100%;
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    flex-direction: column;
+                  "
+                >
+                  <div class="exchange-text">
+                    <span>您</span>
+                    <span>可</span>
+                    <span>于</span>
+                    <span class="space">&nbsp;</span>
+                    <span>{{ exchangeItem?.timeArray[0] }}</span>
+                    <span class="space">&nbsp;</span>
+                    <span>年</span>
+                    <span class="space">&nbsp;</span>
+                    <span>{{ exchangeItem?.timeArray[1] }}</span>
+                    <span class="space">&nbsp;</span>
+                    <span>月</span>
+                    <span class="space">&nbsp;</span>
+                    <span>{{ exchangeItem?.timeArray[2] }}</span>
+                    <span class="space">&nbsp;</span>
+                    <span>日</span>
+                    <span>前</span>
+                    <span>无</span>
+                    <span>限</span>
+                    <span>次</span>
+                    <span>使</span>
+                    <span>用</span>
+                    <span>服</span>
+                    <span>务</span>
+                  </div>
+                  <div
+                    style="
+                      width: 90%;
+                      display: flex;
+                      justify-content: flex-start;
+                      align-items: flex-start;
+                      flex-direction: row;
+                    "
+                  >
+                    <div class="exchange-confirm-2">兑换成功</div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: center;
+                  flex-direction: column;
+                "
+              >
+                <div style="width: 100%">
+                  <div class="description">
+                    ChatGPT 每张周卡兑换码仅可使用一次；
+                  </div>
+                </div>
+                <div style="width: 100%">
+                  <div class="description">
+                    您可在激活后的 7 天内无限次使用 GPT3.5 模型进行回答。
+                  </div>
+                </div>
+                <div class="resume-container" @click="exchangeContinue = true">
+                  <div class="txt">继续兑换</div>
+                  ？
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-drawer>
+        <el-drawer
+          v-model="keyDrawer"
+          direction="ltr"
+          size="80%"
+          :with-header="false"
+        >
+          <div class="popover-container">
+            <img
+              class="popover-logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png"
+              alt=""
+            />
+            <div class="popover-content">
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  flex-direction: column;
+                "
+                v-if="userInfo.isAuth === 1"
+              >
+                <div class="popover-title">我的 GPT4 API Key</div>
+                <div class="popover-part">
+                  <div class="popover-block">
+                    <div class="internal">
+                      <div>
+                        {{
+                          userInfo.accountType === 2
+                            ? "企业"
+                            : userInfo.accountType === 3
+                            ? "团队"
+                            : "个人"
+                        }}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="popover-right"
+                    v-if="
+                      userInfo.accountType === 1 || userInfo.accountType === 3
+                    "
+                  >
+                    <div class="price">升级至</div>
+                    <div style="display: flex; flex-direction: row">
+                      <div
+                        class="desc"
+                        v-if="
+                          userInfo.accountType === 1 ||
+                          userInfo.accountType === 3
+                        "
+                        @click="popoverConfirm(2)"
+                      >
+                        企业
+                      </div>
+                      <div
+                        class="desc"
+                        v-if="userInfo.accountType === 1"
+                        style="margin-left: 20px"
+                        @click="popoverConfirm(3)"
+                      >
+                        团队
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="popover-part-a"
+                  style="cursor: pointer"
+                  @click="copyText(userInfo.accessKey)"
+                >
+                  <div class="popover-block-a">
+                    {{ userInfo.accessKey }}
+                  </div>
+                  <div class="popover-right">
+                    <div class="desc2">复制</div>
+                  </div>
+                </div>
+                <div class="popover-part-a">
+                  <div class="popover-block-a">访问 MBM OpenAI 开发文档</div>
+                  <div class="popover-right">
+                    <div class="desc2">
+                      <div>密码</div>
+                      <div>base123</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  flex-direction: column;
+                "
+                v-else
+              >
+                <div class="popover-title">生成 GPT4 API Key</div>
+                <div class="popover-desc">
+                  我们为个人、团队和企业开发者提供了GPT
+                  开发接口，并集成了内容审查服务。
+                </div>
+                <div
+                  class="popover-part"
+                  :class="index == popoverIndex ? '' : 'normal'"
+                  v-for="(item, index) in popoverOptions"
+                  :key="index"
+                  @click="popoverIndex = index"
+                >
+                  <div class="popover-block">
+                    <div class="internal">
+                      <div>{{ item.title }}</div>
+                    </div>
+                  </div>
+                  <div class="popover-right">
+                    <div class="price">{{ item.price }}元</div>
+                    <div class="desc">{{ item.desc }}</div>
+                  </div>
+                </div>
+                <div class="popover-btn" @click="popoverConfirm(popoverIndex)">
+                  <div>立即申请</div>
+                </div>
+              </div>
+              <!-- <div
+                      style="
+                        width: 100%;
+                        display: flex;
+                        justify-content: flex-start;
+                        align-items: flex-start;
+                        flex-direction: column;
+                        flex: 1;
+                        padding-top: 20px;
+                      "
+                      v-if="userInfo.isAuth === 1"
+                    >
+                      <el-divider>开发者社区</el-divider>
+                      <div v-if="isUploadHead"></div>
+                      <div class="popover-ready-upload" v-else>
+                        <div class="popover-upload">
+                          <div>+</div>
+                        </div>
+                        <img
+                          class="popover-head-1"
+                          src="@/assets/images/head1.png"
+                          fit="scale-down"
+                        />
+                        <img
+                          class="popover-head-2"
+                          src="@/assets/images/head2.png"
+                          fit="scale-down"
+                        />
+                        <img
+                          class="popover-head-3"
+                          src="@/assets/images/head3.png"
+                          fit="scale-down"
+                        />
+                        <div class="popover-question-1">
+                          现在，请更新你独一无二的头像。
+                        </div>
+                        <div class="popover-question-2">
+                          Hi 开发者，欢迎加入社区。
+                        </div>
+                      </div>
+                    </div> v-else -->
+              <div
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: flex-start;
+                  align-items: flex-start;
+                  flex-direction: column;
+                "
+                v-if="userInfo.isAuth === 0"
+              >
+                <div class="popover-foot-desc">
+                  GPT4 API key 均包含 GPT-4、GPT-4 32K 和 GPT-3.5-Turbo
+                  模型。由于计算资源紧张，GPT-4 模型将优先保证企业和团队
+                  用户的开发调用请求。
+                </div>
+                <div
+                  class="popover-foot-a"
+                  @click="
+                    skip(
+                      'https://openai.mbmzone.com/mbm-gpt/blog?blogType=3',
+                      true
+                    )
+                  "
+                >
+                  了解企业级 OpenAI 服务与个人服务的区别
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-drawer>
       </el-container>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import QRCode from "qrcode";
-// import logo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png";
-// import whiteLogo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png";
-// import iconMenu from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/images/menu.png";
-// import iconAi from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai.png";
-// import iconSelf from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png";
-// import iconKey from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-key.png";
-// import swiper1 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider1.png";
-// import swiper2 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider2.png";
-// import swiper3 from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/slider3.png";
 import {
   onBeforeMount,
   ref,
@@ -1056,22 +1002,20 @@ import {
   onMounted,
 } from "vue";
 import CollectItem from "@/components/CollectItem.vue";
-import ChatGptTypewriter from "@/components/ChatGptTypewriter.vue";
 import CollectItemSmall from "@/components/CollectItemSmall.vue";
-import ChatGptTypewriterSmall from "@/components/ChatGptTypewriterSmall.vue";
-import { ElMessage, ElNotification, ElMessageBox } from "element-plus";
-import { Back } from "@element-plus/icons-vue";
+import LeftAside from "@/components/Aside.vue";
+import LoginModal from "@/components/LoginModal.vue";
+import { ElMessage, ElMessageBox, dayjs } from "element-plus";
 import { pinyin } from "pinyin-pro";
 import {
-  checkPhone,
-  doSendCode,
-  doLoginApi,
-  doRegisterCode,
-  registerAccount,
+  doLogout,
   doGetInfo,
+  getValidatyTime,
+  doExchangeCode,
 } from "@/api/index";
 import { useRouter } from "vue-router";
 import useClipboard from "vue-clipboard3";
+import { isHashMode, httpUrlAddKey } from "@/utils/utils";
 type Option = {
   value: string;
   label: string;
@@ -1081,6 +1025,15 @@ type popoverOption = {
   price: number;
   desc: string;
 };
+
+type exchangeOption = {
+  validityTime: string;
+  accountId: string;
+  model: string;
+  serialNumber: string;
+  cardType: number; //卡片类型，1、红卡（编号5开头）。2、黑卡（编号8开头）。
+  timeArray: Array<string>; //数组[年，月，日]
+};
 // select opetion
 const options = ref<Option[]>([
   { value: "gpt4", label: "GPT-4" },
@@ -1088,35 +1041,21 @@ const options = ref<Option[]>([
   { value: "gpt3.5", label: "GPT-3.5" },
 ]);
 const popoverOptions = ref<popoverOption[]>([
-  { title: "个人", price: 99, desc: "内含5美金" },
-  { title: "团队(10人以内)", price: 199, desc: "内含10美金" },
-  { title: "企业", price: 1500, desc: "内含100美金" },
+  { title: "个人", price: 698, desc: "内含20美金" },
+  { title: "团队(10人以内)", price: 1298, desc: "内含50美金" },
+  { title: "企业", price: 7500, desc: "内含500美金" },
 ]);
+
+const exchangeItem = ref<exchangeOption | null>(null);
+const exchangeContinue = ref(false);
 const popoverIndex = ref(0);
 const aiVersion = ref<Option>(options.value[0]);
 const showDialog = ref(false);
 const popoverShow = ref(false);
-// 是否注册过
-const isCreatedAccount = ref(false);
-const isCreatedKey = ref(true);
-const isUploadHead = ref(false);
 const mpQrcodeShow = ref(false);
+const exchangeShow = ref(false);
 const fadeName = ref("fadeIn");
-const status = ref(1);
-const tel = ref("");
-const tel1 = ref("");
-const tel2 = ref("");
-const tel3 = ref("");
-const telholder1 = ref("xxx");
-const telholder2 = ref("xxxx");
-const telholder3 = ref("xxxx");
-// const telFocus = ref(false);
-// const telholder = ref("请输入手机号码");
-const sms = ref("");
-const sms1 = ref("");
-const sms2 = ref("");
-const sms3 = ref("");
-const sms4 = ref("");
+const inviteCode = ref<any>("");
 const userInfo = ref({
   mobile: "",
   id: "",
@@ -1126,25 +1065,28 @@ const userInfo = ref({
   token: "",
   createTime: "",
   inviteCode: "",
+  isAuth: 0,
+  accountType: 1,
+  accessKey: "",
 });
 const agent = ref(
   navigator.userAgent.match(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
   )
 );
-const requestLock = ref(false);
 const drawer = ref(false);
+const keyDrawer = ref(false);
+const exchangeDrawer = ref(false);
 const qrCodeImgUrl = ref("");
+const exchangeCode = ref("");
 // 使用插件
 const { toClipboard } = useClipboard();
 const proxy: any = getCurrentInstance()?.proxy ?? null;
 const nickname = ref("");
 const animate = ref(true);
 const showUserInfo = ref(false);
-const time = ref(60);
 const $router = useRouter();
 const redirectUrl = ref<any>("");
-const loginFlag = ref(false);
 const swiperList = ref([
   {
     title: "MBM OpenAI GPT-4 服务",
@@ -1181,6 +1123,9 @@ onBeforeMount(() => {
   if ($router.currentRoute.value.query.redirectUrl) {
     redirectUrl.value = $router.currentRoute.value.query.redirectUrl;
   }
+  if ($router.currentRoute.value.query.inviteCode) {
+    inviteCode.value = $router.currentRoute.value.query.inviteCode;
+  }
   let usr = localStorage.getItem("userInfo");
   if (usr) {
     const info = JSON.parse(usr);
@@ -1199,6 +1144,9 @@ const getUserInfo = async (token: string, accessKey: string) => {
   const res = await doGetInfo({ token, accessKey });
   if (res.data.code === 11000) {
     userInfo.value = res.data.data;
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.setUserInfo(userInfo.value);
+    }
     const firstC = getFirstChar(userInfo.value.name);
     nickname.value = firstC;
     if (
@@ -1210,6 +1158,7 @@ const getUserInfo = async (token: string, accessKey: string) => {
         qrCodeImgUrl.value = res1;
       });
     }
+    getExchangeTime(userInfo.value.id);
   } else if (res.data.code === 12004) {
     localStorage.removeItem("userInfo");
     userInfo.value = {
@@ -1221,288 +1170,86 @@ const getUserInfo = async (token: string, accessKey: string) => {
       token: "",
       createTime: "",
       inviteCode: "",
+      isAuth: 0,
+      accountType: 1,
+      accessKey: "",
     };
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.setUserInfo(userInfo.value);
+    }
     nickname.value = "";
     showUserInfo.value = false;
-    status.value = 1;
-    tel.value = "";
-    tel1.value = "";
-    tel2.value = "";
-    tel3.value = "";
     qrCodeImgUrl.value = "";
   }
 };
-const deleteTel = (flag: number) => {
-  if (flag == 2 && tel3.value.length == 0) {
-    proxy?.$refs["telInput2"].focus();
-  } else if (tel2.value.length == 0) {
-    proxy?.$refs["telInput1"].focus();
-  }
-};
-const deleteSms = (flag: number) => {
-  if (flag == 3 && sms4.value.length == 0) {
-    proxy?.$refs["smsInput3"].focus();
-  } else if (flag == 2 && sms3.value.length == 0) {
-    proxy?.$refs["smsInput2"].focus();
-  } else if (sms2.value.length == 0) {
-    proxy?.$refs["smsInput1"].focus();
-  }
-};
-const pasteSms = (e: ClipboardEvent) => {
-  const text = e.clipboardData?.getData("text");
-  const arrText = text?.split(/ [(\r\n)\r\n] +/); // 以转行符切割文本字符串
-  if (arrText && arrText.length > 0 && arrText[0].length >= 4) {
-    sms1.value = arrText[0][0];
-    sms2.value = arrText[0][1];
-    sms3.value = arrText[0][2];
-    sms4.value = arrText[0][3];
-    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
-  }
-};
-const pasteTel = (e: ClipboardEvent) => {
-  const text = e.clipboardData?.getData("text");
-  const arrText = text?.split(/ [(\r\n)\r\n] +/);
-  if (arrText && arrText.length > 0 && arrText[0].length >= 11) {
-    tel1.value = arrText[0][0] + arrText[0][1] + arrText[0][2];
-    tel2.value = arrText[0][3] + arrText[0][4] + arrText[0][5] + arrText[0][6];
-    tel3.value = arrText[0][7] + arrText[0][8] + arrText[0][9] + arrText[0][10];
-    getTelCode(tel1.value + tel2.value + tel3.value);
-  }
-};
-const telInput = (index: number) => {
-  switch (index) {
-    case 0:
-      if (tel1.value.length == 3) {
-        proxy?.$refs["telInput2"].focus();
-      }
-      break;
-    case 1:
-      if (tel2.value.length == 4) {
-        proxy?.$refs["telInput3"].focus();
-      }
-      break;
-    default:
-      break;
-  }
-  if (
-    tel1.value.length == 3 &&
-    tel2.value.length == 4 &&
-    tel3.value.length == 4
-  ) {
-    getTelCode(tel1.value + tel2.value + tel3.value);
-  }
-};
-const getTelCode = async (val: string) => {
-  tel.value = val.replace(/\s/g, "");
-  if (tel.value.length === 11) {
-    let mobile = tel.value.replace(/\s/g, "");
-    if (mobile && verifyPhone(mobile)) {
-      if (loginFlag.value) return;
-      loginFlag.value = true;
-      const phoneRegister = await checkPhone({ phone: mobile });
-      let codeRes = null;
-      if (phoneRegister.data.data.register) {
-        // 注册过。登陆验证码
-        codeRes = await doSendCode({ phone: mobile });
-        isCreatedAccount.value = true;
-      } else {
-        // 未注册过，注册验证码
-        codeRes = await doRegisterCode({ phone: mobile });
-      }
-      if (codeRes.data.code === 11000) {
-        ElMessage({ type: "success", message: "验证码已发送" });
-        const timer = setInterval(() => {
-          time.value--;
-          if (time.value <= 0) {
-            time.value = 60;
-            clearInterval(timer);
-          }
-        }, 1000);
-        status.value = 3;
-      } else {
-        if (codeRes.data.code === 12006) {
-          status.value = 3;
+const getExchangeTime = async (accountId: string) => {
+  const res = await getValidatyTime({
+    token: userInfo.value.token,
+    accessKey: userInfo.value.accessKey,
+    accountId: accountId,
+  });
+  if (res.data.code === 11000) {
+    if (!agent.value) {
+      if (res.data.data.length > 0) {
+        const item = res.data.data[0];
+        let cartType = 1;
+        if (item && item.serialNumber) {
+          const temp: string = item.serialNumber.replace("NO.", "");
+          cartType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
         }
-        ElMessage({ type: "error", message: codeRes.data.msg });
+        const timeStr = dayjs(item.validityTime);
+        proxy?.$refs["lf-side"]?.setExchangeItem(
+          Object.assign({}, item, {
+            cartType,
+            timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
+          })
+        );
+      } else {
+        proxy?.$refs["lf-side"]?.setExchangeItem(null);
       }
-      loginFlag.value = false;
-    } else ElMessage("请输入正确的手机号");
-  }
-};
-const smsInput = (index: number) => {
-  switch (index) {
-    case 0:
-      if (sms1.value.length == 1) {
-        proxy?.$refs["smsInput2"].focus();
+    } else {
+      if (res.data.data.length > 0) {
+        const item = res.data.data[0];
+        let cartType = 1;
+        if (item && item.serialNumber) {
+          const temp: string = item.serialNumber.replace("NO.", "");
+          cartType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+        }
+        const timeStr = dayjs(item.validityTime);
+        exchangeItem.value = Object.assign({}, item, {
+          cartType,
+          timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
+        });
+      } else {
+        exchangeItem.value = null;
       }
-      break;
-    case 1:
-      if (sms2.value.length == 1) {
-        proxy?.$refs["smsInput3"].focus();
-      }
-      break;
-    case 2:
-      if (sms3.value.length == 1) {
-        proxy?.$refs["smsInput4"].focus();
-      }
-      break;
-    default:
-      break;
-  }
-  if (
-    sms1.value.length == 1 &&
-    sms2.value.length == 1 &&
-    sms3.value.length == 1 &&
-    sms4.value.length == 1
-  ) {
-    inputCode(sms1.value + sms2.value + sms3.value + sms4.value);
-  }
-};
-watch(
-  () => status.value,
-  (newValue, oldValue) => {
-    if (newValue == 2 && oldValue == 1) {
-      nextTick(() => {
-        proxy?.$refs["telInput1"].focus();
-      });
-    } else if (newValue == 2 && oldValue == 3) {
-      nextTick(() => {
-        proxy?.$refs["telInput3"].focus();
-      });
-    } else if (newValue == 3 && oldValue == 2) {
-      nextTick(() => {
-        proxy?.$refs["smsInput1"].focus();
-      });
+    }
+  } else {
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.setExchangeItem(null);
+    } else {
+      exchangeItem.value = null;
     }
   }
-);
-watch(
-  () => showDialog.value,
-  (newValue) => {
-    if (newValue && status.value == 2) {
-      nextTick(() => {
-        if (tel3.value.length > 0) {
-          setTimeout(() => {
-            proxy?.$refs["telInput3"].focus();
-          }, 500);
-        } else if (tel2.value.length > 0) {
-          setTimeout(() => {
-            proxy?.$refs["telInput2"].focus();
-          }, 500);
-        } else {
-          setTimeout(() => {
-            proxy?.$refs["telInput1"].focus();
-          }, 500);
-        }
-      });
-    } else if (newValue && status.value == 3) {
-      nextTick(() => {
-        if (sms4.value.length > 0) {
-          setTimeout(() => {
-            proxy?.$refs["smsInput4"].focus();
-          }, 500);
-        } else if (sms3.value.length > 0) {
-          setTimeout(() => {
-            proxy?.$refs["smsInput3"].focus();
-          }, 500);
-        } else if (sms2.value.length > 0) {
-          setTimeout(() => {
-            proxy?.$refs["smsInput2"].focus();
-          }, 500);
-        } else {
-          setTimeout(() => {
-            proxy?.$refs["smsInput1"].focus();
-          }, 500);
-        }
-      });
-    }
+};
+const setPopoverShow = (show: boolean) => {
+  popoverShow.value = show;
+  if (show) {
+    updateUserInfo();
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
   }
-);
-// watch(
-//   () => sms1.value,
-//   async (newValue) => {
-//     sms.value = newValue + sms2.value + sms3.value + sms4.value;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     } else if (showDialog.value && newValue && newValue.length > 0) {
-//       proxy?.$refs["smsInput2"].focus();
-//     }
-//   }
-// );
-// watch(
-//   () => sms2.value,
-//   async (newValue) => {
-//     sms.value = sms1.value + newValue + sms3.value + sms4.value;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     } else if (showDialog.value && newValue && newValue.length > 0) {
-//       proxy?.$refs["smsInput3"].focus();
-//     }
-//   }
-// );
-// watch(
-//   () => sms3.value,
-//   async (newValue) => {
-//     sms.value = sms1.value + sms2.value + newValue + sms4.value;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     } else if (showDialog.value && newValue && newValue.length > 0) {
-//       proxy?.$refs["smsInput4"].focus();
-//     }
-//   }
-// );
-// watch(
-//   () => sms4.value,
-//   async (newValue) => {
-//     sms.value = sms1.value + sms2.value + sms3.value + newValue;
-//     if (sms.value.length === 4) {
-//       inputCode(sms.value);
-//     }
-//   }
-// );
-// 监听手机号
-// watch(
-//   () => tel.value,
-//   async (newValue, oldValue) => {
-//     tel.value =
-//       newValue.length > oldValue.length
-//         ? newValue
-//             .replace(/\s/g, "")
-//             .replace(/(\d{3})(\d{0,4})(\d{0,4})/, "$1 $2 $3")
-//         : tel.value.trim();
-//     if (tel.value.length === 13) {
-//       let mobile = tel.value.replace(/\s/g, "");
-//       if (mobile && verifyPhone(mobile)) {
-//         if (loginFlag.value) return;
-//         loginFlag.value = true;
-//         const phoneRegister = await checkPhone({ phone: mobile });
-//         let codeRes = null;
-//         if (phoneRegister.data.data.register) {
-//           // 注册过。登陆验证码
-//           codeRes = await doSendCode({ phone: mobile });
-//           isCreatedAccount.value = true;
-//         } else {
-//           // 未注册过，注册验证码
-//           codeRes = await doRegisterCode({ phone: mobile });
-//         }
-//         if (codeRes.data.code === 11000) {
-//           ElMessage({ type: "success", message: "验证码已发送" });
-//           const timer = setInterval(() => {
-//             time.value--;
-//             if (time.value <= 0) {
-//               time.value = 60;
-//               clearInterval(timer);
-//             }
-//           }, 1000);
-//           status.value = 3;
-//         } else {
-//           ElMessage({ type: "error", message: codeRes.data.msg });
-//         }
-//         loginFlag.value = false;
-//       } else ElMessage("请输入正确的手机号");
-//     }
-//   }
-// );
+};
+const setExchangeShow = (show: boolean) => {
+  exchangeShow.value = show;
+  if (show) {
+    getExchangeTime(userInfo.value.id);
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+};
 // 显示登录选项
 const toLogin = () => {
   let usr = localStorage.getItem("userInfo");
@@ -1521,16 +1268,6 @@ const toLogin = () => {
     }
   }
 };
-// 培训
-const train = (message: string) => {
-  ElNotification({
-    title: "Success",
-    message,
-    type: "success",
-    duration: 2000,
-    showClose: false,
-  });
-};
 // swiper slide
 const changeSwiper = () => {
   animate.value = false;
@@ -1538,152 +1275,86 @@ const changeSwiper = () => {
     animate.value = true;
   }, 100);
 };
-// sms countDown
-const countDown = async () => {
-  if (time.value < 60) return;
-  if (tel.value.length === 11) {
-    let phone = tel.value.replace(/\s/g, "");
-    if (phone && verifyPhone(phone)) {
-      const res = await doRegisterCode({ phone });
-      if (res.data.code === 11000) {
-        ElMessage({ type: "success", message: "验证码已发送" });
-        const timer = setInterval(() => {
-          time.value--;
-          if (time.value <= 0) {
-            time.value = 60;
-            clearInterval(timer);
-          }
-        }, 1000);
-        status.value = 3;
-      } else {
-        if (res.data.code === 12006) {
-          status.value = 3;
-        }
-        // 没有注册
-        ElMessage({ type: "warning", message: res.data.msg });
-      }
-    } else {
-      ElMessage({ type: "warning", message: "请输入正确的手机号码" });
-    }
-  } else {
-    ElMessage({ type: "warning", message: "请输入正确的手机号码" });
-  }
-};
 // 复制
 const copy = async () => {
   try {
-    // 复制
-    await toClipboard(
-      `${window.location.href}?inviteCode=${userInfo.value.inviteCode}`
-    );
+    if (isHashMode($router.options.history.base)) {
+      // 复制
+      await toClipboard(
+        `${
+          window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+        }#/?inviteCode=${userInfo.value.inviteCode}`
+      );
+    } else {
+      // 复制
+      await toClipboard(
+        `${
+          window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+        }?inviteCode=${userInfo.value.inviteCode}`
+      );
+    }
     ElMessage({ message: "复制成功", type: "success" });
   } catch (e) {
     ElMessage("复制失败");
   }
 };
-// sms-code
-const inputCode = async (code: string) => {
-  if (code && code.length === 4 && !isNaN(parseInt(code))) {
-    sms.value = code.replace(/\s/g, "");
-    if (isCreatedAccount.value) {
-      if (requestLock.value) return;
-      requestLock.value = true;
-      // 注册过账号。调登陆接口
-      let phone = tel.value.replace(/\s/g, "");
-      let query = { code: sms.value, phone };
-      const res = await doLoginApi(query);
-      if (res.data.code === 11000) {
-        ElMessage({ type: "success", message: "手机号验证成功" });
-        status.value = -1;
-        showDialog.value = false;
-        localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
-        userInfo.value = res?.data?.data;
-        const firstC = getFirstChar(userInfo.value.name);
-        nickname.value = firstC;
-        sms1.value = "";
-        sms2.value = "";
-        sms3.value = "";
-        sms4.value = "";
-        if (redirectUrl.value) {
-          skip(redirectUrl.value, false);
-        } else {
-          if (
-            qrCodeImgUrl.value.length == 0 &&
-            userInfo.value.inviteCode &&
-            userInfo.value.inviteCode.length > 0
-          ) {
-            QRCode.toDataURL(userInfo.value.inviteCode).then((res1: any) => {
-              qrCodeImgUrl.value = res1;
-            });
-          }
-        }
-      } else {
-        ElMessage({ type: "error", message: res.data.msg });
-      }
-      requestLock.value = false;
-    } else {
-      // 未注册过。
-      setTimeout(() => {
-        status.value = 4;
-      }, 1000);
-    }
-  }
-};
-// Nickname
-const inputNickname = async () => {
-  if (!nickname.value) return ElMessage("请输入昵称");
-  let phone = tel.value.replace(/\s/g, "");
-  let query: any = { code: sms.value, name: nickname.value, phone };
-  if ($router.currentRoute.value.query.inviteCode) {
-    query.inviteCode = $router.currentRoute.value.query.inviteCode;
-  }
-  const res = await registerAccount(query);
-  if (res.data.code === 11000) {
-    ElMessage({ type: "success", message: "手机号验证成功" });
-    status.value = -1;
-    showDialog.value = false;
-    localStorage.setItem("userInfo", JSON.stringify(res?.data?.data));
-    userInfo.value = res?.data?.data;
-    const firstC = getFirstChar(userInfo.value.name);
-    nickname.value = firstC;
-    sms1.value = "";
-    sms2.value = "";
-    sms3.value = "";
-    sms4.value = "";
-    if (redirectUrl.value) {
-      skip(redirectUrl.value, false);
-    } else {
-      if (
-        qrCodeImgUrl.value.length == 0 &&
-        userInfo.value.inviteCode &&
-        userInfo.value.inviteCode.length > 0
-      ) {
-        QRCode.toDataURL(userInfo.value.inviteCode).then((res1: any) => {
-          qrCodeImgUrl.value = res1;
-        });
-      }
-    }
+const copyShare = async () => {
+  let url = "";
+  if (isHashMode($router.options.history.base)) {
+    url = `${
+      window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+    }/#/share?nickName=${encodeURIComponent(userInfo.value.name)}&inviteCode=${
+      userInfo.value.inviteCode
+    }`;
   } else {
-    ElMessage({ type: "error", message: res.data.msg });
+    url = `${
+      window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+    }/share?nickName=${encodeURIComponent(userInfo.value.name)}&inviteCode=${
+      userInfo.value.inviteCode
+    }`;
+  }
+  try {
+    await toClipboard(url);
+    ElMessage({ message: "复制成功", type: "success" });
+  } catch (e) {
+    ElMessage("复制失败");
   }
 };
-// verify input mobile
-const verifyPhone = (phone: string | number) => {
-  const reg =
-    /^1((3[0-9])|(4[1579])|(5[0-9])|(6[6])|(7[0-9])|(8[0-9])|(9[0-9]))\d{8}$/;
-  return reg.test(phone + "");
+const copyText = async (txt: string) => {
+  try {
+    // 复制
+    await toClipboard(txt);
+    ElMessage({ message: "复制成功", type: "success" });
+  } catch (e) {
+    ElMessage("复制失败");
+  }
+};
+const toSkip = (e: any) => {
+  const { url, openNew } = e;
+  skip(url, openNew);
 };
 // 跳转url
 const skip = (url: string, openNew: boolean) => {
   let usr: any = localStorage.getItem("userInfo");
+  let urlString = url;
   if (usr) {
     usr = JSON.parse(usr);
+    urlString = httpUrlAddKey(url, "token", usr.token);
+    urlString = httpUrlAddKey(urlString, "version", aiVersion.value.value);
   }
   if (openNew) {
-    window.open(`${url}?token=${usr?.token}&version=${aiVersion.value.value}`);
+    window.open(urlString);
   } else {
-    window.location.href = `${url}?token=${usr?.token}&version=${aiVersion.value.value}`;
+    window.location.href = urlString;
   }
+};
+const navSetting = () => {
+  $router.push({ name: "setting" });
+  // if (isHashMode($router.options.history.base)) {
+  //   window.open(`${window.location.href.split("#")[0]}#/setting`);
+  // } else {
+  //   window.open(`${window.location.href.split("?")[0]}setting`);
+  // }
 };
 // 处理首字母nickname
 const getFirstChar = (str: string) => {
@@ -1699,7 +1370,11 @@ const getFirstChar = (str: string) => {
 };
 // 跳转充值
 const recharge = () => {
-  window.open(`${window.location.href.split("?")[0]}recharge`);
+  if (isHashMode($router.options.history.base)) {
+    window.open(`${window.location.href.split("#")[0]}#/recharge`);
+  } else {
+    window.open(`${window.location.href.split("?")[0]}recharge`);
+  }
 };
 // 滑动切换
 const slideBanner = () => {
@@ -1746,6 +1421,10 @@ const logout = () => {
     cancelButtonText: "取消",
     type: "warning",
   }).then(() => {
+    doLogout({
+      token: userInfo.value.token,
+      accessKey: userInfo.value.accessKey,
+    });
     localStorage.removeItem("userInfo");
     userInfo.value = {
       mobile: "",
@@ -1756,16 +1435,21 @@ const logout = () => {
       token: "",
       createTime: "",
       inviteCode: "",
+      isAuth: 0,
+      accountType: 1,
+      accessKey: "",
     };
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.setUserInfo(userInfo.value);
+    }
     nickname.value = "";
     showUserInfo.value = false;
-    status.value = 1;
-    tel.value = "";
-    tel1.value = "";
-    tel2.value = "";
-    tel3.value = "";
     qrCodeImgUrl.value = "";
   });
+};
+const toNavQuestion = (e: any) => {
+  const { blogType } = e;
+  navQuestion(blogType);
 };
 const navQuestion = (blogType: string) => {
   $router.push({ name: "blog", query: { blogType } });
@@ -1776,6 +1460,77 @@ const hideQrcode = () => {
     mpQrcodeShow.value = false;
     fadeName.value = "fadeIn";
   }, 1000);
+};
+const showMessage = (params: any) => {
+  ElMessage(params);
+};
+const loginComplete = (data: any) => {
+  if (data) {
+    showDialog.value = false;
+    localStorage.setItem("userInfo", JSON.stringify(data));
+    userInfo.value = data;
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.setUserInfo(userInfo.value);
+    }
+    const firstC = getFirstChar(userInfo.value.name);
+    nickname.value = firstC;
+    if (redirectUrl.value) {
+      skip(redirectUrl.value, false);
+    } else {
+      if (
+        qrCodeImgUrl.value.length == 0 &&
+        userInfo.value.inviteCode &&
+        userInfo.value.inviteCode.length > 0
+      ) {
+        QRCode.toDataURL(userInfo.value.inviteCode).then((res1: any) => {
+          qrCodeImgUrl.value = res1;
+        });
+      }
+    }
+  }
+};
+const toPopoverConfirm = (e: any) => {
+  const { keyType } = e;
+  popoverConfirm(keyType);
+};
+const toExchangeConfirm = (e: { code: string }) => {
+  ElMessageBox.confirm("是否使用该卡片？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "info",
+  }).then(() => {
+    exchangeConfirm(e);
+  });
+};
+const exchangeConfirm = async (e: { code: string }) => {
+  const { code } = e;
+  const res = await doExchangeCode({
+    token: userInfo.value.token,
+    accessKey: userInfo.value.accessKey,
+    accountId: userInfo.value.id,
+    code,
+  });
+  if (res.data.code === 11000) {
+    getExchangeTime(userInfo.value.id);
+  } else {
+    ElMessage(res.data.msg);
+  }
+  if (!agent) {
+    proxy?.$refs["lf-side"]?.setExchangeContinue(false);
+  } else {
+    exchangeContinue.value = false;
+  }
+};
+const popoverConfirm = (keyType: number) => {
+  if (isHashMode($router.options.history.base)) {
+    window.open(
+      `${window.location.href.split("#")[0]}#/keycharge?keyType=${keyType}`
+    );
+  } else {
+    window.open(
+      `${window.location.href.split("?")[0]}keycharge?keyType=${keyType}`
+    );
+  }
 };
 </script>
 <style lang="scss" scoped>
@@ -1842,6 +1597,68 @@ const hideQrcode = () => {
   100% {
     opacity: 0;
   }
+}
+.popover-user-info {
+  width: 0;
+  height: 0;
+  background: #ffffff;
+  border: 1px solid #707070;
+  border-radius: 11px;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 0;
+  transition: all 0.2s;
+  overflow: hidden;
+  .nickname {
+    width: 100%;
+    // height: 25px;
+    font-size: 24px;
+    font-family: FUTURA-MEDIUM;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #07070d;
+    span {
+      font-size: 24px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: bold;
+    }
+  }
+  .info-item {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    height: 35px;
+    font-size: 11px;
+    font-family: FUTURA-MEDIUM;
+    font-weight: normal;
+    line-height: 21px;
+    color: #07070d;
+    .label {
+      display: inline-block;
+      width: 100px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .code {
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .underline {
+      font-size: 16px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: bold;
+      color: #07070d;
+      text-decoration: underline;
+    }
+  }
+}
+.popover-show-user {
+  padding: 25px 20px 15px 15px;
+  width: 304px;
+  height: auto;
+  transition: all 0.3s;
 }
 .px-common-layout {
   // height: 100vh;
@@ -1920,327 +1737,10 @@ const hideQrcode = () => {
     width: 20vw;
     min-height: 100vh;
     min-width: 280px;
-    // overflow: hidden;
     background: #07070d;
     color: #fff;
     box-sizing: border-box;
-    padding: 33px 2vw 33px 2vw;
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-direction: column;
-    z-index: 100;
-    .aside-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-direction: column;
-      width: 100%;
-      flex: 1;
-    }
-    .flex {
-      width: 100%;
-    }
-    .logo {
-      //   height: 33px;
-      // height: 5vh;
-      width: 10vw;
-      min-width: 140px;
-    }
-    .gpt-button {
-      width: 100%;
-      height: 7vh;
-      min-height: 52px;
-      background: #4383ea;
-      border-radius: 8px;
-      font-family: FUTURA-MEDIUM;
-      font-weight: bold;
-      color: #ffffff;
-      text-align: center;
-      margin: 4vh auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: nowrap;
-    }
-    .color-button {
-      margin-top: 5vh;
-      background: linear-gradient(23deg, #4383ea 0%, #4861eb 49%, #8748eb 100%);
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 1rem;
-      font-family: FUTURA-MEDIUM;
-      @include chargeHover5Style;
-      position: relative;
-      cursor: pointer;
-      .light {
-        font-size: 25px;
-        margin-left: 5px;
-      }
-      .my-count-hover {
-        width: 0;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.15);
-        transition: all 0.3s;
-        position: absolute;
-        left: 0;
-        top: 0;
-        border-radius: 10px;
-      }
-      // .top,
-      // .right,
-      // .bottom,
-      // .left {
-      //   position: absolute;
-      //   width: 100%;
-      //   height: 100%;
-      //   top: 0;
-      //   left: 0;
-      //   transition: all 0.3s;
-      // }
-      // .top:after,
-      // .right:after,
-      // .bottom:after,
-      // .left:after {
-      //   position: absolute;
-      //   content: "";
-      //   width: 100%;
-      //   height: 100%;
-      // }
-      // .top {
-      //   top: -100%;
-      //   background: transparent;
-      // }
-      // .right {
-      //   right: -100%;
-      //   left: auto;
-      //   background: transparent;
-      // }
-      // .bottom {
-      //   bottom: -100%;
-      //   top: auto;
-      //   background: transparent;
-      // }
-      // .left {
-      //   left: -100%;
-      //   background: transparent;
-      // }
-      // .top:after {
-      //   clip-path: polygon(0 0, 50% 50%, 100% 0);
-      //   top: 100%;
-      //   left: 0;
-      // }
-      // .right:after {
-      //   clip-path: polygon(100% 0, 50% 50%, 100% 100%);
-      //   right: 100%;
-      //   top: 0;
-      // }
-      // .bottom:after {
-      //   clip-path: polygon(0 100%, 50% 50%, 100% 100%);
-      //   bottom: 100%;
-      //   left: 0;
-      // }
-      // .left:after {
-      //   clip-path: polygon(0 0, 50% 50%, 0 100%);
-      //   left: 100%;
-      //   top: 0;
-      // }
-      // .top:after,
-      // .right:after,
-      // .bottom:after,
-      // .left:after {
-      //   position: absolute;
-      //   content: "";
-      //   width: 100%;
-      //   height: 100%;
-      //   transform-origin: 0 0;
-      // }
-      // .top:after {
-      //   top: 150%;
-      //   left: 50%;
-      //   transform: rotate(calc(var(--angle) - 180deg))
-      //     skew(calc((var(--angle) - 45deg) * 2));
-      // }
-      // .right:after {
-      //   top: 50%;
-      //   left: -50%;
-      //   transform: rotate(calc(0deg - var(--angle)))
-      //     skew(calc((45deg - var(--angle)) * 2));
-      // }
-      // .bottom:after {
-      //   top: -50%;
-      //   left: 50%;
-      //   transform: rotate(var(--angle)) skew(calc((var(--angle) - 45deg) * 2));
-      // }
-      // .left:after {
-      //   top: 50%;
-      //   left: 150%;
-      //   transform: rotate(calc(180deg - var(--angle)))
-      //     skew(calc((45deg - var(--angle)) * 2));
-      // }
-      // .top:hover {
-      //   top: 0;
-      //   background: rgba(255, 255, 255, 0.15);
-      // }
-      // .right:hover {
-      //   right: 0;
-      //   background: rgba(255, 255, 255, 0.15);
-      // }
-      // .bottom:hover {
-      //   bottom: 0;
-      //   background: rgba(255, 255, 255, 0.15);
-      // }
-      // .left:hover {
-      //   left: 0;
-      //   background: rgba(255, 255, 255, 0.15);
-      // }
-      // /* 解决层级阻断问题 */
-      // .top:hover ~ .right,
-      // .top:hover ~ .bottom,
-      // .top:hover ~ .left,
-      // .right:hover ~ .bottom,
-      // .right:hover ~ .left,
-      // .bottom:hover ~ .left {
-      //   display: none;
-      // }
-      .block_hoverer {
-        position: absolute;
-        z-index: 1;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        transition: all 0.3s ease;
-      }
-
-      .block_hoverer:nth-child(1) {
-        background: rgba(255, 255, 255, 0.15);
-        top: -90%;
-      }
-
-      .block_hoverer:nth-child(2) {
-        background: rgba(255, 255, 255, 0.15);
-        top: 90%;
-      }
-
-      .block_hoverer:nth-child(3) {
-        background: rgba(255, 255, 255, 0.15);
-        left: -90%;
-      }
-
-      .block_hoverer:nth-child(4) {
-        background: rgba(255, 255, 255, 0.15);
-        left: 90%;
-      }
-      .block_hoverer:hover {
-        opacity: 1;
-        top: 0;
-        left: 0;
-      }
-    }
-    .get-one-dollar {
-      font-family: FUTURA-MEDIUM;
-    }
-    .share-my-code {
-      width: 100%;
-      box-sizing: border-box;
-      padding: o 10px;
-      font-family: FUTURA-MEDIUM;
-      font-weight: bold;
-      color: rgba(255, 255, 255, 0.8);
-      .code {
-        text-decoration: underline;
-        cursor: pointer;
-        font-size: 16px;
-      }
-    }
-    .default-model {
-      // width: 235px;
-      width: 100%;
-      // height: 47px;
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      flex-wrap: nowrap;
-      color: rgba(255, 255, 255, 0.4);
-      cursor: pointer;
-      margin-bottom: 4vh;
-      @include hover2Style;
-      .icon-ai {
-        display: block;
-      }
-      &:nth-of-type(1) {
-        .icon-ai {
-          width: 40px;
-        }
-      }
-      &:nth-of-type(2),
-      &:nth-of-type(3) {
-        .icon-ai {
-          width: 30px;
-          margin-right: 3px;
-          filter: brightness(0.4);
-        }
-      }
-      .model-name {
-        margin: 0 3px 0 10px;
-        font-size: 1rem;
-        font-family: FUTURA-MEDIUM;
-        font-weight: bold;
-        min-width: 60px;
-      }
-      .active {
-        font-size: 0.9rem;
-        color: #fff;
-      }
-      .ai-select {
-        width: 100%;
-        ::placeholder {
-          color: #fff;
-        }
-
-        :deep(.el-input__wrapper) {
-          background: #202226;
-          color: #ffffff;
-          min-height: 3vh;
-          max-width: 7vw;
-          min-width: 100px;
-          box-shadow: none !important;
-          border: 1px dashed rgba(255, 255, 255, 0.6);
-          box-sizing: border-box;
-          .el-input__inner {
-            font-size: 1rem;
-            font-family: FUTURA-MEDIUM;
-            font-weight: bold;
-            color: #ffffff;
-          }
-        }
-      }
-      //   .w128 {
-      //     width: 128px;
-      //   }
-      //   .w171 {
-      //     width: 171px;
-      //   }
-    }
-    // .default-model:nth-last-child(1) {
-    //   margin-bottom: 21.5vh;
-    // }
-    .question-box {
-      width: 100%;
-      list-style: none;
-      padding: 0;
-      margin: 0 auto;
-      .question {
-        font-size: 0.8rem;
-        font-family: FUTURA-MEDIUM;
-        font-weight: bold;
-        color: rgba(255, 255, 255, 0.4);
-        margin: 11px 0;
-        cursor: pointer;
-        @include hover5Style;
-      }
-    }
   }
-
   .phone-aside {
     width: 80vw;
     min-height: 100vh;
@@ -2338,7 +1838,8 @@ const hideQrcode = () => {
         }
       }
       &:nth-of-type(2),
-      &:nth-of-type(3) {
+      &:nth-of-type(3),
+      &:nth-of-type(4) {
         .icon-ai {
           width: 24px;
           margin-right: 3px;
@@ -2503,64 +2004,6 @@ const hideQrcode = () => {
       z-index: 2;
       cursor: pointer;
     }
-    .user-info {
-      width: 0;
-      height: 0;
-      background: #ffffff;
-      border: 1px solid #707070;
-      border-radius: 11px;
-      position: absolute;
-      right: 39px;
-      top: 15px;
-      z-index: 1;
-      box-sizing: border-box;
-      padding: 0;
-      transition: all 0.2s;
-      overflow: hidden;
-      .nickname {
-        width: 100%;
-        height: 25px;
-        font-size: 24px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: bold;
-        margin-bottom: 36px;
-        color: #07070d;
-        span {
-          font-size: 24px;
-          font-family: FUTURA-MEDIUM;
-          font-weight: bold;
-        }
-      }
-      .info-item {
-        width: 100%;
-        display: flex;
-        justify-content: flex-start;
-        align-items: flex-start;
-        flex-wrap: nowrap;
-        height: 35px;
-        font-size: 11px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: normal;
-        line-height: 21px;
-        color: #07070d;
-        .label {
-          display: inline-block;
-          width: 100px;
-          flex-shrink: 0;
-          overflow: hidden;
-        }
-        .code {
-          font-size: 11px;
-          cursor: pointer;
-        }
-      }
-    }
-    .show-user {
-      padding: 25px 20px 15px 15px;
-      width: 344px;
-      height: 300px;
-      transition: all 0.3s;
-    }
   }
   .phone-header {
     height: 260px;
@@ -2705,7 +2148,7 @@ const hideQrcode = () => {
     padding: 0;
     height: 64vh;
     box-sizing: border-box;
-    padding: 40px 50px;
+    // padding: 40px 50px;
     background: #f5f5f7;
     .title {
       font-size: 23px;
@@ -2719,13 +2162,31 @@ const hideQrcode = () => {
         font-weight: bold;
       }
     }
+    .foot {
+      width: 100%;
+      // height: 8vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background-color: #000;
+      padding: 10px 0;
+      .txt {
+        font-size: 0.6rem;
+        line-height: 1rem;
+        color: #fff;
+        a {
+          color: #fff;
+        }
+      }
+    }
   }
   .phone-main {
     padding: 0;
     height: calc(100vh - 320px);
     width: 100vw;
     box-sizing: border-box;
-    padding: 20px 25px;
+    // padding: 20px 25px;
     background: #f5f5f7;
     .title {
       font-size: 16px;
@@ -2739,6 +2200,24 @@ const hideQrcode = () => {
         font-weight: bold;
       }
     }
+
+    .foot {
+      width: 100%;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background-color: #000;
+      .txt {
+        font-size: 0.6rem;
+        line-height: 1rem;
+        color: #fff;
+        a {
+          color: #fff;
+        }
+      }
+    }
   }
   .underline {
     font-size: 16px;
@@ -2746,432 +2225,6 @@ const hideQrcode = () => {
     font-weight: bold;
     color: #07070d;
     text-decoration: underline;
-  }
-}
-.dialog {
-  width: 588px;
-  height: 477px;
-  background: #ffffff;
-  border: 1px solid #707070;
-  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
-  border-radius: 11px;
-  overflow: hidden;
-  .type-word {
-    width: 100%;
-    height: 243px;
-    background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/type-word.png")
-      center / cover no-repeat;
-    border-radius: 11px 11px 0px 0px;
-    padding: 118px 10px 65px 155px;
-    box-sizing: border-box;
-    .mask {
-      width: 100%;
-      height: 243px;
-      // background: rgba(0, 0, 0, 0.2);
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 2;
-    }
-  }
-
-  .avatar {
-    width: 77px;
-    height: 77px;
-    background: #818da3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
-    border-radius: 50%;
-    margin: 0 auto;
-    position: absolute;
-    top: 203px;
-    left: 50%;
-    transform: translateX(-38.5px);
-    color: #fff;
-    font-size: 28px;
-    font-family: FUTURA-MEDIUM;
-    font-weight: bold;
-    color: #ffffff;
-  }
-  .one-key {
-    width: 285px;
-    height: 64px;
-    background: #ffffff;
-    border: 1px solid #000000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    margin: 70px auto 30px;
-    font-size: 24px;
-    font-family: FUTURA-MEDIUM;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.8);
-    cursor: pointer;
-  }
-  .ipt-box {
-    position: relative;
-    margin: 20px auto 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    .tel {
-      // width: 320px;
-      border: none;
-      // margin: 40px 10px 0;
-      :deep(.el-input__wrapper) {
-        // border-bottom: 1px solid #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-      }
-      :deep(.el-input__inner) {
-        text-align: left;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        color: #000;
-      }
-    }
-    .tel-container {
-      margin: 60px 10px 0;
-      border-bottom: 1px solid #000;
-      padding: 0 6px;
-    }
-    .tel-big {
-      margin: 40px 10px 0;
-      border: 3px solid transparent;
-      border-radius: 6px;
-      &.focus {
-        border: 3px solid #66b1fc;
-      }
-      .tel-contain {
-        border: 1px solid #d2d2d7;
-        width: 320px;
-        height: 50px;
-        border-radius: 3px;
-        padding: 0 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        &.focus {
-          border: 2px solid #4383ea;
-        }
-      }
-    }
-    .tel1 {
-      width: 66px;
-      border: none;
-      // border-bottom: 1px solid #000;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0;
-      text-align: center;
-      font-size: 26px;
-      font-family: FUTURA-MEDIUM;
-      font-weight: 400;
-      color: #000000;
-      letter-spacing: 6px;
-      // margin: 40px 10px 0;
-      ::placeholder {
-        letter-spacing: 9.6px;
-      }
-      &:focus,
-      & :focus {
-        outline: none;
-      }
-      // :deep(.el-input__wrapper) {
-      //   // border-bottom: 1px solid #000;
-      //   box-shadow: none;
-      //   border-radius: 0;
-      //   padding: 0;
-      // }
-      // :deep(.el-input__inner) {
-      //   text-align: center;
-      //   font-size: 26px;
-      //   font-family: FUTURA-MEDIUM;
-      //   font-weight: 400;
-      //   color: #000000;
-      //   letter-spacing: 6px;
-      // }
-    }
-    .tel2 {
-      width: 90px;
-      border: none;
-      // margin: 40px 10px 0;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0;
-      text-align: center;
-      font-size: 26px;
-      font-family: FUTURA-MEDIUM;
-      font-weight: 400;
-      color: #000000;
-      letter-spacing: 6px;
-      ::placeholder {
-        letter-spacing: 9.6px;
-      }
-      &:focus,
-      & :focus {
-        outline: none;
-      }
-      // :deep(.el-input__wrapper) {
-      //   // border-bottom: 1px solid #000;
-      //   box-shadow: none;
-      //   border-radius: 0;
-      //   padding: 0;
-      // }
-      // :deep(.el-input__inner) {
-      //   text-align: center;
-      //   font-size: 26px;
-      //   font-family: FUTURA-MEDIUM;
-      //   font-weight: 400;
-      //   color: #000000;
-      //   letter-spacing: 6px;
-      // }
-    }
-    .tel3 {
-      width: 90px;
-      border: none;
-      // margin: 40px 10px 0;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0;
-      text-align: center;
-      font-size: 26px;
-      font-family: FUTURA-MEDIUM;
-      font-weight: 400;
-      color: #000000;
-      letter-spacing: 6px;
-      ::placeholder {
-        letter-spacing: 9.6px;
-      }
-      &:focus,
-      & :focus {
-        outline: none;
-      }
-      // :deep(.el-input__wrapper) {
-      //   // border-bottom: 1px solid #000;
-      //   box-shadow: none;
-      //   border-radius: 0;
-      //   padding: 0;
-      // }
-      // :deep(.el-input__inner) {
-      //   text-align: center;
-      //   font-size: 26px;
-      //   font-family: FUTURA-MEDIUM;
-      //   font-weight: 400;
-      //   color: #000000;
-      //   letter-spacing: 6px;
-      // }
-    }
-    .btm {
-      height: 33px;
-      width: 10px;
-      background: #fff;
-      position: absolute;
-      top: 40px;
-      left: 204px;
-    }
-    .btm2 {
-      left: 318px;
-    }
-  }
-  .square-box {
-    position: relative;
-    margin: 50px auto 19px;
-    .tel {
-      width: 100%;
-      border: none;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0;
-      position: relative;
-      z-index: 3;
-      background: none;
-      font-size: 28px;
-      font-family: FUTURA-MEDIUM;
-      font-weight: 600;
-      color: #000000;
-      text-align: center;
-      &:focus,
-      & :focus {
-        outline: none;
-      }
-      // :deep(.el-input__wrapper) {
-      //   box-shadow: none;
-      //   border-radius: 0;
-      //   padding: 0;
-      //   position: relative;
-      //   z-index: 3;
-      //   background: none;
-      //   // top: 45px;
-      // }
-      // :deep(.el-input__inner) {
-      //   // padding: 0 22% 0 21%;
-      //   font-size: 28px;
-      //   font-family: FUTURA-MEDIUM;
-      //   font-weight: 600;
-      //   color: #000000;
-      //   // letter-spacing: 80px;
-      //   text-align: center;
-      //   // overflow-x: hidden;
-      //   // overflow: hidden;
-      // }
-    }
-    .bb {
-      width: 360px;
-      height: 64px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      position: relative;
-      // left: 32px;
-      .square {
-        height: 64px;
-        width: 47px;
-        border: 1px solid #000000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        // margin-right:3px;
-      }
-      //   .square2 {
-      //     left: 140px;
-      //   }
-      //   .square3 {
-      //     left: 210px;
-      //   }
-      //   .square4 {
-      //     left: 280px;
-      //   }
-      .square7 {
-        border: none;
-        background: #fff;
-        position: relative;
-        z-index: 99;
-      }
-    }
-  }
-  .nickname-box {
-    position: relative;
-    .tel {
-      width: 50%;
-      border: none;
-      margin: 80px 0 0;
-      transform: translateX(50%);
-      ::placeholder {
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        font-weight: 400;
-        line-height: 0px;
-        color: #969393;
-        letter-spacing: 3px;
-      }
-      :deep(.el-input__wrapper) {
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-        position: relative;
-        z-index: 3;
-        background: none;
-        width: 100px;
-      }
-      :deep(.el-input__inner) {
-        margin: 0 auto;
-        font-size: 26px;
-        font-family: FUTURA-MEDIUM;
-        letter-spacing: 5px;
-        text-align: center;
-        overflow-x: hidden;
-        overflow: hidden;
-        font-weight: 400;
-        color: #000;
-        border-bottom: 1px solid #000;
-      }
-    }
-    .btm {
-      height: 20px;
-      width: 120px;
-      margin: 20px auto 0;
-      border-radius: 50%;
-      background: url("https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/hudu.png")
-        center / contain no-repeat;
-    }
-  }
-  .resend {
-    // height: 30px;
-    font-size: 18px;
-    font-family: FUTURA-MEDIUM;
-    font-weight: 400;
-    color: #000000;
-    margin: 15px auto 0;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    cursor: pointer;
-    .countdown {
-      margin-left: 5px;
-      font-weight: 100;
-      font-family: FUTURA-MEDIUM;
-    }
-    &.disable {
-      color: rgba(0, 0, 0, 0.3);
-    }
-  }
-  .back {
-    font-size: 12px;
-    font-family: FUTURA-MEDIUM;
-    font-weight: 400;
-    color: #000000;
-    margin: 16px auto 0;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    cursor: pointer;
-  }
-  .tip {
-    height: 30px;
-    font-size: 12px;
-    font-family: FUTURA-MEDIUM;
-    font-weight: 400;
-    color: #000000;
-    margin: 21px auto 0;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    .point {
-      height: 10px;
-      width: 10px;
-      border-radius: 50%;
-      background: #000;
-      margin-right: 5px;
-      padding: 1px;
-      box-sizing: border-box;
-
-      .in-circle {
-        height: 100%;
-        width: 100%;
-        border-radius: 50%;
-        background: #000;
-        border: 1px solid #fff;
-      }
-    }
-    a {
-      font-size: 8px;
-      cursor: pointer;
-    }
   }
 }
 
@@ -3486,14 +2539,14 @@ const hideQrcode = () => {
     background: #1b1c21 !important;
   }
 }
-:global(.el-popper) {
-  background: #000 !important;
-  //   border: 1px dashed rgba(255, 255, 255, 0.6) !important;
-  margin-top: -14px;
-  box-sizing: border-box;
-  border-radius: 0 0 3px 3px;
-  border: none;
-}
+// :global(.el-popper) {
+//   background: #000 !important;
+//   //   border: 1px dashed rgba(255, 255, 255, 0.6) !important;
+//   margin-top: -14px;
+//   box-sizing: border-box;
+//   border-radius: 0 0 3px 3px;
+//   border: none;
+// }
 :global(.el-select-dropdown__list) {
   width: 100%;
   border: 1px dashed rgba(255, 255, 255, 0.6) !important;
@@ -3508,8 +2561,8 @@ const hideQrcode = () => {
   background: #000 !important;
   border: none;
 }
-:global(.el-popper.is-light) {
-  background: #000 !important;
+:global(.user.el-popper.is-light) {
+  background: #fff !important;
   border: none;
 }
 :global(.el-popper__arrow) {
@@ -3528,12 +2581,11 @@ const hideQrcode = () => {
   overflow: auto;
 }
 .popover-container {
-  width: 30vw;
-  min-width: 300px;
+  width: 80vw;
   height: 100vh;
   background: #07070d;
   box-sizing: border-box;
-  padding: 33px 2vw 33px 2vw;
+  padding: 33px 20px 33px 20px;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
@@ -3565,6 +2617,99 @@ const hideQrcode = () => {
       color: #89919e;
       opacity: 1;
       margin-top: 10px;
+    }
+    .description {
+      color: rgba(225, 225, 225, 0.7);
+      font-size: 0.6rem;
+    }
+    .resume-container {
+      margin-top: 40px;
+      width: 90%;
+      color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      flex-direction: row;
+      font-size: 1.2rem;
+      cursor: pointer;
+      .txt {
+        text-decoration: underline;
+      }
+    }
+    .exchange-input {
+      margin-top: 40px;
+      width: 90%;
+      border-bottom: #fff solid 1px;
+      :deep(.el-input__wrapper) {
+        background-color: transparent;
+        box-shadow: none;
+        padding: 3px 0;
+      }
+      :deep(.el-input__inner) {
+        font-size: 1.2rem;
+        font-family: PingFangTC-Semibold;
+        color: #fff;
+        &::placeholder {
+          font-size: 1rem;
+          font-family: PingFangTC-Semibold;
+          color: #fff;
+          opacity: 0.6;
+        }
+      }
+      .clear {
+        font-size: 1rem;
+        font-family: PingFangTC-Semibold;
+        color: #fff;
+        opacity: 0.6;
+        cursor: pointer;
+      }
+    }
+    .exchange-text {
+      display: flex;
+      justify-content: space-between;
+      width: 90%;
+      margin-top: 40px;
+      color: #fff;
+      padding-bottom: 10px;
+      border-bottom: #fff solid 1px;
+      font-size: 0.8rem;
+      .space {
+        // flex-grow: 1;
+      }
+      span {
+        font-family: PingFangTC-Semibold;
+        white-space: nowrap;
+      }
+    }
+    .exchange-confirm {
+      margin-top: 60px;
+      height: 60px;
+      width: 70%;
+      background: rgba(255, 255, 255, 0.1);
+      border: #fff solid 1px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      &:active {
+        background: rgba(255, 255, 255, 0.5);
+      }
+    }
+    .exchange-confirm-2 {
+      margin-top: 60px;
+      height: 60px;
+      width: 70%;
+      background: #fff;
+      border: #fff solid 1px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+      color: #000;
+      font-size: 1.5rem;
     }
     .popover-part {
       width: 100%;
@@ -3634,6 +2779,13 @@ const hideQrcode = () => {
           font-family: FUTURA-MEDIUM;
           font-weight: 500;
           color: #89919e;
+
+          &:hover {
+            color: #fff;
+          }
+          &:active {
+            color: #89919e;
+          }
         }
         .desc2 {
           font-size: 0.6rem;
@@ -3684,6 +2836,16 @@ const hideQrcode = () => {
           font-weight: 500;
           color: #ffffff;
           opacity: 0.6;
+          display: flex;
+          justify-content: center;
+          align-items: flex-end;
+          flex-direction: column;
+          &:hover {
+            opacity: 1;
+          }
+          &:active {
+            opacity: 0.5;
+          }
         }
       }
     }
@@ -3702,6 +2864,7 @@ const hideQrcode = () => {
       align-items: center;
       flex-direction: row;
       margin-top: 14px;
+      cursor: pointer;
     }
   }
   .popover-foot-desc {
@@ -3807,13 +2970,14 @@ const hideQrcode = () => {
     }
   }
 }
-:global(.el-popper.is-light.el-popover) {
+:global(.user.el-popover.el-popper) {
+  // padding: 0;
+  // // margin-top: 10px;
+  // width: 304px !important;
+  // border-radius: 11px;
   background: transparent !important;
+  padding: 20px 50px 0 0;
+  box-shadow: none;
   border: none;
-  height: 100vh;
-}
-:global(.el-divider__text) {
-  background: #07070d;
-  color: #fff;
 }
 </style>

@@ -23,7 +23,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from "vue";
-// import loading from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/loading.jpg";
+// import loading from "@/assets/images/loading.jpg";
 // import logo from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/logo.png";
 const agent = ref(
   navigator.userAgent.match(

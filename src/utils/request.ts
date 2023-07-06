@@ -3,8 +3,8 @@ import axios from "axios";
 // 创建axios实例
 const service = axios.create({
   // baseURL: "https://openai.yingjin.pro/api",
-  baseURL: "https://openai-service.mbmzone.com/api",
-  // baseURL: 'https://www.yingjin.pro',
+  // baseURL: "https://openai-service.mbmzone.com/api",
+  baseURL: "https://musicgpt.mbmzone.com/api",
   headers: { "Content-Type": "application/json" },
   timeout: 5000, // 请求超时时间
 });

@@ -3,8 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "run-p type-check build-only",
+    "dev": "vite --mode development",
+    "build": "npm run type-check && npm run build-only -- --mode mbm",
+    "build:mbm": "npm run type-check && npm run build-only -- --mode mbm",
+    "build:openai": "npm run type-check && npm run build-only -- --mode openai",
+    "build:test": "npm run type-check && npm run build-only -- --mode development",
     "deploy": "rsync -avz dist/. app@openai.mbmzone.com:apps/openai.mbmzone.com/mbm-gpt.",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -19,9 +22,11 @@
     "pinia": "^2.0.32",
     "pinyin-pro": "^3.14.0",
     "qrcode": "^1.5.3",
+    "swiper": "^9.4.1",
     "vue": "^3.2.47",
     "vue-clipboard3": "^2.0.0",
     "vue-router": "^4.1.6",
+    "vuesax": "^4.0.1-alpha.25",
     "weixin-js-sdk": "^1.6.0"
   },
   "devDependencies": {
