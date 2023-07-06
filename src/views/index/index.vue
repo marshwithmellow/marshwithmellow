@@ -533,13 +533,7 @@
                 />
                 <div class="model-name">训练你自己的 ChatGPT</div>
               </div>
-              <div
-                class="default-model"
-                @click="
-                  exchangeDrawer = true;
-                  drawer = false;
-                "
-              >
+              <div class="default-model" @click="openExchangeDrawer">
                 <img
                   class="icon-ai"
                   src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/setting-documents.png"
@@ -629,15 +623,23 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: flex-start;
+                  justify-content: space-between;
                   align-items: flex-start;
                   flex-direction: column;
+                  flex: 1;
+                  max-height: 60vh;
                 "
               >
                 <div class="popover-title">兑换我的无限次周卡</div>
                 <img
-                  src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-default.png"
-                  style="width: 100%; margin-top: 30px"
+                  :src="
+                    cardType == 2
+                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-block.png'
+                      : cardType == 1
+                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-red.png'
+                      : 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-default.png'
+                  "
+                  style="width: 100%"
                 />
                 <div
                   style="
@@ -652,6 +654,7 @@
                     v-model="exchangeCode"
                     class="exchange-input"
                     placeholder="在此填入兑换码"
+                    :maxlength="8"
                   >
                     <template #suffix>
                       <div
@@ -663,6 +666,16 @@
                       </div>
                     </template>
                   </el-input>
+                </div>
+                <div
+                  style="
+                    width: 100%;
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    flex-direction: column;
+                  "
+                >
                   <div
                     style="
                       width: 90%;
@@ -685,7 +698,7 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: flex-start;
+                  justify-content: center;
                   align-items: flex-start;
                   flex-direction: column;
                 "
@@ -703,9 +716,11 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: flex-start;
+                  justify-content: space-between;
                   align-items: flex-start;
                   flex-direction: column;
+                  flex: 1;
+                  max-height: 60vh;
                 "
               >
                 <div class="popover-title">兑换我的无限次周卡</div>
@@ -715,7 +730,7 @@
                       ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-black.png'
                       : 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-red.png'
                   "
-                  style="width: 100%; margin-top: 30px"
+                  style="width: 100%"
                 />
                 <div
                   style="
@@ -751,6 +766,16 @@
                     <span>服</span>
                     <span>务</span>
                   </div>
+                </div>
+                <div
+                  style="
+                    width: 100%;
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    flex-direction: column;
+                  "
+                >
                   <div
                     style="
                       width: 90%;
@@ -768,17 +793,17 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: flex-start;
+                  justify-content: center;
                   align-items: center;
                   flex-direction: column;
                 "
               >
-                <div style="width: 100%">
+                <div style="width: 90%">
                   <div class="description">
                     ChatGPT 每张周卡兑换码仅可使用一次；
                   </div>
                 </div>
-                <div style="width: 100%">
+                <div style="width: 90%">
                   <div class="description">
                     您可在激活后的 7 天内无限次使用 GPT3.5 模型进行回答。
                   </div>
@@ -1012,6 +1037,7 @@ import {
   doGetInfo,
   getValidatyTime,
   doExchangeCode,
+  getSerialNumber,
 } from "@/api/index";
 import { useRouter } from "vue-router";
 import useClipboard from "vue-clipboard3";
@@ -1079,6 +1105,8 @@ const keyDrawer = ref(false);
 const exchangeDrawer = ref(false);
 const qrCodeImgUrl = ref("");
 const exchangeCode = ref("");
+const cardType = ref(0); //0是默认卡片，1是红卡，2是黑卡
+let requestLock = false;
 // 使用插件
 const { toClipboard } = useClipboard();
 const proxy: any = getCurrentInstance()?.proxy ?? null;
@@ -1116,6 +1144,50 @@ const questionList = ref<Option[]>([
   { value: "2", label: "MBM OpenAI 服务如何计费" },
   { value: "1", label: "探索与 OpenAI 的区别" },
 ]);
+watch(
+  () => exchangeCode.value,
+  async (newValue) => {
+    if (newValue.length >= 8) {
+      if (requestLock) {
+        return;
+      }
+      requestLock = true;
+      const res = await getSerialNumber({
+        token: userInfo.value.token,
+        accessKey: userInfo.value.accessKey,
+        code: newValue,
+      });
+      if (res.data.code == 11000) {
+        const num: string = res.data.data.serialNumber;
+        if (num) {
+          cardType.value = num.replace("NO.", "").startsWith("8")
+            ? 2
+            : num.replace("NO.", "").startsWith("5")
+            ? 1
+            : 0;
+        } else {
+          cardType.value = 0;
+        }
+      } else {
+        cardType.value = 0;
+      }
+      requestLock = false;
+    } else {
+      cardType.value = 0;
+    }
+  }
+);
+watch(
+  () => exchangeDrawer.value,
+  (newValue) => {
+    if (!newValue) {
+      setTimeout(() => {
+        exchangeContinue.value = false;
+        exchangeCode.value = "";
+      }, 500);
+    }
+  }
+);
 onMounted(() => {
   slideBanner();
 });
@@ -1494,6 +1566,14 @@ const toPopoverConfirm = (e: any) => {
   popoverConfirm(keyType);
 };
 const toExchangeConfirm = (e: { code: string }) => {
+  if (exchangeCode.value.length == 0) {
+    ElMessage({ message: "请输入密钥", type: "error" });
+    return;
+  }
+  if (cardType.value == 0) {
+    ElMessage({ message: "密钥不正确，请重新输入", type: "error" });
+    return;
+  }
   ElMessageBox.confirm("是否使用该卡片？", "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
@@ -1519,6 +1599,8 @@ const exchangeConfirm = async (e: { code: string }) => {
     proxy?.$refs["lf-side"]?.setExchangeContinue(false);
   } else {
     exchangeContinue.value = false;
+    cardType.value = 0;
+    exchangeCode.value = "";
   }
 };
 const popoverConfirm = (keyType: number) => {
@@ -1530,6 +1612,14 @@ const popoverConfirm = (keyType: number) => {
     window.open(
       `${window.location.href.split("?")[0]}keycharge?keyType=${keyType}`
     );
+  }
+};
+const openExchangeDrawer = () => {
+  if (userInfo.value.name) {
+    exchangeDrawer.value = true;
+    drawer.value = false;
+  } else {
+    toLogin();
   }
 };
 </script>
@@ -2623,7 +2713,6 @@ const popoverConfirm = (keyType: number) => {
       font-size: 0.6rem;
     }
     .resume-container {
-      margin-top: 40px;
       width: 90%;
       color: rgba(255, 255, 255, 0.8);
       display: flex;
@@ -2631,13 +2720,13 @@ const popoverConfirm = (keyType: number) => {
       align-items: flex-start;
       flex-direction: row;
       font-size: 1.2rem;
+      margin-top: 20px;
       cursor: pointer;
       .txt {
         text-decoration: underline;
       }
     }
     .exchange-input {
-      margin-top: 40px;
       width: 90%;
       border-bottom: #fff solid 1px;
       :deep(.el-input__wrapper) {
@@ -2668,11 +2757,10 @@ const popoverConfirm = (keyType: number) => {
       display: flex;
       justify-content: space-between;
       width: 90%;
-      margin-top: 40px;
       color: #fff;
       padding-bottom: 10px;
       border-bottom: #fff solid 1px;
-      font-size: 0.8rem;
+      font-size: 0.6rem;
       .space {
         // flex-grow: 1;
       }
@@ -2682,8 +2770,7 @@ const popoverConfirm = (keyType: number) => {
       }
     }
     .exchange-confirm {
-      margin-top: 60px;
-      height: 60px;
+      padding: 10px 0;
       width: 70%;
       background: rgba(255, 255, 255, 0.1);
       border: #fff solid 1px;
@@ -2692,15 +2779,14 @@ const popoverConfirm = (keyType: number) => {
       align-items: center;
       flex-direction: row;
       color: #fff;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       cursor: pointer;
       &:active {
         background: rgba(255, 255, 255, 0.5);
       }
     }
     .exchange-confirm-2 {
-      margin-top: 60px;
-      height: 60px;
+      padding: 10px 0;
       width: 70%;
       background: #fff;
       border: #fff solid 1px;
@@ -2709,7 +2795,7 @@ const popoverConfirm = (keyType: number) => {
       align-items: center;
       flex-direction: row;
       color: #000;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
     }
     .popover-part {
       width: 100%;
