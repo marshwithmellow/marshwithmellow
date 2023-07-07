@@ -31,7 +31,9 @@ const payment = () => {
   if (usr) {
     const info = JSON.parse(usr);
     window.location.href =
-      "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa1c2983ad99da4bc&redirect_uri=https%3A%2F%2Fopenai-service.mbmzone.com%2Fapi%2FgetOpenid&response_type=code&scope=snsapi_base&state=" +
+      `https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa1c2983ad99da4bc&redirect_uri=https%3A%2F%2F${
+        import.meta.env.VITE_PUBLIC_URL
+      }%2Fapi%2FgetOpenid&response_type=code&scope=snsapi_base&state=` +
       info.token +
       "-" +
       price.value;

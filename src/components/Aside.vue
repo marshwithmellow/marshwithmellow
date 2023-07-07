@@ -89,18 +89,20 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: space-between;
+                  justify-content: flex-start;
                   align-items: flex-start;
                   flex-direction: column;
                   flex: 1;
-                  max-height: 60vh;
+                  max-height: 450px;
                 "
               >
-                <div class="popover-title">兑换我的无限次周卡</div>
+                <div class="popover-title" style="margin-bottom: 20px">
+                  兑换我的无限次周卡
+                </div>
                 <img
                   :src="
                     cardType == 2
-                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-block.png'
+                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-black.png'
                       : cardType == 1
                       ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-red.png'
                       : 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-default.png'
@@ -114,6 +116,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <el-input
@@ -140,6 +143,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <div
@@ -156,14 +160,26 @@
                     </div>
                   </div>
                 </div>
+                <!-- <div
+                  style="
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    flex-direction: column;
+                    flex: 1;
+                  "
+                >
+                </div> -->
               </div>
               <div
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: center;
-                  align-items: flex-start;
+                  justify-content: flex-start;
+                  align-items: center;
                   flex-direction: column;
+                  min-height: 130px;
                 "
               >
                 <div style="width: 90%">
@@ -183,14 +199,16 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: space-between;
+                  justify-content: flex-start;
                   align-items: flex-start;
                   flex-direction: column;
                   flex: 1;
-                  max-height: 60vh;
+                  max-height: 450px;
                 "
               >
-                <div class="popover-title">兑换我的无限次周卡</div>
+                <div class="popover-title" style="margin-bottom: 20px">
+                  兑换我的无限次周卡
+                </div>
                 <img
                   :src="
                     exchangeItem?.cardType == 2
@@ -206,6 +224,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <div class="exchange-text">
@@ -241,6 +260,8 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
+                    margin-bottom: 30px;
                   "
                 >
                   <div
@@ -260,7 +281,7 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: center;
+                  justify-content: flex-start;
                   align-items: center;
                   flex-direction: column;
                 "
@@ -275,7 +296,11 @@
                     您可在激活后的 7 天内无限次使用 GPT3.5 模型进行回答。
                   </div>
                 </div>
-                <div class="resume-container" @click="exchangeContinue = true">
+                <div
+                  class="resume-container"
+                  style="margin-top: 40px"
+                  @click="exchangeContinue = true"
+                >
                   <div class="txt">继续兑换</div>
                   ？
                 </div>
@@ -641,7 +666,6 @@ const questionList = ref<Option[]>([
   { value: "2", label: "MBM OpenAI 服务如何计费" },
   { value: "1", label: "探索与 OpenAI 的区别" },
 ]);
-
 watch(
   () => popoverShow.value,
   (newValue) => {
@@ -766,10 +790,14 @@ const setExchangeContinue = (contin: boolean) => {
     exchangeCode.value = "";
   }
 };
+const changeExchange = (show: boolean) => {
+  cliping = show;
+};
 defineExpose({
   setUserInfo,
   setExchangeItem,
   setExchangeContinue,
+  changeExchange,
 });
 </script>
 <style lang="scss" scoped>
@@ -1241,7 +1269,6 @@ defineExpose({
       flex-direction: row;
       font-size: 1.2rem;
       cursor: pointer;
-      margin-top: 20px;
       .txt {
         text-decoration: underline;
       }

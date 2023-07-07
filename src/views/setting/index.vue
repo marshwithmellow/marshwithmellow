@@ -1229,15 +1229,15 @@ const getExchangeTime = async (accountId: string) => {
     if (!agent.value) {
       if (res.data.data.length > 0) {
         const item = res.data.data[0];
-        let cartType = 1;
+        let cardType = 1;
         if (item && item.serialNumber) {
           const temp: string = item.serialNumber.replace("NO.", "");
-          cartType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+          cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
         }
         const timeStr = dayjs(item.validityTime);
         proxy?.$refs["lf-side"]?.setExchangeItem(
           Object.assign({}, item, {
-            cartType,
+            cardType,
             timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
           })
         );
@@ -1623,6 +1623,9 @@ const toExchangeConfirm = (e: { code: string }) => {
     type: "info",
   }).then(() => {
     exchangeConfirm(e);
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.changeExchange(true);
+    }
   });
 };
 const exchangeConfirm = async (e: { code: string }) => {

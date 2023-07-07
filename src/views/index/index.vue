@@ -623,18 +623,20 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: space-between;
+                  justify-content: flex-start;
                   align-items: flex-start;
                   flex-direction: column;
                   flex: 1;
-                  max-height: 60vh;
+                  max-height: 380px;
                 "
               >
-                <div class="popover-title">兑换我的无限次周卡</div>
+                <div class="popover-title" style="margin-bottom: 20px">
+                  兑换我的无限次周卡
+                </div>
                 <img
                   :src="
                     cardType == 2
-                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-block.png'
+                      ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-black.png'
                       : cardType == 1
                       ? 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-red.png'
                       : 'https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/exchange-default.png'
@@ -648,6 +650,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <el-input
@@ -674,6 +677,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <div
@@ -698,16 +702,21 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: center;
-                  align-items: flex-start;
+                  justify-content: flex-start;
+                  align-items: center;
                   flex-direction: column;
+                  min-height: 120px;
                 "
               >
-                <div class="description">
-                  ChatGPT 每张周卡兑换码仅可使用一次；
+                <div style="width: 90%">
+                  <div class="description">
+                    ChatGPT 每张周卡兑换码仅可使用一次；
+                  </div>
                 </div>
-                <div class="description" style="margin-bottom: 60px">
-                  您可在激活后的 7 天内无限次使用 GPT3.5 模型进行回答。
+                <div style="width: 90%">
+                  <div class="description">
+                    您可在激活后的 7 天内无限次使用 GPT3.5 模型进行回答。
+                  </div>
                 </div>
               </div>
             </div>
@@ -716,14 +725,16 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: space-between;
+                  justify-content: flex-start;
                   align-items: flex-start;
                   flex-direction: column;
                   flex: 1;
-                  max-height: 60vh;
+                  max-height: 380px;
                 "
               >
-                <div class="popover-title">兑换我的无限次周卡</div>
+                <div class="popover-title" style="margin-bottom: 20px">
+                  兑换我的无限次周卡
+                </div>
                 <img
                   :src="
                     exchangeItem?.cardType == 2
@@ -739,6 +750,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <div class="exchange-text">
@@ -774,6 +786,7 @@
                     justify-content: flex-start;
                     align-items: center;
                     flex-direction: column;
+                    margin-top: 30px;
                   "
                 >
                   <div
@@ -793,9 +806,10 @@
                 style="
                   width: 100%;
                   display: flex;
-                  justify-content: center;
+                  justify-content: flex-start;
                   align-items: center;
                   flex-direction: column;
+                  min-height: 150px;
                 "
               >
                 <div style="width: 90%">
@@ -1264,15 +1278,15 @@ const getExchangeTime = async (accountId: string) => {
     if (!agent.value) {
       if (res.data.data.length > 0) {
         const item = res.data.data[0];
-        let cartType = 1;
+        let cardType = 1;
         if (item && item.serialNumber) {
           const temp: string = item.serialNumber.replace("NO.", "");
-          cartType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+          cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
         }
         const timeStr = dayjs(item.validityTime);
         proxy?.$refs["lf-side"]?.setExchangeItem(
           Object.assign({}, item, {
-            cartType,
+            cardType,
             timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
           })
         );
@@ -1282,14 +1296,14 @@ const getExchangeTime = async (accountId: string) => {
     } else {
       if (res.data.data.length > 0) {
         const item = res.data.data[0];
-        let cartType = 1;
+        let cardType = 1;
         if (item && item.serialNumber) {
           const temp: string = item.serialNumber.replace("NO.", "");
-          cartType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+          cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
         }
         const timeStr = dayjs(item.validityTime);
         exchangeItem.value = Object.assign({}, item, {
-          cartType,
+          cardType,
           timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
         });
       } else {
@@ -1566,13 +1580,15 @@ const toPopoverConfirm = (e: any) => {
   popoverConfirm(keyType);
 };
 const toExchangeConfirm = (e: { code: string }) => {
-  if (exchangeCode.value.length == 0) {
-    ElMessage({ message: "请输入密钥", type: "error" });
-    return;
-  }
-  if (cardType.value == 0) {
-    ElMessage({ message: "密钥不正确，请重新输入", type: "error" });
-    return;
+  if (agent.value) {
+    if (exchangeCode.value.length == 0) {
+      ElMessage({ message: "请输入密钥", type: "error" });
+      return;
+    }
+    if (cardType.value == 0) {
+      ElMessage({ message: "密钥不正确，请重新输入", type: "error" });
+      return;
+    }
   }
   ElMessageBox.confirm("是否使用该卡片？", "提示", {
     confirmButtonText: "确定",
@@ -1580,6 +1596,9 @@ const toExchangeConfirm = (e: { code: string }) => {
     type: "info",
   }).then(() => {
     exchangeConfirm(e);
+    if (!agent.value) {
+      proxy?.$refs["lf-side"]?.changeExchange(true);
+    }
   });
 };
 const exchangeConfirm = async (e: { code: string }) => {
@@ -1595,7 +1614,7 @@ const exchangeConfirm = async (e: { code: string }) => {
   } else {
     ElMessage(res.data.msg);
   }
-  if (!agent) {
+  if (!agent.value) {
     proxy?.$refs["lf-side"]?.setExchangeContinue(false);
   } else {
     exchangeContinue.value = false;
