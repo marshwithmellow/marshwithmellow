@@ -50,6 +50,7 @@
             @clip-text="copyShare"
             @exchange-confirm="toExchangeConfirm"
             @set-exchange-show="setExchangeShow"
+            @change-ai-version="changeAiVersion"
           ></left-aside>
         </el-aside>
         <el-container>
@@ -222,8 +223,9 @@
                 <span class="app-num">(7)</span>
               </h1>
               <collect-item
-                :ai-version="aiVersion"
+                ref="collect"
                 @open-overlay="mpQrcodeShow = true"
+                @skip="collectSkip"
               ></collect-item>
             </div>
             <div class="foot">
@@ -310,8 +312,10 @@
               flex-direction: row;
               align-items: center;
               justify-content: center;
+              position: relative;
             "
           >
+            <div class="week" v-if="exchangeItem"><div>周卡</div></div>
             <img
               class="logo"
               src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
@@ -432,7 +436,10 @@
                 当下热门 AI 应用
                 <span class="app-num">(6)</span>
               </h1>
-              <collect-item-small :ai-version="aiVersion"></collect-item-small>
+              <collect-item-small
+                ref="collect"
+                @skip="collectSkip"
+              ></collect-item-small>
             </div>
             <!-- <div class="foot">
               <div class="txt">
@@ -501,12 +508,6 @@
                   popper-class="select-down"
                   :popper-append-to-body="false"
                   class="ai-select"
-                  :class="{
-                    w128:
-                      aiVersion.value === 'GPT-4' ||
-                      aiVersion.value === 'GPT-3.5',
-                    w171: aiVersion.value === 'GPT-4 32K',
-                  }"
                   :placeholder="options[0].label"
                   size="small"
                 >
@@ -1078,7 +1079,8 @@ type exchangeOption = {
 const options = ref<Option[]>([
   { value: "gpt4", label: "GPT-4" },
   { value: "gpt432", label: "GPT-4 32K" },
-  { value: "gpt3.5", label: "GPT-3.5" },
+  { value: "gpt-35-turbo", label: "GPT-3.5" },
+  { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
 ]);
 const popoverOptions = ref<popoverOption[]>([
   { title: "个人", price: 698, desc: "内含20美金" },
@@ -1089,7 +1091,7 @@ const popoverOptions = ref<popoverOption[]>([
 const exchangeItem = ref<exchangeOption | null>(null);
 const exchangeContinue = ref(false);
 const popoverIndex = ref(0);
-const aiVersion = ref<Option>(options.value[0]);
+const aiVersion = ref<string>(options.value[0].value);
 const showDialog = ref(false);
 const popoverShow = ref(false);
 const mpQrcodeShow = ref(false);
@@ -1166,8 +1168,9 @@ watch(
         return;
       }
       requestLock = true;
+      let usr = localStorage.getItem("userInfo");
       const res = await getSerialNumber({
-        token: userInfo.value.token,
+        token: usr ? JSON.parse(usr).token : "",
         accessKey: userInfo.value.accessKey,
         code: newValue,
       });
@@ -1200,6 +1203,12 @@ watch(
         exchangeCode.value = "";
       }, 500);
     }
+  }
+);
+watch(
+  () => aiVersion.value,
+  (newValue) => {
+    proxy?.$refs["collect"]?.setAIVersion(newValue);
   }
 );
 onMounted(() => {
@@ -1269,8 +1278,9 @@ const getUserInfo = async (token: string, accessKey: string) => {
   }
 };
 const getExchangeTime = async (accountId: string) => {
+  let usr = localStorage.getItem("userInfo");
   const res = await getValidatyTime({
-    token: userInfo.value.token,
+    token: usr ? JSON.parse(usr).token : "",
     accessKey: userInfo.value.accessKey,
     accountId: accountId,
   });
@@ -1290,8 +1300,10 @@ const getExchangeTime = async (accountId: string) => {
             timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
           })
         );
+        proxy?.$refs["lf-side"]?.setAiVersion(2);
       } else {
         proxy?.$refs["lf-side"]?.setExchangeItem(null);
+        proxy?.$refs["lf-side"]?.setAiVersion(0);
       }
     } else {
       if (res.data.data.length > 0) {
@@ -1306,15 +1318,19 @@ const getExchangeTime = async (accountId: string) => {
           cardType,
           timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
         });
+        aiVersion.value = options.value[2].value;
       } else {
         exchangeItem.value = null;
+        aiVersion.value = options.value[0].value;
       }
     }
   } else {
     if (!agent.value) {
       proxy?.$refs["lf-side"]?.setExchangeItem(null);
+      proxy?.$refs["lf-side"]?.setAiVersion(0);
     } else {
       exchangeItem.value = null;
+      aiVersion.value = options.value[0].value;
     }
   }
 };
@@ -1426,7 +1442,7 @@ const skip = (url: string, openNew: boolean) => {
   if (usr) {
     usr = JSON.parse(usr);
     urlString = httpUrlAddKey(url, "token", usr.token);
-    urlString = httpUrlAddKey(urlString, "version", aiVersion.value.value);
+    urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
   }
   if (openNew) {
     window.open(urlString);
@@ -1507,8 +1523,9 @@ const logout = () => {
     cancelButtonText: "取消",
     type: "warning",
   }).then(() => {
+    let usr = localStorage.getItem("userInfo");
     doLogout({
-      token: userInfo.value.token,
+      token: usr ? JSON.parse(usr).token : "",
       accessKey: userInfo.value.accessKey,
     });
     localStorage.removeItem("userInfo");
@@ -1527,6 +1544,8 @@ const logout = () => {
     };
     if (!agent.value) {
       proxy?.$refs["lf-side"]?.setUserInfo(userInfo.value);
+    } else {
+      exchangeItem.value = null;
     }
     nickname.value = "";
     showUserInfo.value = false;
@@ -1560,6 +1579,7 @@ const loginComplete = (data: any) => {
     }
     const firstC = getFirstChar(userInfo.value.name);
     nickname.value = firstC;
+    getUserInfo(userInfo.value.token, userInfo.value.accessKey);
     if (redirectUrl.value) {
       skip(redirectUrl.value, false);
     } else {
@@ -1603,8 +1623,9 @@ const toExchangeConfirm = (e: { code: string }) => {
 };
 const exchangeConfirm = async (e: { code: string }) => {
   const { code } = e;
+  let usr = localStorage.getItem("userInfo");
   const res = await doExchangeCode({
-    token: userInfo.value.token,
+    token: usr ? JSON.parse(usr).token : "",
     accessKey: userInfo.value.accessKey,
     accountId: userInfo.value.id,
     code,
@@ -1639,6 +1660,20 @@ const openExchangeDrawer = () => {
     drawer.value = false;
   } else {
     toLogin();
+  }
+};
+const changeAiVersion = (val: string) => {
+  aiVersion.value = val;
+};
+const collectSkip = (e: { urlString: string; openNew: boolean }) => {
+  let { urlString, openNew } = e;
+  if (userInfo.value.isAuth == 1) {
+    urlString = httpUrlAddKey(urlString, "active", "true");
+  }
+  if (openNew) {
+    window.open(urlString);
+  } else {
+    window.location.href = urlString;
   }
 };
 </script>
@@ -1824,6 +1859,24 @@ const openExchangeDrawer = () => {
       //   height: 33px;
       height: 20px;
     }
+    .week {
+      position: absolute;
+      left: 5px;
+      top: 0;
+      background: rgba(7, 25, 54, 0.8);
+      border-radius: 100px;
+      padding: 0 8px;
+      height: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      div {
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 0.6rem;
+        font-family: Gotham-Rounded;
+      }
+    }
     .avatar {
       width: 32px;
       height: 32px;
@@ -1960,10 +2013,12 @@ const openExchangeDrawer = () => {
         font-size: 16px;
         font-family: FUTURA-MEDIUM;
         font-weight: bold;
+        flex: 1;
       }
       .active {
         font-size: 12px;
         color: #fff;
+        white-space: nowrap;
       }
       .ai-select {
         ::placeholder {
@@ -1974,7 +2029,8 @@ const openExchangeDrawer = () => {
           background: #202226;
           color: #ffffff;
           min-height: 33px;
-          max-width: 106px;
+          max-width: 140px;
+          min-width: 100px;
           box-shadow: none !important;
           border: 1px dashed rgba(255, 255, 255, 0.6);
           box-sizing: border-box;
@@ -2677,7 +2733,10 @@ const openExchangeDrawer = () => {
 :global(.el-popper__arrow) {
   display: none;
 }
-
+:global(.select-down) {
+  width: 140px;
+  min-width: 140px !important;
+}
 :v-deep(.select-down) {
   display: none;
 }

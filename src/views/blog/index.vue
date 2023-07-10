@@ -96,7 +96,7 @@
                         blogType == "3"
                           ? "企业级 MBM OpenAI"
                           : blogType == "2"
-                          ? "Prompt提示"
+                          ? "Input输入"
                           : "MBM OpenAI"
                       }}
                     </div>
@@ -107,7 +107,7 @@
                         blogType == "3"
                           ? "个人版"
                           : blogType == "2"
-                          ? "Completion完成"
+                          ? "Output输出"
                           : "OpenAI"
                       }}
                     </div>
@@ -225,7 +225,7 @@
                       }}
                     </div>
                   </el-col>
-                  <el-col
+                  <!-- <el-col
                     :span="16"
                     v-if="blogType == '2'"
                     style="
@@ -233,6 +233,28 @@
                       border-right: 1px solid #ffffff;
                       border-bottom: 1px solid #ffffff;
                     "
+                  >
+                    <div class="right-2">0.004美金 / 1K tokens</div>
+                  </el-col> -->
+                  <el-col
+                    :span="8"
+                    style="
+                      border-top: 1px solid #ffffff;
+                      border-right: 1px solid #ffffff;
+                      border-bottom: 1px solid #ffffff;
+                    "
+                    v-if="blogType == '2'"
+                  >
+                    <div class="right-2">0.003美金 / 1K tokens</div>
+                  </el-col>
+                  <el-col
+                    :span="8"
+                    style="
+                      border-top: 1px solid #ffffff;
+                      border-right: 1px solid #ffffff;
+                      border-bottom: 1px solid #ffffff;
+                    "
+                    v-if="blogType == '2'"
                   >
                     <div class="right-2">0.004美金 / 1K tokens</div>
                   </el-col>
@@ -265,6 +287,32 @@
                     <div class="right-2">
                       {{ blogType == "3" ? "自己部署" : "限制调用频次" }}
                     </div>
+                  </el-col>
+                </el-row>
+                <el-row :gutter="0" v-if="blogType == '2'">
+                  <el-col
+                    :span="8"
+                    style="background: #ffffff; border-top: 1px solid #000000"
+                  >
+                    <div class="left">GPT-3.5-Turbo-16K</div>
+                  </el-col>
+                  <el-col
+                    :span="8"
+                    style="
+                      border-right: 1px solid #ffffff;
+                      border-bottom: 1px solid #ffffff;
+                    "
+                  >
+                    <div class="right-2">0.006美金 / 1K tokens</div>
+                  </el-col>
+                  <el-col
+                    :span="8"
+                    style="
+                      border-right: 1px solid #ffffff;
+                      border-bottom: 1px solid #ffffff;
+                    "
+                  >
+                    <div class="right-2">0.008美金 / 1K tokens</div>
                   </el-col>
                 </el-row>
               </el-col>

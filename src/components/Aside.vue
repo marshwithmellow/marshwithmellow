@@ -30,11 +30,6 @@
             popper-class="select-down"
             :popper-append-to-body="false"
             class="ai-select"
-            :class="{
-              w128:
-                aiVersion.value === 'GPT-4' || aiVersion.value === 'GPT-3.5',
-              w171: aiVersion.value === 'GPT-4 32K',
-            }"
             :placeholder="options[0].label"
             size="small"
           >
@@ -622,12 +617,14 @@ const emits = defineEmits([
   "clipText",
   "exchangeConfirm",
   "setExchangeShow",
+  "changeAiVersion",
 ]);
 // select opetion
 const options = ref<Option[]>([
   { value: "gpt4", label: "GPT-4" },
   { value: "gpt432", label: "GPT-4 32K" },
-  { value: "gpt3.5", label: "GPT-3.5" },
+  { value: "gpt-35-turbo", label: "GPT-3.5" },
+  { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
 ]);
 const popoverOptions = ref<popoverOption[]>([
   { title: "个人", price: 698, desc: "内含20美金" },
@@ -641,7 +638,7 @@ const exchangeItem = ref<exchangeOption | null>(null);
 const exchangeContinue = ref(false);
 const cardType = ref(0); //0是默认卡片，1是红卡，2是黑卡
 let requestLock = false;
-const aiVersion = ref<Option>(options.value[0]);
+const aiVersion = ref<string>(options.value[0].value);
 const { toClipboard } = useClipboard();
 let cliping = false;
 const exchangeCode = ref("");
@@ -713,6 +710,14 @@ watch(
       requestLock = false;
     } else {
       cardType.value = 0;
+    }
+  }
+);
+watch(
+  () => aiVersion.value,
+  (newValue) => {
+    if (newValue) {
+      emits("changeAiVersion", newValue);
     }
   }
 );
@@ -793,11 +798,15 @@ const setExchangeContinue = (contin: boolean) => {
 const changeExchange = (show: boolean) => {
   cliping = show;
 };
+const setAiVersion = (index: number) => {
+  aiVersion.value = options.value[index].value;
+};
 defineExpose({
   setUserInfo,
   setExchangeItem,
   setExchangeContinue,
   changeExchange,
+  setAiVersion,
 });
 </script>
 <style lang="scss" scoped>
@@ -1104,13 +1113,15 @@ defineExpose({
       font-family: FUTURA-MEDIUM;
       font-weight: bold;
       min-width: 60px;
+      flex: 1;
     }
     .active {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: #fff;
+      white-space: nowrap;
     }
     .ai-select {
-      width: 100%;
+      // width: 100%;
       ::placeholder {
         color: #fff;
       }
@@ -1119,7 +1130,7 @@ defineExpose({
         background: #202226;
         color: #ffffff;
         min-height: 3vh;
-        max-width: 7vw;
+        max-width: 140px;
         min-width: 100px;
         box-shadow: none !important;
         border: 1px dashed rgba(255, 255, 255, 0.6);
@@ -1199,6 +1210,10 @@ defineExpose({
 :global(.el-scrollbar) {
   background: #000 !important;
   border: none;
+}
+:global(.select-down) {
+  width: 140px;
+  min-width: 140px !important;
 }
 :global(.select-down.el-popper.is-light),
 :global(.gpt-model.el-popper.is-light) {

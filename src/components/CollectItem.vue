@@ -44,35 +44,53 @@
       <el-button class="btn star popular" type="primary" color="#EE385C">最受欢迎</el-button>
       <el-button class="btn" type="primary" color="#333333">￥999/申请</el-button>
       <el-button class="btn" round>$ 1 即可体验</el-button> -->
-      <el-button
-        class="btn"
-        type="primary"
-        color="#4622E6"
-        v-if="item.btnType == 1"
-        :icon="StarFilled"
-        @click="nav(item)"
+      <div
+        class="btn-container"
+        :style="{
+          'justify-content':
+            item.download && item.download === 1 ? 'space-between' : 'flex-end',
+        }"
       >
-        {{ item.btnText }}
-      </el-button>
-      <el-button
-        class="btn"
-        type="primary"
-        color="#EE385C"
-        v-else-if="item.btnType == 2"
-        :icon="StarFilled"
-        @click="nav(item)"
-      >
-        {{ item.btnText }}
-      </el-button>
-      <el-button
-        class="btn"
-        type="primary"
-        color="#333333"
-        v-else-if="item.name"
-        @click="nav(item)"
-      >
-        {{ item.btnText }}
-      </el-button>
+        <el-button
+          class="left-btn"
+          type="primary"
+          color="#4622E6"
+          v-if="item.download && item.download === 1"
+          :icon="Download"
+          @click="download(item)"
+        >
+          客户端下载
+        </el-button>
+        <el-button
+          class="btn"
+          type="primary"
+          color="#4622E6"
+          v-if="item.btnType == 1"
+          :icon="StarFilled"
+          @click="nav(item)"
+        >
+          {{ item.btnText }}
+        </el-button>
+        <el-button
+          class="btn"
+          type="primary"
+          color="#EE385C"
+          v-else-if="item.btnType == 2"
+          :icon="StarFilled"
+          @click="nav(item)"
+        >
+          {{ item.btnText }}
+        </el-button>
+        <el-button
+          class="btn"
+          type="primary"
+          color="#333333"
+          v-else-if="item.name"
+          @click="nav(item)"
+        >
+          {{ item.btnText }}
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -89,17 +107,22 @@
 import fusionIcon from "@/assets/images/mbm-fusion-icon.jpg";
 import { ref } from "vue";
 import { ElNotification } from "element-plus";
-import { StarFilled } from "@element-plus/icons-vue";
+import { StarFilled, Download } from "@element-plus/icons-vue";
 import { httpUrlAddKey } from "@/utils/utils";
-const emits = defineEmits(["openOverlay"]);
-const props = defineProps({
-  aiVersion: {
-    type: Object,
-    default: () => {
-      return { value: "gpt4", label: "GPT-4" };
-    },
-  },
-});
+const emits = defineEmits(["openOverlay", "skip"]);
+// type Option = {
+//   value: string;
+//   label: string;
+// };
+// const props = defineProps({
+//   aiVersion: {
+//     type: Object,
+//     default: () => {
+//       return { value: "gpt4", label: "GPT-4" };
+//     },
+//   },
+// });
+const aiVersion = ref<string>("gpt4");
 const appList = ref([
   {
     name: "ChatGPT Next Web",
@@ -110,6 +133,7 @@ const appList = ref([
     btnType: 0,
     btnText: "立即体验",
     collect: false,
+    download: 0,
   },
   {
     name: "MBM Fusion",
@@ -120,6 +144,7 @@ const appList = ref([
     btnType: 3,
     btnText: "免费体验",
     collect: false,
+    download: 0,
   },
   // {
   //   name: "MusicAI",
@@ -140,6 +165,7 @@ const appList = ref([
     btnType: 0,
     btnText: "立即体验",
     collect: false,
+    download: 1,
   },
   {
     name: "AutoGPT Next Web",
@@ -150,6 +176,7 @@ const appList = ref([
     btnType: 0,
     btnText: "立即体验",
     collect: false,
+    download: 0,
   },
   // {
   //   name: "ChatGPT With GPT4",
@@ -170,6 +197,7 @@ const appList = ref([
     btnType: 0,
     btnText: "需要 API",
     collect: false,
+    download: 0,
   },
   {
     name: "Law - AI法律助手",
@@ -180,6 +208,7 @@ const appList = ref([
     btnType: 2,
     btnText: "免费使用",
     collect: false,
+    download: 0,
   },
   {
     name: "ChatGPT With GPT4",
@@ -190,6 +219,7 @@ const appList = ref([
     btnType: 0,
     btnText: "立即体验",
     collect: false,
+    download: 0,
   },
   {
     name: "",
@@ -214,28 +244,20 @@ const skip = (url: string, openNew: boolean, useToken: boolean) => {
     if (usr) {
       const user = JSON.parse(usr);
       urlString = httpUrlAddKey(urlString, "token", user.token);
-      urlString = httpUrlAddKey(
-        urlString,
-        "version",
-        typeof props.aiVersion === "object"
-          ? props.aiVersion.value
-          : props.aiVersion
-      );
+      urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
     } else {
-      urlString = httpUrlAddKey(
-        urlString,
-        "version",
-        typeof props.aiVersion === "object"
-          ? props.aiVersion.value
-          : props.aiVersion
-      );
+      urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
     }
   }
-  if (openNew) {
-    window.open(urlString);
-  } else {
-    window.location.href = urlString;
-  }
+  emits("skip", {
+    urlString,
+    openNew,
+  });
+  // if (openNew) {
+  //   window.open(urlString);
+  // } else {
+  //   window.location.href = urlString;
+  // }
 };
 const nav = (item: any) => {
   if (item.btnType == 3) {
@@ -244,6 +266,28 @@ const nav = (item: any) => {
     skip(item.url, true, item.useToken);
   }
 };
+const setAIVersion = (val: string) => {
+  aiVersion.value = val;
+};
+const download = (item: any) => {
+  if (item.download === 1) {
+    if (
+      /Safari/.test(navigator.userAgent) &&
+      !/Chrome/.test(navigator.userAgent)
+    ) {
+      window.open(
+        "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/MBM%20ChatBot_1.0.0_x64.dmg"
+      );
+    } else {
+      window.open(
+        "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/MBM%20ChatBot_1.0.0_x64_en-US.msi"
+      );
+    }
+  }
+};
+defineExpose({
+  setAIVersion,
+});
 </script>
 <style lang="scss" scoped>
 .wrap {
@@ -320,6 +364,23 @@ const nav = (item: any) => {
       -webkit-line-clamp: 4;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+    .btn-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      flex-wrap: nowrap;
+    }
+    .left-btn {
+      float: right;
+      width: 120px;
+      height: 28px;
+      line-height: 28px;
+      border-radius: 17px;
+      font-size: 14px;
+      font-family: Gotham-Rounded;
+      padding: 4px 20px;
     }
     .btn {
       float: right;

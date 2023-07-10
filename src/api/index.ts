@@ -130,8 +130,7 @@ export const doLogout = (data: { token: string; accessKey: string }) =>
     method: "post",
     headers: {
       "Content-Type": "application/json",
-      Authorization: data.token,
-      accessKey: data.accessKey,
+      token: data.token,
     },
   });
 export const getCashPage = (data: {

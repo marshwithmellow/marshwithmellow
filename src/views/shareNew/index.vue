@@ -114,16 +114,15 @@
         @mousedown="handleMouseDown"
         @mousemove="handleMouseMove"
         @mouseup="handleMouseUp"
-        v-if="!agent"
         ref="scrollView"
+        v-if="!agent"
       >
         <div class="content">
           <div class="title">新用户注册并完成首充获得专属权益礼包</div>
           <div class="desc">
             2023 年 7 月 1 日至 7 月 30
             日期间，使用引荐链接注册成为新用户并完成首笔充值 MBM OpenAI
-            服务，即可加赠 30% 充值金额专属优惠，更可受邀免费参加由 MBM OpenAI
-            于中国大陆线下举办的 AI 分享沙龙活动。期待与你碰面。
+            服务，即可加赠 30% 充值金额专属优惠，更可
           </div>
           <img
             src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/share-slider1.png"
@@ -186,19 +185,19 @@
               flex-direction: column;
             "
           >
-            <div class="title">新用户注册并完成首充</div>
-            <div class="title">获得专属权益礼包</div>
-            <div class="desc" style="margin-top: 20px">
-              2023 年 7 月 1 日至 7 月 30 日期间，使用引荐链接注
+            <!-- <div class="desc">2023 年 7 月 1 日至 7 月 30 日期间，</div>
+            <div class="desc">
+              使用引荐链接注册成为新用户并完成首笔充值 MBM OpenAI 服务，即可加赠
+              30% 充值金额专属优惠
             </div>
             <div class="desc">
-              册成为新用户并完成首笔充值 MBM OpenAI 服务，即
+              更可受邀免费参加由 MBM OpenAI 于中国大陆线下举办的 AI 分享沙龙活动
             </div>
-            <div class="desc">可加赠 30% 充值金额专属优惠。</div>
-            <div class="desc">
-              更可受邀免费参加由 MBM OpenAI 于中国大陆线下举
-            </div>
-            <div class="desc">办的 AI 分享沙龙活动。期待与你碰面</div>
+            <div class="desc">期待与你碰面</div> -->
+            <div class="title">受邀免费参加由 MBM OpenAI</div>
+            <div class="title">于中国大陆线下举办的</div>
+            <div class="title">AI 分享沙龙活动</div>
+            <div class="title">期待与你碰面</div>
           </div>
           <img
             src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/share-phone1.png"
@@ -206,7 +205,7 @@
             fit="scale-down"
             @click="navSlider(0)"
           />
-          <img
+          <!-- <img
             src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/share-phone2.png"
             class="slider"
             fit="scale-down"
@@ -217,16 +216,15 @@
             class="slider"
             fit="scale-down"
             @click="navSlider(2)"
-          />
-          <div class="bottom" style="margin-top: 60px">
-            {{ `通过${nickName}的引荐链接注册` }}
-          </div>
-          <div class="bottom">享受充值加赠权益</div>
-          <div class="button" @click="nav(0)">
+          /> -->
+          <!-- <div class="bottom">
+            {{ `通过${nickName}的引荐链接注册享受充值加赠权益` }}
+          </div> -->
+          <div class="button" @click="nav(0)" style="margin-top: 60px">
             <div class="text">现在开启你的 AI 时刻</div>
           </div>
-          <div class="button" @click="nav(1)">
-            <div class="text">了解更多</div>
+          <div class="button" @click="nav(0)">
+            <div class="text">免费注册</div>
           </div>
           <div class="foot">
             <div class="row-part">
@@ -668,22 +666,21 @@ const slideChange = () => {
   flex-direction: column;
   padding: 60px 20px 50px;
   .title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-family: Gotham-Rounded;
     font-weight: bold;
     color: #07070d;
     opacity: 1;
   }
   .desc {
-    max-width: 80vw;
-    text-align: center;
-    font-size: 0.8rem;
+    max-width: 1000px;
+    text-align: left;
+    font-size: 1rem;
     font-family: Gotham-Rounded;
     font-weight: 500;
     line-height: 1.2rem;
     color: #07070d;
     opacity: 1;
-    white-space: nowrap;
   }
   .slider {
     width: 90vw;
@@ -691,17 +688,16 @@ const slideChange = () => {
     cursor: pointer;
   }
   .bottom {
-    max-width: 90vw;
-    font-size: 1.2rem;
+    margin-top: 60px;
+    font-size: 1rem;
     font-family: FUTURA-MEDIUM;
     font-weight: 500;
     color: #111113;
     opacity: 1;
-    white-space: nowrap;
   }
   .button {
     margin-top: 30px;
-    border: 2px solid #000000;
+    border: 3px solid #000000;
     color: #000000;
     background-color: #fff;
     height: 50px;
@@ -755,15 +751,6 @@ const slideChange = () => {
       opacity: 1;
       cursor: pointer;
     }
-    .row-part {
-      flex: 1;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: row;
-      margin: 10px 0;
-    }
     .foot-row {
       width: 100%;
       display: flex;
@@ -771,6 +758,15 @@ const slideChange = () => {
       align-items: center;
       flex-direction: row;
       height: 50px;
+    }
+    .row-part {
+      margin: 10px 0;
+      flex: 1;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
     }
   }
 }

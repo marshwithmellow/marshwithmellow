@@ -76,14 +76,20 @@ import { ref } from "vue";
 import { ElNotification } from "element-plus";
 import { StarFilled } from "@element-plus/icons-vue";
 import { httpUrlAddKey } from "@/utils/utils";
-const props = defineProps({
-  aiVersion: {
-    type: Object,
-    default: () => {
-      return { value: "gpt4", label: "GPT-4" };
-    },
-  },
-});
+const emits = defineEmits(["skip"]);
+// type Option = {
+//   value: string;
+//   label: string;
+// };
+// const props = defineProps({
+//   aiVersion: {
+//     type: Object,
+//     default: () => {
+//       return { value: "gpt4", label: "GPT-4" };
+//     },
+//   },
+// });
+const aiVersion = ref<string>("gpt4");
 const appList = ref([
   {
     name: "ChatGPT Next Web",
@@ -176,32 +182,30 @@ const skip = (url: string, openNew: boolean, useToken: boolean) => {
     if (usr) {
       const user = JSON.parse(usr);
       urlString = httpUrlAddKey(urlString, "token", user.token);
-      urlString = httpUrlAddKey(
-        urlString,
-        "version",
-        typeof props.aiVersion === "object"
-          ? props.aiVersion.value
-          : props.aiVersion
-      );
+      urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
     } else {
-      urlString = httpUrlAddKey(
-        urlString,
-        "version",
-        typeof props.aiVersion === "object"
-          ? props.aiVersion.value
-          : props.aiVersion
-      );
+      urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
     }
   }
-  if (openNew) {
-    window.open(urlString);
-  } else {
-    window.location.href = urlString;
-  }
+  emits("skip", {
+    urlString,
+    openNew,
+  });
+  // if (openNew) {
+  //   window.open(urlString);
+  // } else {
+  //   window.location.href = urlString;
+  // }
 };
 const nav = (item: any) => {
   skip(item.url, true, item.useToken);
 };
+const setAIVersion = (val: string) => {
+  aiVersion.value = val;
+};
+defineExpose({
+  setAIVersion,
+});
 </script>
 <style lang="scss" scoped>
 .wrap {
