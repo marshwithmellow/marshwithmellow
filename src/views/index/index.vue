@@ -1865,8 +1865,7 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
       top: 0;
       background: rgba(7, 25, 54, 0.8);
       border-radius: 100px;
-      padding: 0 8px;
-      height: 20px;
+      padding: 0 5px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -1874,7 +1873,10 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
       div {
         color: rgba(255, 255, 255, 0.94);
         font-size: 0.6rem;
+        line-height: 20px;
+        font-weight: bold;
         font-family: Gotham-Rounded;
+        transform: translateY(1px);
       }
     }
     .avatar {
