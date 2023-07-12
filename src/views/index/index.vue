@@ -315,7 +315,7 @@
               position: relative;
             "
           >
-            <div class="week" v-if="exchangeItem"><div>周卡</div></div>
+            <div class="week" @click="drawer = true"><div>周卡</div></div>
             <img
               class="logo"
               src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
@@ -1040,6 +1040,7 @@ import {
   nextTick,
   getCurrentInstance,
   onMounted,
+  computed,
 } from "vue";
 import CollectItem from "@/components/CollectItem.vue";
 import CollectItemSmall from "@/components/CollectItemSmall.vue";
@@ -1076,21 +1077,35 @@ type exchangeOption = {
   timeArray: Array<string>; //数组[年，月，日]
 };
 // select opetion
-const options = ref<Option[]>([
-  { value: "gpt4", label: "GPT-4" },
-  { value: "gpt432", label: "GPT-4 32K" },
-  { value: "gpt-35-turbo", label: "GPT-3.5" },
-  { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
-]);
+// const options = ref<Option[]>([
+//   { value: "gpt4", label: "GPT-4" },
+//   { value: "gpt432", label: "GPT-4 32K" },
+//   { value: "gpt-35-turbo", label: "GPT-3.5" },
+//   { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
+// ]);
 const popoverOptions = ref<popoverOption[]>([
   { title: "个人", price: 698, desc: "内含20美金" },
   { title: "团队(10人以内)", price: 1298, desc: "内含50美金" },
   { title: "企业", price: 7500, desc: "内含500美金" },
 ]);
-
 const exchangeItem = ref<exchangeOption | null>(null);
 const exchangeContinue = ref(false);
 const popoverIndex = ref(0);
+const options = computed<Option[]>(() => {
+  return exchangeItem.value
+    ? [
+        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt432", label: "GPT-4 32K" },
+        { value: "gpt-35-turbo", label: "GPT-周卡" },
+        { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
+      ]
+    : [
+        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt432", label: "GPT-4 32K" },
+        { value: "gpt-35-turbo", label: "GPT-3.5" },
+        { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
+      ];
+});
 const aiVersion = ref<string>(options.value[0].value);
 const showDialog = ref(false);
 const popoverShow = ref(false);

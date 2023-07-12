@@ -586,6 +586,7 @@ import {
   nextTick,
   getCurrentInstance,
   onMounted,
+  computed,
 } from "vue";
 import useClipboard from "vue-clipboard3";
 import { getSerialNumber } from "@/api/index";
@@ -620,12 +621,12 @@ const emits = defineEmits([
   "changeAiVersion",
 ]);
 // select opetion
-const options = ref<Option[]>([
-  { value: "gpt4", label: "GPT-4" },
-  { value: "gpt432", label: "GPT-4 32K" },
-  { value: "gpt-35-turbo", label: "GPT-3.5" },
-  { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
-]);
+// const options = ref<Option[]>([
+//   { value: "gpt4", label: "GPT-4" },
+//   { value: "gpt432", label: "GPT-4 32K" },
+//   { value: "gpt-35-turbo", label: "GPT-3.5" },
+//   { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
+// ]);
 const popoverOptions = ref<popoverOption[]>([
   { title: "个人", price: 698, desc: "内含20美金" },
   { title: "团队(10人以内)", price: 1298, desc: "内含50美金" },
@@ -635,6 +636,21 @@ const popoverIndex = ref(0);
 const popoverShow = ref(false);
 const exchangeShow = ref(false);
 const exchangeItem = ref<exchangeOption | null>(null);
+const options = computed<Option[]>(() => {
+  return exchangeItem.value
+    ? [
+        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt432", label: "GPT-4 32K" },
+        { value: "gpt-35-turbo", label: "GPT-周卡" },
+        { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
+      ]
+    : [
+        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt432", label: "GPT-4 32K" },
+        { value: "gpt-35-turbo", label: "GPT-3.5" },
+        { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
+      ];
+});
 const exchangeContinue = ref(false);
 const cardType = ref(0); //0是默认卡片，1是红卡，2是黑卡
 let requestLock = false;
