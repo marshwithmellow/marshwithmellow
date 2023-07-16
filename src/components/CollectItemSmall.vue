@@ -122,6 +122,17 @@ const appList = ref([
     collect: false,
   },
   {
+    name: "Own GPT",
+    desc: "几秒钟内创建属于你自己的应用。",
+    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/mbm-fusion-icon.jpg",
+    url: "https://open.mbmzone.com/",
+    useToken: true,
+    btnType: 0,
+    btnText: "立即体验",
+    collect: false,
+    download: 0,
+  },
+  {
     name: "AutoGPT Next Web",
     desc: "这个由 GPT-4 驱动的项目将 LLM 的“思想”链接在一起，以自主实现你设定的任何目标。作为 GPT-4 完全自主运行的首批示例之一，Auto-GPT 突破了 AI 可能性的界限。",
     img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/gpt-auto-icon.png",

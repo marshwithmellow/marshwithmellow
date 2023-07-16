@@ -220,7 +220,7 @@
             <div style="padding: 40px 50px">
               <h1 class="title">
                 当下热门 AI 应用
-                <span class="app-num">(7)</span>
+                <span class="app-num">(8)</span>
               </h1>
               <collect-item
                 ref="collect"
@@ -434,7 +434,7 @@
             <div style="padding: 20px 25px">
               <h1 class="title">
                 当下热门 AI 应用
-                <span class="app-num">(6)</span>
+                <span class="app-num">(7)</span>
               </h1>
               <collect-item-small
                 ref="collect"

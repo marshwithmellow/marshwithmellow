@@ -104,7 +104,6 @@
 // import autoIcon from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/gpt-auto-icon.png";
 // import paperIcon from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/paper-icon.png";
 // import lawIcon from "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/law-icon.png";
-import fusionIcon from "@/assets/images/mbm-fusion-icon.jpg";
 import { ref } from "vue";
 import { ElNotification } from "element-plus";
 import { StarFilled, Download } from "@element-plus/icons-vue";
@@ -138,7 +137,7 @@ const appList = ref([
   {
     name: "MBM Fusion",
     desc: "用超乎视觉的光影，流淌你与生俱来的灵感。\n快来体验专为建筑和室内设计师准备的 MBM 应用。\n目前支持小程序体验。",
-    img: fusionIcon,
+    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/mbm-fusion-icon.jpg",
     url: "",
     useToken: false,
     btnType: 3,
@@ -166,6 +165,17 @@ const appList = ref([
     btnText: "立即体验",
     collect: false,
     download: 1,
+  },
+  {
+    name: "Own GPT",
+    desc: "几秒钟内创建属于你自己的应用。",
+    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/mbm-fusion-icon.jpg",
+    url: "https://open.mbmzone.com/",
+    useToken: true,
+    btnType: 0,
+    btnText: "立即体验",
+    collect: false,
+    download: 0,
   },
   {
     name: "AutoGPT Next Web",
@@ -220,9 +230,6 @@ const appList = ref([
     btnText: "立即体验",
     collect: false,
     download: 0,
-  },
-  {
-    name: "",
   },
 ]);
 // do collect / uncollect
