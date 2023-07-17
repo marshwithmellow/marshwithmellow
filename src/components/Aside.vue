@@ -350,7 +350,7 @@
                   align-items: flex-start;
                   flex-direction: column;
                 "
-                v-if="userInfo.isAuth === 1"
+                v-if="userInfo.isAuth === 0"
               >
                 <div class="popover-title">我的 GPT4 API Key</div>
                 <div class="popover-part">
@@ -1528,6 +1528,9 @@ defineExpose({
       flex-direction: row;
       margin-top: 14px;
       cursor: pointer;
+      &:active div {
+        color: rgba(255, 255, 255, 0.5);
+      }
     }
   }
   .popover-foot-desc {
