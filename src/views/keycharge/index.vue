@@ -51,9 +51,20 @@
       <div class="container">
         <div class="recharge-icon iconfont icon-shandian"></div>
         <div class="recharge-count">
-          生成{{ keyList[keyIndex].name }} GPT4 API Key
+          生成{{
+            keyList[keyIndex] && keyList[keyIndex].name
+              ? keyList[keyIndex].name
+              : "个人"
+          }}
+          GPT4 API Key
         </div>
-        <p class="tip">{{ keyList[keyIndex].desc }}</p>
+        <p class="tip">
+          {{
+            keyList[keyIndex] && keyList[keyIndex].desc
+              ? keyList[keyIndex].desc
+              : ""
+          }}
+        </p>
         <div class="charge-box">
           <div class="left">
             <div></div>
@@ -74,10 +85,20 @@
               :style="{ 'text-align': paying ? 'center' : 'left' }"
             >
               <span class="d">支付：</span>
-              {{ keyList[keyIndex].price }}元
+              {{
+                keyList[keyIndex] && keyList[keyIndex].price
+                  ? keyList[keyIndex].price
+                  : "698"
+              }}元
             </div>
             <ul class="money-list" v-if="!paying">
-              <li class="money-item">{{ keyList[keyIndex].price }}元</li>
+              <li class="money-item">
+                {{
+                  keyList[keyIndex] && keyList[keyIndex].price
+                    ? keyList[keyIndex].price
+                    : "698"
+                }}元
+              </li>
             </ul>
             <div class="weChat-pay-code">
               <img
@@ -96,9 +117,20 @@
     <div class="phone-recharge" v-else>
       <div class="recharge-icon iconfont icon-shandian"></div>
       <div class="recharge-count">
-        生成{{ keyList[keyIndex].name }} GPT4 API Key
+        生成{{
+          keyList[keyIndex] && keyList[keyIndex].name
+            ? keyList[keyIndex].name
+            : "个人"
+        }}
+        GPT4 API Key
       </div>
-      <p class="tip">{{ keyList[keyIndex].desc }}</p>
+      <p class="tip">
+        {{
+          keyList[keyIndex] && keyList[keyIndex].desc
+            ? keyList[keyIndex].desc
+            : ""
+        }}
+      </p>
       <div class="charge-box">
         <!-- <div class="left">
           <div></div>
@@ -115,10 +147,20 @@
             :style="{ 'text-align': paying ? 'center' : 'left' }"
           >
             <span class="d">支付：</span>
-            {{ keyList[keyIndex].price }}元
+            {{
+              keyList[keyIndex] && keyList[keyIndex].price
+                ? keyList[keyIndex].price
+                : "698"
+            }}元
           </div>
           <ul class="money-list" v-if="!paying">
-            <li class="money-item">{{ keyList[keyIndex].price }}元</li>
+            <li class="money-item">
+              {{
+                keyList[keyIndex] && keyList[keyIndex].price
+                  ? keyList[keyIndex].price
+                  : "698"
+              }}元
+            </li>
           </ul>
           <div class="weChat-pay-code">
             <img v-if="qrCodeImgUrl" class="code" :src="qrCodeImgUrl" alt="" />
@@ -140,13 +182,9 @@ import { useRouter } from "vue-router";
 import useClipboard from "vue-clipboard3";
 import { pinyin } from "pinyin-pro";
 import { isHashMode } from "@/utils/utils";
-// const selectIndex = ref(10);
-// const showUnit = ref(false);
-// const model = ref<any>();
 const userInfo = ref();
 const nickname = ref("");
 const qrCodeImgUrl = ref();
-// const list = [10, 30, 50, 100, 200, 300];
 const keyList = ref([
   { name: "个人", price: 698, desc: "内含20美金", accountType: 1 },
   { name: "团队", price: 1298, desc: "内含50美金", accountType: 3 },
@@ -187,7 +225,7 @@ const getUserInfo = async (token: string, accessKey: string) => {
     nickname.value = firstC;
     const keyType: any = $router.currentRoute.value.query.keyType;
     if (userInfo.value.isAuth == 0) {
-      keyIndex.value = keyType ? keyType : 0;
+      keyIndex.value = keyType ? (keyType > 2 ? 2 : keyType) : 0;
     } else {
       if (userInfo.value.accountType == 1) {
         if (keyType == 2) {

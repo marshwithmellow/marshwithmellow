@@ -891,7 +891,7 @@
                         class="desc"
                         v-if="userInfo.accountType === 1"
                         style="margin-left: 20px"
-                        @click="popoverConfirm(3)"
+                        @click="popoverConfirm(1)"
                       >
                         团队
                       </div>
@@ -1094,13 +1094,13 @@ const popoverIndex = ref(0);
 const options = computed<Option[]>(() => {
   return exchangeItem.value
     ? [
-        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt-4", label: "GPT-4" },
         { value: "gpt432", label: "GPT-4 32K" },
         { value: "gpt-35-turbo", label: "GPT-周卡" },
         { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
       ]
     : [
-        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt-4", label: "GPT-4" },
         { value: "gpt432", label: "GPT-4 32K" },
         { value: "gpt-35-turbo", label: "GPT-3.5" },
         { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },

@@ -396,7 +396,7 @@
                         style="margin-left: 20px"
                         @click="
                           emits('popoverConfirm', {
-                            keyType: 3,
+                            keyType: 1,
                           })
                         "
                       >
@@ -639,13 +639,13 @@ const exchangeItem = ref<exchangeOption | null>(null);
 const options = computed<Option[]>(() => {
   return exchangeItem.value
     ? [
-        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt-4", label: "GPT-4" },
         { value: "gpt432", label: "GPT-4 32K" },
         { value: "gpt-35-turbo", label: "GPT-周卡" },
         { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
       ]
     : [
-        { value: "gpt4", label: "GPT-4" },
+        { value: "gpt-4", label: "GPT-4" },
         { value: "gpt432", label: "GPT-4 32K" },
         { value: "gpt-35-turbo", label: "GPT-3.5" },
         { value: "xy-openai-gpt35-16k", label: "GPT-3.5 16K" },
