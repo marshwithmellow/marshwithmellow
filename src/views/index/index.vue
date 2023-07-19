@@ -197,7 +197,7 @@
               </div>
               <div class="info-item">
                 <span class="label">推荐码：</span>
-                <span class="code underline" @click="copy">
+                <span class="code underline" @click="copyShare">
                   {{ userInfo.inviteCode }}
                 </span>
               </div>
@@ -406,7 +406,7 @@
               </div>
               <div class="info-item">
                 <span class="label">推荐码：</span>
-                <span class="code underline" @click="copy">
+                <span class="code underline" @click="copyShare">
                   {{ userInfo.inviteCode }}
                 </span>
               </div>
@@ -597,7 +597,7 @@
               </button>
               <div v-if="userInfo.name" class="share-my-code">
                 分享我的推荐码：
-                <span class="code" @click="copy">
+                <span class="code" @click="copyShare">
                   {{ userInfo.inviteCode }}
                 </span>
               </div>
@@ -910,14 +910,13 @@
                     <div class="desc2">复制</div>
                   </div>
                 </div>
-                <div class="popover-part-a">
+                <div
+                  class="popover-part-a"
+                  @click="
+                    skip('https://www.showdoc.com.cn/2249626116233450', true)
+                  "
+                >
                   <div class="popover-block-a">访问 MBM OpenAI 开发文档</div>
-                  <div class="popover-right">
-                    <div class="desc2">
-                      <div>密码</div>
-                      <div>base123</div>
-                    </div>
-                  </div>
                 </div>
               </div>
               <div
@@ -1392,29 +1391,29 @@ const changeSwiper = () => {
     animate.value = true;
   }, 100);
 };
-// 复制
-const copy = async () => {
-  try {
-    if (isHashMode($router.options.history.base)) {
-      // 复制
-      await toClipboard(
-        `${
-          window.location.origin + import.meta.env.VITE_PUBLIC_BASE
-        }#/?inviteCode=${userInfo.value.inviteCode}`
-      );
-    } else {
-      // 复制
-      await toClipboard(
-        `${
-          window.location.origin + import.meta.env.VITE_PUBLIC_BASE
-        }?inviteCode=${userInfo.value.inviteCode}`
-      );
-    }
-    ElMessage({ message: "复制成功", type: "success" });
-  } catch (e) {
-    ElMessage("复制失败");
-  }
-};
+// // 复制
+// const copy = async () => {
+//   try {
+//     if (isHashMode($router.options.history.base)) {
+//       // 复制
+//       await toClipboard(
+//         `${
+//           window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+//         }#/?inviteCode=${userInfo.value.inviteCode}`
+//       );
+//     } else {
+//       // 复制
+//       await toClipboard(
+//         `${
+//           window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+//         }?inviteCode=${userInfo.value.inviteCode}`
+//       );
+//     }
+//     ElMessage({ message: "复制成功", type: "success" });
+//   } catch (e) {
+//     ElMessage("复制失败");
+//   }
+// };
 const copyShare = async () => {
   let url = "";
   if (isHashMode($router.options.history.base)) {
