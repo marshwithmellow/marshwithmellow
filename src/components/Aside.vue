@@ -350,7 +350,7 @@
                   align-items: flex-start;
                   flex-direction: column;
                 "
-                v-if="userInfo.isAuth === 0"
+                v-if="userInfo.isAuth === 1"
               >
                 <div class="popover-title">我的 GPT4 API Key</div>
                 <div class="popover-part">
