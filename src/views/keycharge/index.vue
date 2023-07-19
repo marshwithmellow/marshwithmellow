@@ -188,7 +188,7 @@ const qrCodeImgUrl = ref();
 const keyList = ref([
   { name: "个人", price: 698, desc: "内含20美金", accountType: 1 },
   { name: "团队", price: 1298, desc: "内含50美金", accountType: 3 },
-  { name: "企业", price: 7500, desc: "内含500美金", accountType: 2 },
+  { name: "企业", price: 6000, desc: "内含400美金", accountType: 2 },
 ]);
 const keyIndex = ref<any>(0);
 const timer = ref();
@@ -345,7 +345,9 @@ const loopOrderDetail = async (orderNo: string) => {
     timer.value = "";
     setTimeout(() => {
       // window.close();
-      $router.back();
+      $router.replace({
+        name: "home",
+      });
     }, 5000);
   } else {
     timer.value = setTimeout(() => {

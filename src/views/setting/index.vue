@@ -1025,7 +1025,7 @@ const monthOptions = ref(monthArray);
 const popoverOptions = ref<popoverOption[]>([
   { title: "个人", price: 698, desc: "内含20美金" },
   { title: "团队(10人以内)", price: 1298, desc: "内含50美金" },
-  { title: "企业", price: 7500, desc: "内含500美金" },
+  { title: "企业", price: 6000, desc: "内含400美金" },
 ]);
 const popoverIndex = ref(0);
 const menuIndex = ref(0);
