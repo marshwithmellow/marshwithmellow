@@ -1229,25 +1229,33 @@ const getExchangeTime = async (accountId: string) => {
     if (!agent.value) {
       if (res.data.data.length > 0) {
         const item = res.data.data[0];
-        let cardType = 1;
-        if (item && item.serialNumber) {
-          const temp: string = item.serialNumber.replace("NO.", "");
-          cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
-        }
         const timeStr = dayjs(item.validityTime);
-        proxy?.$refs["lf-side"]?.setExchangeItem(
-          Object.assign({}, item, {
-            cardType,
-            timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
-          })
-        );
+        if (dayjs().isSameOrBefore(timeStr)) {
+          let cardType = 1;
+          if (item && item.serialNumber) {
+            const temp: string = item.serialNumber.replace("NO.", "");
+            cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+          }
+          proxy?.$refs["lf-side"]?.setExchangeItem(
+            Object.assign({}, item, {
+              cardType,
+              timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
+            })
+          );
+          proxy?.$refs["lf-side"]?.setAiVersion(2);
+        } else {
+          proxy?.$refs["lf-side"]?.setExchangeItem(null);
+          proxy?.$refs["lf-side"]?.setAiVersion(0);
+        }
       } else {
         proxy?.$refs["lf-side"]?.setExchangeItem(null);
+        proxy?.$refs["lf-side"]?.setAiVersion(0);
       }
     }
   } else {
     if (!agent.value) {
       proxy?.$refs["lf-side"]?.setExchangeItem(null);
+      proxy?.$refs["lf-side"]?.setAiVersion(0);
     }
   }
 };

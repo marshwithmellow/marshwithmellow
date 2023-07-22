@@ -1057,6 +1057,7 @@ import {
 import { useRouter } from "vue-router";
 import useClipboard from "vue-clipboard3";
 import { isHashMode, httpUrlAddKey } from "@/utils/utils";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 type Option = {
   value: string;
   label: string;
@@ -1302,19 +1303,25 @@ const getExchangeTime = async (accountId: string) => {
     if (!agent.value) {
       if (res.data.data.length > 0) {
         const item = res.data.data[0];
-        let cardType = 1;
-        if (item && item.serialNumber) {
-          const temp: string = item.serialNumber.replace("NO.", "");
-          cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
-        }
         const timeStr = dayjs(item.validityTime);
-        proxy?.$refs["lf-side"]?.setExchangeItem(
-          Object.assign({}, item, {
-            cardType,
-            timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
-          })
-        );
-        proxy?.$refs["lf-side"]?.setAiVersion(2);
+        if (dayjs().isSameOrBefore(timeStr)) {
+          let cardType = 1;
+          if (item && item.serialNumber) {
+            const temp: string = item.serialNumber.replace("NO.", "");
+            cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+          }
+          proxy?.$refs["lf-side"]?.setExchangeItem(
+            Object.assign({}, item, {
+              cardType,
+              timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
+            })
+          );
+          proxy?.$refs["lf-side"]?.setAiVersion(2);
+        } else {
+          //周卡已过期
+          proxy?.$refs["lf-side"]?.setExchangeItem(null);
+          proxy?.$refs["lf-side"]?.setAiVersion(0);
+        }
       } else {
         proxy?.$refs["lf-side"]?.setExchangeItem(null);
         proxy?.$refs["lf-side"]?.setAiVersion(0);
@@ -1322,17 +1329,23 @@ const getExchangeTime = async (accountId: string) => {
     } else {
       if (res.data.data.length > 0) {
         const item = res.data.data[0];
-        let cardType = 1;
-        if (item && item.serialNumber) {
-          const temp: string = item.serialNumber.replace("NO.", "");
-          cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
-        }
         const timeStr = dayjs(item.validityTime);
-        exchangeItem.value = Object.assign({}, item, {
-          cardType,
-          timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
-        });
-        aiVersion.value = options.value[2].value;
+        if (dayjs().isSameOrBefore(timeStr)) {
+          let cardType = 1;
+          if (item && item.serialNumber) {
+            const temp: string = item.serialNumber.replace("NO.", "");
+            cardType = temp ? (temp.startsWith("8") ? 2 : 1) : 1;
+          }
+          exchangeItem.value = Object.assign({}, item, {
+            cardType,
+            timeArray: [timeStr.year(), timeStr.month() + 1, timeStr.date()],
+          });
+          aiVersion.value = options.value[2].value;
+        } else {
+          //周卡已过期
+          exchangeItem.value = null;
+          aiVersion.value = options.value[0].value;
+        }
       } else {
         exchangeItem.value = null;
         aiVersion.value = options.value[0].value;
