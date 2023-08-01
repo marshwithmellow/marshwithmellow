@@ -113,7 +113,7 @@
         class="tel"
         v-model="nickname"
         placeholder="怎么称呼你？"
-        @keyup.enter="inputNickname"
+        @keyup.enter.native="inputNickname"
       />
       <div class="btm"></div>
     </div>

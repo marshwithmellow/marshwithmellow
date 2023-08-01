@@ -123,17 +123,17 @@ const emits = defineEmits(["openOverlay", "skip"]);
 // });
 const aiVersion = ref<string>("gpt4");
 const appList = ref([
-  {
-    name: "AI文案助手",
-    desc: "AI文案助手。",
-    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/paper-icon.png",
-    url: "http://8.222.139.196:8700/",
-    useToken: true,
-    btnType: 0,
-    btnText: "立即体验",
-    collect: false,
-    download: 0,
-  },
+  // {
+  //   name: "AI文案助手",
+  //   desc: "AI文案助手。",
+  //   img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/paper-icon.png",
+  //   url: "http://8.222.139.196:8700/",
+  //   useToken: true,
+  //   btnType: 0,
+  //   btnText: "立即体验",
+  //   collect: false,
+  //   download: 0,
+  // },
   {
     name: "ChatGPT Next Web",
     desc: "即刻体验当前最强大的对话式人工智能 ChatGPT ，可以与您聊天，回答后续问题，并挑战错误的假设。模型包含 GPT-4 和 GPT-4 32K ，优先获得 OpenAI 新功能和改进。",
