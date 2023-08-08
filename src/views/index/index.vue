@@ -220,7 +220,7 @@
             <div style="padding: 40px 50px">
               <h1 class="title">
                 当下热门 AI 应用
-                <span class="app-num">(8)</span>
+                <span class="app-num">(9)</span>
               </h1>
               <collect-item
                 ref="collect"
