@@ -70,6 +70,11 @@ const router = createRouter({
       name: "shareNew",
       component: () => import("../views/shareNew/index.vue"),
     },
+    {
+      path: "/mcd",
+      name: "mcd",
+      component: () => import("../views/mcd/index.vue"),
+    },
   ],
 });
 
