@@ -6,7 +6,7 @@ const service = axios.create({
   // baseURL: "https://openai-service.mbmzone.com/api",
   baseURL: `https://${import.meta.env.VITE_PUBLIC_URL}/api`,
   headers: { "Content-Type": "application/json" },
-  timeout: 5000, // 请求超时时间
+  timeout: 60000, // 请求超时时间
 });
 
 // request拦截器

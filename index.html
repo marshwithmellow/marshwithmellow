@@ -29,6 +29,18 @@
         s.parentNode.insertBefore(hm, s);
       })();
     </script>
+    <!-- 导入需要的包 （一定要放到index.html中的head标签里） -->
+    <!-- 高德地图api更新必须配合安全密钥使用 -->
+    <script>
+      window._AMapSecurityConfig = {
+        securityJsCode: "d277fa88782c61122b5d5d9674421445",
+      };
+    </script>
+    <script
+      type="text/javascript"
+      src="https://webapi.amap.com/maps?v=1.4.11&key=980903342157672e3d22412d1bf17e07&plugin=AMap.PlaceSearch"
+    ></script>
+    <script src="https://webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script>
   </head>
   <body>
     <div id="app"></div>

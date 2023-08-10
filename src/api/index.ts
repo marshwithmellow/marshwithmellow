@@ -206,3 +206,93 @@ export const getSerialNumber = (data: {
       code: data.code,
     },
   });
+
+export const getAddressList = (data: {
+  token: string;
+  accessKey: string;
+  userId: string;
+}) =>
+  axios({
+    url: `/userAddress/mylist`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    params: {
+      userId: data.accessKey,
+    },
+  });
+
+export const addAddress = (data: {
+  token: string;
+  accessKey: string;
+  dto: any;
+}) =>
+  axios({
+    url: `/userAddress/add`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      ...data.dto,
+    },
+  });
+
+export const editAddress = (data: {
+  token: string;
+  accessKey: string;
+  dto: any;
+}) =>
+  axios({
+    url: `/userAddress/edit`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      ...data.dto,
+    },
+  });
+
+export const delAddress = (data: {
+  token: string;
+  accessKey: string;
+  id: string;
+}) =>
+  axios({
+    url: `/userAddress/remove`,
+    method: "delete",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    params: {
+      ids: data.id,
+    },
+  });
+
+export const sendMail = (data: {
+  token: string;
+  accessKey: string;
+  dto: any;
+}) =>
+  axios({
+    url: `/userAddress/sendMail`,
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      ...data.dto,
+    },
+  });
