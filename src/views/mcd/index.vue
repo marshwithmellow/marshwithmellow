@@ -5,6 +5,7 @@
         <img
           class="logo"
           src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
+          @click="goHome"
         />
         <div
           style="
@@ -19,12 +20,95 @@
           <img class="center-logo" :src="logoImg" alt="" />
         </div>
         <div class="header-right">
-          <div class="avatar">{{ nickName }}</div>
+          <!-- <div class="avatar">{{ nickName }}</div> -->
+          <el-popover
+            placement="bottom"
+            :width="344"
+            trigger="hover"
+            v-if="userInfo.name"
+            popper-class="user"
+            v-model:visible="showUserInfo"
+          >
+            <template #reference>
+              <div
+                v-if="userInfo.name"
+                class="avatar"
+                @click="
+                  updateUserInfo();
+                  navSetting();
+                "
+              >
+                {{ nickName }}
+              </div>
+            </template>
+            <div
+              v-if="userInfo.name"
+              class="popover-user-info"
+              :class="{ 'popover-show-user': showUserInfo }"
+            >
+              <p class="nickname">
+                Hello,
+                <span class="underline">{{ userInfo.name }}！</span>
+              </p>
+              <div class="info-item">
+                <span class="label">手机号：</span>
+                {{ userInfo.mobile }}
+              </div>
+              <div class="info-item">
+                <span class="label">剩余金额：</span>
+                {{ userInfo.remainAmount }}美元
+              </div>
+              <div class="info-item">
+                <span class="label">请求次数：</span>
+                {{ userInfo.requestCount }}次
+              </div>
+              <div class="info-item">
+                <span class="label">推荐码：</span>
+                <span class="code underline" @click="copyShare">
+                  {{ userInfo.inviteCode }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="label">AI时刻：</span>
+                {{ userInfo.createTime }}
+              </div>
+              <div class="info-item">
+                <span
+                  class="label underline"
+                  style="cursor: pointer"
+                  @click="logout()"
+                >
+                  退出登录
+                </span>
+              </div>
+            </div>
+          </el-popover>
         </div>
       </el-header>
       <el-main class="main">
-        <div class="big">麦当劳外卖</div>
-        <div class="address" v-if="addressList.length > 0">
+        <div
+          class="big"
+          :style="{
+            cursor: processStatus == 4 ? 'pointer' : 'auto',
+          }"
+          @click="openReport"
+        >
+          {{
+            processStatus == 1
+              ? "正在点餐"
+              : processStatus == 2
+              ? "正在取餐"
+              : processStatus == 3
+              ? "正在送餐"
+              : processStatus == 4
+              ? "查看点餐报告"
+              : "麦当劳外卖"
+          }}
+        </div>
+        <div
+          class="address"
+          v-if="addressList.length > 0 && processStatus != 5"
+        >
           <img class="hamburger" :src="hamburgerImg" alt="" />
           <div style="margin: 0 30px">
             送至：{{
@@ -39,7 +123,7 @@
             {{ addressList[currentAddress].mobile }}
           </div>
         </div>
-        <div class="address" v-else>
+        <div class="address" v-else-if="processStatus != 5">
           <div
             style="text-decoration: underline; cursor: pointer"
             @click="dialogEditVisible = true"
@@ -47,10 +131,14 @@
             填写送餐地址
           </div>
         </div>
-        <div class="contact" v-if="addressList.length > 0">
+        <div
+          class="contact"
+          v-if="addressList.length > 0 && processStatus != 5"
+        >
           <div class="label">联系人：</div>
           {{ addressList[currentAddress].userName }}
           <div
+            v-if="processStatus == 0"
             :style="{
               'margin-left': '30px',
               cursor: submitLoading ? 'not-allowed' : 'pointer',
@@ -61,24 +149,27 @@
             编辑地址
           </div>
         </div>
-        <el-dropdown :disabled="submitLoading">
-          <div class="count">
-            <span class="num">{{ currentCount }}</span>
+        <el-row class="count-container" v-if="processStatus == 0">
+          <el-col :span="6" v-for="item in counts">
+            <div :class="item.num == currentCount ? 'count' : 'count-normal'">
+              <div
+                class="txt"
+                @click="changeCount(item)"
+                style="cursor: pointer"
+              >
+                <view class="num">{{ item.num }}</view>
+                人份
+              </div>
+            </div>
+          </el-col>
+        </el-row>
+        <div class="count" v-else-if="processStatus != 5">
+          <div class="txt">
+            <view class="num">{{ currentCount }}</view>
             人份
           </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="item in counts"
-                :key="item.num"
-                @click="changeCount(item)"
-              >
-                {{ item.text }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <div class="area">
+        </div>
+        <div class="area" v-if="processStatus == 0">
           <el-input
             v-model="inputValue"
             :rows="5"
@@ -92,6 +183,7 @@
           color="#000000"
           @click="clickRun"
           :loading="submitLoading"
+          v-if="processStatus == 0"
         >
           <template #loading>
             <div class="custom-loading">
@@ -113,6 +205,205 @@
           </template>
           {{ submitLoading ? "正在下单..." : "下单" }}
         </el-button>
+        <el-row
+          :gutter="2"
+          class="process-container"
+          v-if="
+            processStatus == 1 ||
+            processStatus == 2 ||
+            processStatus == 3 ||
+            processStatus == 4
+          "
+        >
+          <el-col :span="6">
+            <div class="pro">
+              <div class="txt">正在点餐</div>
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div
+              class="pro"
+              :style="{ opacity: processStatus == 1 ? 0.75 : 1 }"
+            >
+              <div class="txt">正在取餐</div>
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div
+              class="pro"
+              :style="{
+                opacity:
+                  processStatus == 1 ? 0.5 : processStatus == 2 ? 0.75 : 1,
+              }"
+            >
+              <div class="txt">正在送餐</div>
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div
+              class="pro"
+              :style="{
+                opacity:
+                  processStatus == 1 || processStatus == 2
+                    ? 0.5
+                    : processStatus == 3
+                    ? 0.75
+                    : 1,
+                cursor: processStatus == 4 ? 'pointer' : 'auto',
+              }"
+              @click="openReport"
+            >
+              <div class="txt">点餐报告</div>
+            </div>
+          </el-col>
+        </el-row>
+        <div class="count-down" v-if="processStatus != 0 && processStatus != 5">
+          <div
+            class="column"
+            :style="{
+              transform: `translateY(${-lineHeight * timeObject.index4}px)`,
+            }"
+          >
+            <div
+              class="num"
+              v-for="(item, index) in timeObject.arr4"
+              :key="index"
+            >
+              <div>{{ item }}</div>
+            </div>
+          </div>
+          <div
+            class="column"
+            :style="{
+              transform: `translateY(${-lineHeight * timeObject.index3}px)`,
+            }"
+          >
+            <div
+              class="num"
+              v-for="(item, index) in timeObject.arr3"
+              :key="index"
+            >
+              <div>{{ item }}</div>
+            </div>
+          </div>
+          <div
+            style="
+              width: 10px;
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <div style="height: 30px">:</div>
+          </div>
+          <div
+            class="column"
+            :style="{
+              transform: `translateY(${-lineHeight * timeObject.index2}px)`,
+            }"
+          >
+            <div
+              class="num"
+              v-for="(item, index) in timeObject.arr2"
+              :key="index"
+            >
+              <div>{{ item }}</div>
+            </div>
+          </div>
+          <div
+            class="column"
+            :style="{
+              transform: `translateY(${-lineHeight * timeObject.index1}px)`,
+            }"
+          >
+            <div
+              class="num"
+              v-for="(item, index) in timeObject.arr1"
+              :key="index"
+            >
+              <div>{{ item }}</div>
+            </div>
+          </div>
+        </div>
+        <div style="color: #000; font-size: 1rem" v-if="processStatus == 5">
+          Hi，{{
+            addressList.length > 0 ? addressList[currentAddress].userName : ""
+          }}，很高兴为您完成本次订单。
+        </div>
+        <div class="report-container" v-if="processStatus == 5">
+          <img class="hamburger" :src="reportHamburgerImg" />
+          <div class="solid"></div>
+          <div class="report-part">
+            <div class="desc">本次点餐</div>
+            <div class="content">
+              <div class="large">11.9</div>
+              元
+            </div>
+            <div class="desc">包含餐食+配送费</div>
+          </div>
+          <div class="report-part">
+            <div class="desc">为您节约</div>
+            <div class="content">
+              <div class="large">17.1</div>
+              元
+            </div>
+            <div class="desc">相比原餐食和配送价</div>
+          </div>
+          <div class="report-part">
+            <div class="desc">相当于</div>
+            <div class="content">
+              <div class="large">11.9</div>
+              元
+            </div>
+            <div class="desc">购买了相同的商品</div>
+          </div>
+          <div class="report-part">
+            <div class="desc">并且节约您</div>
+            <div class="content">
+              <div class="large">4</div>
+              分钟
+            </div>
+            <div class="desc">点单时间</div>
+          </div>
+        </div>
+        <div class="evaluate" v-if="processStatus == 5">
+          <el-input
+            v-model="evaluateValue"
+            :rows="5"
+            type="textarea"
+            placeholder="欢迎您留下评价。"
+          />
+          <div class="evaluate-group">
+            <el-button
+              :class="evaluateButton == 1 ? 'selected' : 'normal'"
+              @click="clickEvaluate(1)"
+            >
+              喜欢
+            </el-button>
+            <el-button
+              :class="evaluateButton == 2 ? 'selected' : 'normal'"
+              @click="clickEvaluate(2)"
+            >
+              不喜欢
+            </el-button>
+          </div>
+        </div>
+        <div class="button-group" v-if="processStatus == 5">
+          <el-button color="#000" style="border-radius: 12px; width: 100px">
+            05:00
+          </el-button>
+          <el-button
+            color="#000"
+            style="border-radius: 12px; width: 100px"
+            @click="processStatus = 0"
+          >
+            再来一份
+          </el-button>
+        </div>
+        <div class="order-no" v-if="processStatus != 0 && processStatus != 1">
+          订单号：4aba027c-dc99-4ac8-b64e-c70cc4b236f4
+        </div>
       </el-main>
     </el-container>
     <el-dialog v-model="dialogEditVisible" title="新增送餐地址">
@@ -120,7 +411,8 @@
         ref="editAddressForm"
         v-model="addressEditForm"
         :option="addressEditOption"
-      ></avue-form>
+      >
+      </avue-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogEditVisible = false">取消</el-button>
@@ -174,6 +466,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import logoImg from "@/assets/images/mcd.jpg";
 import hamburgerImg from "@/assets/images/mcd-hamburger.png";
 import phoneImg from "@/assets/images/mcd-phone.png";
+import reportHamburgerImg from "@/assets/images/report-hamburger.png";
 import {
   doLogout,
   doGetInfo,
@@ -185,8 +478,11 @@ import {
 } from "@/api/index";
 import { pinyin } from "pinyin-pro";
 import { useRouter } from "vue-router";
-import { isPhone } from "@/utils/utils";
+import { isPhone, isHashMode } from "@/utils/utils";
 import axios from "axios";
+import useClipboard from "vue-clipboard3";
+// 使用插件
+const { toClipboard } = useClipboard();
 // 创建axios实例
 const service = axios.create({
   headers: { "Content-Type": "application/json" },
@@ -197,19 +493,22 @@ type countItem = {
   text: string;
 };
 const counts = ref<Array<countItem>>([]);
-for (let index = 0; index < 10; index++) {
+for (let index = 0; index < 4; index++) {
   const temp = index + 1;
   counts.value.push({
     num: temp,
     text: temp + "人份",
   });
 }
+const timeSecond = ref(0);
 const submitLoading = ref(false);
 const currentCount = ref(1);
 const addressStatus = ref(0);
 const proxy: any = getCurrentInstance()?.proxy ?? null;
 const $router = useRouter();
 const inputValue = ref("");
+const evaluateValue = ref("");
+const evaluateButton = ref(0);
 type addressItem = {
   cityName: string;
   countyName: string;
@@ -227,11 +526,13 @@ type addressFormItem = {
   map: Array<number | string>;
   userDetailInfo: string;
 };
+const showUserInfo = ref(false);
 const editAddressId = ref("");
 const dialogEditVisible = ref(false);
 const dialogTableVisible = ref(false);
 const addressList = ref<Array<addressItem>>([]);
 const currentAddress = ref(0);
+const processStatus = ref(0); //进度状态，0是未点餐，1是gpt正在点餐，2是快递员正在取餐，3是快递员正在送餐，4是待查看点餐报告，5是显示点餐报告
 const validatePhone = (rule: any, value: string, callback: Function) => {
   if (value === "") {
     callback(new Error("请填写联系电话"));
@@ -339,7 +640,112 @@ const userInfo = ref({
   accessKey: "",
 });
 const nickName = ref("");
+/************************ todo-定义数据data(START) ************************/
+const lineHeight = ref(48); //跟字体大小和wraper的高度相关！
+type timeItem = {
+  // 秒
+  arr1: Array<number>;
+  index1: number;
+  arr2: Array<number>;
+  index2: number;
+  // 分
+  arr3: Array<number>;
+  index3: number;
+  arr4: Array<number>;
+  index4: number;
+  // 时
+  arr5: Array<number>;
+  index5: number;
+  arr6: Array<number>;
+  index6: number;
+  [key: string]: any;
+};
+const timeObject = ref<timeItem>({
+  arr1: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  index1: 0,
+  arr2: [0, 1, 2, 3, 4, 5],
+  index2: 0,
+  // 分
+  arr3: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  index3: 0,
+  arr4: [0, 1, 2, 3, 4, 5],
+  index4: 0,
+  // 时
+  arr5: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  index5: 0,
+  arr6: [0, 1, 2],
+  index6: 0,
+});
+//watch监听机型
+// watch(
+//   () => index5.value,
+//   (newVal) => {
+//     // 超过24小时
+//     if (index6.value === 2 && newVal === 4) {
+//       for (let i = 1; i < 7; i++) {
+//         data[`index${i}`] = 0;
+//       }
+//     }
+//   }
+// );
+const startTime = () => {
+  // const date = new Date();
+  // let hour = bu0(date.getHours());
+  // let minute = bu0(date.getMinutes());
+  // let second = bu0(date.getSeconds());
+  // // 秒
+  // timeObject.value.index1 = +second[1];
+  // timeObject.value.index2 = +second[0];
+  // // 分
+  // timeObject.value.index3 = +minute[1];
+  // timeObject.value.index4 = +minute[0];
+  // // 时
+  // timeObject.value.index5 = +hour[1];
+  // timeObject.value.index6 = +hour[0];
+  timeSecond.value = 0;
+  processStatus.value = 1;
+  turnSecond(timeObject.value.arr1.length);
+};
+const turnSecond = (length: number) => {
+  const timer = setInterval(() => {
+    if (timeObject.value.index1 === length - 1) {
+      // 通知前一位移动
+      turnOther(2, timeObject.value.arr2.length);
+      timeObject.value.index1 = -1;
+    }
+    timeObject.value.index1++;
+    timeSecond.value++;
+    if (timeSecond.value >= 300) {
+      processStatus.value = 4;
+      clearInterval(timer);
+    } else if (timeSecond.value >= 180) {
+      processStatus.value = 3;
+    } else if (timeSecond.value >= 60) {
+      processStatus.value = 2;
+    } else if (timeSecond.value >= 0) {
+      processStatus.value = 1;
+    }
+  }, 1000);
+};
+// const bu0 = (num: number) => {
+//   let str;
+//   if (num < 10) str = `0${num}`;
+//   else str = `${num}`;
+//   return str.split("");
+// };
+const turnOther = (type: number, length: number) => {
+  // type代表第几组数列，例如2，就是从右往左第二列
+  if (timeObject.value[`index${type}`] === length - 1) {
+    // 通知前一位移动
+    let next = type + 1;
+    turnOther(next, timeObject.value[`arr${next}`].length);
+    timeObject.value[`index${type}`] = -1;
+  }
+  timeObject.value[`index${type}`]++;
+};
+/************************ todo-定义数据data(END) ************************/
 onBeforeMount(() => {
+  // startTime();
   let usr = localStorage.getItem("userInfo");
   if (usr) {
     const info = JSON.parse(usr);
@@ -605,8 +1011,84 @@ const confirmForm = async (usr: string) => {
   submitLoading.value = false;
   if (res.data.code === 11000) {
     ElMessage({ message: "下单成功！", type: "success" });
+    startTime();
   } else {
     ElMessage({ message: "下单失败，请重试", type: "error" });
+  }
+};
+const goHome = () => {
+  $router.replace({ name: "home" });
+};
+const updateUserInfo = () => {
+  let usr = localStorage.getItem("userInfo");
+  if (usr) {
+    const info = JSON.parse(usr);
+    getUserInfo(info.token, info.accessKey);
+  }
+};
+const navSetting = () => {
+  $router.push({ name: "setting" });
+};
+const copyShare = async () => {
+  let url = "";
+  if (isHashMode($router.options.history.base)) {
+    url = `${
+      window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+    }/#/share?nickName=${encodeURIComponent(userInfo.value.name)}&inviteCode=${
+      userInfo.value.inviteCode
+    }`;
+  } else {
+    url = `${
+      window.location.origin + import.meta.env.VITE_PUBLIC_BASE
+    }/share?nickName=${encodeURIComponent(userInfo.value.name)}&inviteCode=${
+      userInfo.value.inviteCode
+    }`;
+  }
+  try {
+    await toClipboard(url);
+    ElMessage({ message: "复制成功", type: "success" });
+  } catch (e) {
+    ElMessage("复制失败");
+  }
+};
+const logout = () => {
+  ElMessageBox.confirm("是否退出登录?", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(() => {
+    let usr = localStorage.getItem("userInfo");
+    doLogout({
+      token: usr ? JSON.parse(usr).token : "",
+      accessKey: userInfo.value.accessKey,
+    });
+    localStorage.removeItem("userInfo");
+    userInfo.value = {
+      mobile: "",
+      id: "",
+      name: "",
+      remainAmount: 0,
+      requestCount: 0,
+      token: "",
+      createTime: "",
+      inviteCode: "",
+      isAuth: 0,
+      accountType: 1,
+      accessKey: "",
+    };
+    showUserInfo.value = false;
+    goHome();
+  });
+};
+const clickEvaluate = (num: number) => {
+  if (evaluateButton.value === 0) {
+    evaluateButton.value = num;
+    ElMessage({ message: "感谢您的评价！祝您生活愉快", type: "success" });
+  }
+};
+const openReport = () => {
+  if (processStatus.value == 4) {
+    processStatus.value = 5;
   }
 };
 </script>
@@ -626,6 +1108,7 @@ const confirmForm = async (usr: string) => {
     .logo {
       width: 140px;
       min-width: 140px;
+      cursor: pointer;
     }
     .center-logo {
       height: 80px;
@@ -678,10 +1161,6 @@ const confirmForm = async (usr: string) => {
         height: 30px;
         width: 36px;
       }
-      .hamburger {
-        height: 30px;
-        width: 36px;
-      }
       .phone {
         height: 30px;
         width: 18px;
@@ -699,22 +1178,44 @@ const confirmForm = async (usr: string) => {
         font-weight: bold;
       }
     }
+    .count-container {
+      width: 30vw;
+    }
     .count {
       display: flex;
       flex-direction: row;
       align-items: flex-end;
       justify-content: center;
-      color: #000;
-      font-size: 1rem;
-      line-height: 2rem;
       margin-top: 10px;
-      .num {
-        font-size: 3rem;
-        line-height: 3rem;
+      .txt {
+        color: #000;
+        font-size: 1rem;
+        line-height: 2rem;
+        .num {
+          font-size: 3rem;
+          line-height: 3rem;
+        }
+      }
+    }
+    .count-normal {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: center;
+      margin-top: 10px;
+      .txt {
+        color: #000;
+        font-size: 1rem;
+        line-height: 2rem;
+        opacity: 0.3;
+        .num {
+          font-size: 3rem;
+          line-height: 3rem;
+        }
       }
     }
     .area {
-      width: 50vw;
+      width: 40vw;
       margin-top: 20px;
     }
     .button {
@@ -722,9 +1223,132 @@ const confirmForm = async (usr: string) => {
       width: 140px;
       border-radius: 12px;
     }
+    .process-container {
+      width: 600px;
+      margin-top: 20px;
+      .pro {
+        height: 120px;
+        background: #3180ff;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .txt {
+          font-size: 1rem;
+          color: #ffffff;
+        }
+      }
+    }
+    .count-down {
+      text-align: center;
+      border-radius: 12px;
+      width: 120px;
+      height: 48px;
+      font-size: 1rem;
+      font-weight: bolder;
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      border: #000 solid 1px;
+      .column {
+        transition: transform 300ms;
+      }
+      .num {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        width: 10px;
+      }
+    }
+    .report-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      .hamburger {
+        width: 120px;
+        height: 120px;
+      }
+      .solid {
+        margin: 10px 0 10px 36px;
+        width: 1px;
+        height: 100px;
+        background: #737379;
+      }
+      .report-part {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        margin-left: 30px;
+        .desc {
+          color: #737379;
+          font-size: 1rem;
+        }
+        .content {
+          font-size: 1.5rem;
+          color: #000000;
+          display: flex;
+          flex-direction: row;
+          align-items: flex-end;
+          justify-content: center;
+          line-height: 2rem;
+          margin-top: 10px;
+          .large {
+            font-size: 3rem;
+            line-height: 3rem;
+            color: #000000;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+    .evaluate {
+      width: 30vw;
+      margin-top: 20px;
+      position: relative;
+      .evaluate-group {
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        right: 10px;
+        top: 40px;
+        .normal {
+          width: 80px;
+          background: #ffffff;
+          border: #000 1px solid;
+          color: #000;
+          border-radius: 8px;
+        }
+        .selected {
+          width: 80px;
+          background: #000000;
+          border: #000 1px solid;
+          color: #fff;
+          border-radius: 8px;
+        }
+      }
+    }
+    .button-group {
+      width: 15vw;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .order-no {
+      margin-top: 30px;
+      color: rgba(0, 0, 0, 0.6);
+    }
   }
 }
-
 .el-button .custom-loading .circular {
   margin-right: 6px;
   width: 18px;
@@ -738,5 +1362,73 @@ const confirmForm = async (usr: string) => {
   stroke-width: 2;
   stroke: var(--el-button-text-color);
   stroke-linecap: round;
+}
+:global(.user.el-popover.el-popper) {
+  background: transparent !important;
+  padding: 20px 50px 0 0;
+  box-shadow: none;
+  border: none;
+}
+.popover-user-info {
+  width: 0;
+  height: 0;
+  background: #ffffff;
+  border: 1px solid #707070;
+  border-radius: 11px;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 0;
+  transition: all 0.2s;
+  overflow: hidden;
+  .nickname {
+    width: 100%;
+    // height: 25px;
+    font-size: 24px;
+    font-family: FUTURA-MEDIUM;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #07070d;
+    span {
+      font-size: 24px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: bold;
+    }
+  }
+  .info-item {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    height: 35px;
+    font-size: 11px;
+    font-family: FUTURA-MEDIUM;
+    font-weight: normal;
+    line-height: 21px;
+    color: #07070d;
+    .label {
+      display: inline-block;
+      width: 100px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .code {
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .underline {
+      font-size: 16px;
+      font-family: FUTURA-MEDIUM;
+      font-weight: bold;
+      color: #07070d;
+      text-decoration: underline;
+    }
+  }
+}
+.popover-show-user {
+  padding: 25px 20px 15px 15px;
+  width: 304px;
+  height: auto;
+  transition: all 0.3s;
 }
 </style>
