@@ -101,7 +101,7 @@
               : processStatus == 3
               ? "正在送餐"
               : processStatus == 4
-              ? "查看点餐报告"
+              ? "等待接收点餐报告"
               : "麦当劳外卖"
           }}
         </div>
@@ -112,6 +112,12 @@
           <img class="hamburger" :src="hamburgerImg" alt="" />
           <div style="margin: 0 30px">
             送至：{{
+              addressList[currentAddress].provinceName +
+              " " +
+              addressList[currentAddress].cityName +
+              " " +
+              addressList[currentAddress].countyName +
+              " " +
               addressList[currentAddress].detailInfo +
               (addressList[currentAddress].userDetailInfo
                 ? " " + addressList[currentAddress].userDetailInfo
@@ -120,7 +126,7 @@
           </div>
           <img class="phone" :src="phoneImg" alt="" />
           <div style="margin-left: 30px">
-            {{ addressList[currentAddress].mobile }}
+            电话：{{ addressList[currentAddress].mobile }}
           </div>
         </div>
         <div class="address" v-else-if="processStatus != 5">
@@ -149,7 +155,10 @@
             编辑地址
           </div>
         </div>
-        <el-row class="count-container" v-if="processStatus == 0">
+        <el-row
+          class="count-container"
+          v-if="processStatus == 0 && !submitLoading"
+        >
           <el-col :span="6" v-for="item in counts">
             <div :class="item.num == currentCount ? 'count' : 'count-normal'">
               <div
@@ -163,6 +172,12 @@
             </div>
           </el-col>
         </el-row>
+        <div class="count" v-else-if="submitLoading">
+          <div class="txt">
+            <view class="num">{{ currentCount }}</view>
+            人份
+          </div>
+        </div>
         <div class="count" v-else-if="processStatus != 5">
           <div class="txt">
             <view class="num">{{ currentCount }}</view>
@@ -217,7 +232,9 @@
         >
           <el-col :span="6">
             <div class="pro">
-              <div class="txt">正在点餐</div>
+              <div class="txt">
+                {{ processStatus == 1 ? "正在点餐" : "已点餐" }}
+              </div>
             </div>
           </el-col>
           <el-col :span="6">
@@ -225,7 +242,13 @@
               class="pro"
               :style="{ opacity: processStatus == 1 ? 0.75 : 1 }"
             >
-              <div class="txt">正在取餐</div>
+              <div class="txt">
+                {{
+                  processStatus == 1 || processStatus == 2
+                    ? "正在取餐"
+                    : "已取餐"
+                }}
+              </div>
             </div>
           </el-col>
           <el-col :span="6">
@@ -236,7 +259,13 @@
                   processStatus == 1 ? 0.5 : processStatus == 2 ? 0.75 : 1,
               }"
             >
-              <div class="txt">正在送餐</div>
+              <div class="txt">
+                {{
+                  processStatus == 1 || processStatus == 2 || processStatus == 3
+                    ? "正在送餐"
+                    : "已送餐"
+                }}
+              </div>
             </div>
           </el-col>
           <el-col :span="6">
@@ -253,7 +282,9 @@
               }"
               @click="openReport"
             >
-              <div class="txt">点餐报告</div>
+              <div class="txt">
+                {{ processStatus == 4 ? "等待接收" : "点餐报告" }}
+              </div>
             </div>
           </el-col>
         </el-row>
@@ -402,7 +433,7 @@
           </el-button>
         </div>
         <div class="order-no" v-if="processStatus != 0 && processStatus != 1">
-          订单号：4aba027c-dc99-4ac8-b64e-c70cc4b236f4
+          订单号：{{ reportOrder.orderId }}
         </div>
       </el-main>
     </el-container>
@@ -412,6 +443,26 @@
         v-model="addressEditForm"
         :option="addressEditOption"
       >
+        <template #detailInfo="{}">
+          <el-autocomplete
+            v-model="detailInfo"
+            :fetch-suggestions="queryPoi"
+            :trigger-on-focus="false"
+            clearable
+            popper-class="my-autocomplete"
+            placeholder="请填写详细地址"
+            @input="inputPoi"
+            @select="handlePoi"
+            fit-input-width
+          >
+            <template #default="{ item }">
+              <div class="complete-container">
+                <div class="value">{{ item.name }}</div>
+                <span class="link">{{ item.address }}</span>
+              </div>
+            </template>
+          </el-autocomplete>
+        </template>
       </avue-form>
       <template #footer>
         <span class="dialog-footer">
@@ -475,12 +526,14 @@ import {
   editAddress,
   delAddress,
   sendMail,
+  getReportOrder,
 } from "@/api/index";
 import { pinyin } from "pinyin-pro";
 import { useRouter } from "vue-router";
 import { isPhone, isHashMode } from "@/utils/utils";
 import axios from "axios";
 import useClipboard from "vue-clipboard3";
+import { pca } from "./pca";
 // 使用插件
 const { toClipboard } = useClipboard();
 // 创建axios实例
@@ -523,9 +576,44 @@ type addressItem = {
 type addressFormItem = {
   mobile: string;
   userName: string;
-  map: Array<number | string>;
+  // map: Array<number | string>;
+  detailInfo: string;
   userDetailInfo: string;
+  cityName: Array<string>;
+  // provinceName: string;
 };
+type reportItem = {
+  orderId: string;
+  accessKey: string;
+  orderStatus: number;
+  userName: string;
+  mobile: string;
+  originalPrice: number;
+  originalCharge: number;
+  combination: string;
+  combinationPrice: number;
+  tips: string;
+  sendText: string;
+  detailInfo: string;
+  diningPeople: number;
+  createTime: string;
+};
+// interface poiItem {
+//   adcode: string;
+//   address: string;
+//   adname: string;
+//   citycode: string;
+//   cityname: string;
+//   distance: string;
+//   id: string;
+//   location: string;
+//   name: string;
+//   parent: string;
+//   pcode: string;
+//   pname: string;
+//   type: string;
+//   typecode: string;
+// }
 const showUserInfo = ref(false);
 const editAddressId = ref("");
 const dialogEditVisible = ref(false);
@@ -542,11 +630,31 @@ const validatePhone = (rule: any, value: string, callback: Function) => {
     callback();
   }
 };
+const reportOrder = ref<reportItem>({
+  orderId: "",
+  accessKey: "",
+  orderStatus: 0,
+  userName: "",
+  mobile: "",
+  originalPrice: 0,
+  originalCharge: 0,
+  combination: "",
+  combinationPrice: 0,
+  tips: "",
+  sendText: "",
+  detailInfo: "",
+  diningPeople: 0,
+  createTime: "",
+});
+const detailInfo = ref("");
 const addressEditForm = ref<addressFormItem>({
   mobile: "",
   userName: "",
-  map: [],
+  // map: [],
   userDetailInfo: "",
+  detailInfo: "",
+  cityName: [],
+  // provinceName: "",
 });
 const addressEditOption = ref({
   submitBtn: false,
@@ -569,17 +677,54 @@ const addressEditOption = ref({
       label: "联系电话",
       prop: "mobile",
       span: 12,
-      rules: [{ validator: validatePhone, trigger: "blur" }],
-    },
-    {
-      label: "选择位置",
-      prop: "map",
-      type: "map",
       rules: [
         {
           required: true,
-          message: "请选择地理位置",
-          trigger: "change",
+          message: "请填写联系电话",
+          trigger: "blur",
+        },
+        { validator: validatePhone, trigger: "blur" },
+      ],
+    },
+    // {
+    //   label: "选择位置",
+    //   prop: "map",
+    //   type: "map",
+    //   rules: [
+    //     {
+    //       required: true,
+    //       message: "请选择地理位置",
+    //       trigger: "change",
+    //     },
+    //   ],
+    //   span: 12,
+    // },
+    {
+      label: "省/市",
+      prop: "cityName",
+      type: "cascader",
+      span: 24,
+      props: {
+        label: "name",
+        value: "name",
+      },
+      dicData: pca,
+      rules: [
+        {
+          required: true,
+          message: "请选择省市",
+          trigger: "blur",
+        },
+      ],
+    },
+    {
+      label: "详细地址",
+      prop: "detailInfo",
+      rules: [
+        {
+          required: true,
+          message: "请填写详细地址",
+          trigger: "blur",
         },
       ],
       span: 12,
@@ -615,6 +760,10 @@ const addressTableOption = ref({
     {
       label: "城市",
       prop: "cityName",
+    },
+    {
+      label: "区域",
+      prop: "countyName",
     },
     {
       label: "详细地址",
@@ -689,24 +838,15 @@ const timeObject = ref<timeItem>({
 //   }
 // );
 const startTime = () => {
-  // const date = new Date();
-  // let hour = bu0(date.getHours());
-  // let minute = bu0(date.getMinutes());
-  // let second = bu0(date.getSeconds());
-  // // 秒
-  // timeObject.value.index1 = +second[1];
-  // timeObject.value.index2 = +second[0];
-  // // 分
-  // timeObject.value.index3 = +minute[1];
-  // timeObject.value.index4 = +minute[0];
-  // // 时
-  // timeObject.value.index5 = +hour[1];
-  // timeObject.value.index6 = +hour[0];
   timeSecond.value = 0;
   processStatus.value = 1;
-  turnSecond(timeObject.value.arr1.length);
+  let usr = localStorage.getItem("userInfo");
+  if (usr) {
+    const info = JSON.parse(usr);
+    turnSecond(timeObject.value.arr1.length, info.token, info.accessKey);
+  }
 };
-const turnSecond = (length: number) => {
+const turnSecond = (length: number, token: string, accessKey: string) => {
   const timer = setInterval(() => {
     if (timeObject.value.index1 === length - 1) {
       // 通知前一位移动
@@ -715,24 +855,28 @@ const turnSecond = (length: number) => {
     }
     timeObject.value.index1++;
     timeSecond.value++;
-    if (timeSecond.value >= 300) {
-      processStatus.value = 4;
-      clearInterval(timer);
-    } else if (timeSecond.value >= 180) {
-      processStatus.value = 3;
-    } else if (timeSecond.value >= 60) {
-      processStatus.value = 2;
-    } else if (timeSecond.value >= 0) {
-      processStatus.value = 1;
-    }
+    getReportOrder({
+      token,
+      accessKey,
+      orderId: reportOrder.value.orderId,
+    }).then((res) => {
+      if (res.data.code == 11000 && res.data.data.length > 0) {
+        reportOrder.value = res.data.data[0];
+        processStatus.value = reportOrder.value.orderStatus;
+      }
+    });
+    // if (timeSecond.value >= 300) {
+    //   processStatus.value = 4;
+    //   clearInterval(timer);
+    // } else if (timeSecond.value >= 180) {
+    //   processStatus.value = 3;
+    // } else if (timeSecond.value >= 60) {
+    //   processStatus.value = 2;
+    // } else if (timeSecond.value >= 0) {
+    //   processStatus.value = 1;
+    // }
   }, 1000);
 };
-// const bu0 = (num: number) => {
-//   let str;
-//   if (num < 10) str = `0${num}`;
-//   else str = `${num}`;
-//   return str.split("");
-// };
 const turnOther = (type: number, length: number) => {
   // type代表第几组数列，例如2，就是从右往左第二列
   if (timeObject.value[`index${type}`] === length - 1) {
@@ -812,44 +956,68 @@ const saveAddress = () => {
   proxy?.$refs["editAddressForm"].validate((valid: boolean, done: Function) => {
     if (valid) {
       done();
-      if (addressEditForm.value.map.length > 0) {
-        parseLocation(
-          addressEditForm.value.map[0],
-          addressEditForm.value.map[1]
-        ).then((res) => {
-          if (res.status == 200 && res.data.status == "1") {
-            if (res.data.regeocode && res.data.regeocode.addressComponent) {
-              const temp = {
-                cityName:
-                  typeof res.data.regeocode.addressComponent.city === "string"
-                    ? res.data.regeocode.addressComponent.city
-                    : res.data.regeocode.addressComponent.province,
-                countyName: res.data.regeocode.addressComponent.country,
-                detailInfo: addressEditForm.value.map[2],
-                mobile: addressEditForm.value.mobile,
-                provinceName: res.data.regeocode.addressComponent.province,
-                userName: addressEditForm.value.userName,
-                userDetailInfo: addressEditForm.value.userDetailInfo,
-              };
-              let usr = localStorage.getItem("userInfo");
-              if (usr) {
-                const info = JSON.parse(usr);
-                if (addressStatus.value == 0 || addressStatus.value == 1) {
-                  addAddressItem(info.token, info.accessKey, temp);
-                } else {
-                  editAddressItem(
-                    info.token,
-                    info.accessKey,
-                    Object.assign({}, temp, {
-                      id: editAddressId.value,
-                    })
-                  );
-                }
-              }
-            }
-          }
-        });
+      const temp = {
+        cityName: addressEditForm.value.cityName[1],
+        countyName: addressEditForm.value.cityName[2],
+        detailInfo: addressEditForm.value.detailInfo,
+        mobile: addressEditForm.value.mobile,
+        provinceName: addressEditForm.value.cityName[0],
+        userName: addressEditForm.value.userName,
+        userDetailInfo: addressEditForm.value.userDetailInfo,
+      };
+      let usr = localStorage.getItem("userInfo");
+      if (usr) {
+        const info = JSON.parse(usr);
+        if (addressStatus.value == 0 || addressStatus.value == 1) {
+          addAddressItem(info.token, info.accessKey, temp);
+        } else {
+          editAddressItem(
+            info.token,
+            info.accessKey,
+            Object.assign({}, temp, {
+              id: editAddressId.value,
+            })
+          );
+        }
       }
+      // if (addressEditForm.value.map.length > 0) {
+      //   parseLocation(
+      //     addressEditForm.value.map[0],
+      //     addressEditForm.value.map[1]
+      //   ).then((res) => {
+      //     if (res.status == 200 && res.data.status == "1") {
+      //       if (res.data.regeocode && res.data.regeocode.addressComponent) {
+      //         const temp = {
+      //           cityName:
+      //             typeof res.data.regeocode.addressComponent.city === "string"
+      //               ? res.data.regeocode.addressComponent.city
+      //               : res.data.regeocode.addressComponent.province,
+      //           countyName: res.data.regeocode.addressComponent.country,
+      //           detailInfo: addressEditForm.value.map[2],
+      //           mobile: addressEditForm.value.mobile,
+      //           provinceName: res.data.regeocode.addressComponent.province,
+      //           userName: addressEditForm.value.userName,
+      //           userDetailInfo: addressEditForm.value.userDetailInfo,
+      //         };
+      //         let usr = localStorage.getItem("userInfo");
+      //         if (usr) {
+      //           const info = JSON.parse(usr);
+      //           if (addressStatus.value == 0 || addressStatus.value == 1) {
+      //             addAddressItem(info.token, info.accessKey, temp);
+      //           } else {
+      //             editAddressItem(
+      //               info.token,
+      //               info.accessKey,
+      //               Object.assign({}, temp, {
+      //                 id: editAddressId.value,
+      //               })
+      //             );
+      //           }
+      //         }
+      //       }
+      //     }
+      //   });
+      // }
     } else {
       return false;
     }
@@ -897,6 +1065,20 @@ const parseAddress = (detailInfo: string) => {
     `https://restapi.amap.com/v3/geocode/geo?address=${detailInfo}&key=a9e09a5e99b12541c4f59b218379f78a`
   );
 };
+const parsePoi = (detailInfo: string) => {
+  if (
+    addressEditForm.value &&
+    addressEditForm.value.cityName &&
+    addressEditForm.value.cityName.length > 0
+  ) {
+    return service.get(
+      `https://restapi.amap.com/v5/place/text?key=a9e09a5e99b12541c4f59b218379f78a&region=${addressEditForm.value.cityName[1]}&keywords=${detailInfo}`
+    );
+  }
+  return service.get(
+    `https://restapi.amap.com/v5/place/text?key=a9e09a5e99b12541c4f59b218379f78a&keywords=${detailInfo}`
+  );
+};
 const add = () => {
   addressStatus.value = 1;
   dialogEditVisible.value = true;
@@ -904,31 +1086,47 @@ const add = () => {
   addressEditForm.value = {
     mobile: "",
     userName: "",
-    map: [],
+    // map: [],
+    detailInfo: "",
+    // provinceName: "",
+    cityName: [],
     userDetailInfo: "",
   };
+  detailInfo.value = "";
 };
 const edit = (row: addressItem) => {
   addressStatus.value = 2;
-  parseAddress(row.detailInfo).then((res) => {
-    if (res.status == 200 && res.data.status == "1") {
-      if (res.data.geocodes && res.data.geocodes.length > 0) {
-        let location = res.data.geocodes[0].location;
-        if (location) {
-          location = location.split(",");
-          addressEditForm.value = {
-            mobile: row.mobile,
-            userName: row.userName,
-            map: [location[0], location[1], row.detailInfo],
-            userDetailInfo: row.userDetailInfo,
-          };
-          dialogTableVisible.value = false;
-          dialogEditVisible.value = true;
-          editAddressId.value = row.id;
-        }
-      }
-    }
-  });
+  // parseAddress(row.detailInfo).then((res) => {
+  //   if (res.status == 200 && res.data.status == "1") {
+  //     if (res.data.geocodes && res.data.geocodes.length > 0) {
+  //       let location = res.data.geocodes[0].location;
+  //       if (location) {
+  //         location = location.split(",");
+  //         addressEditForm.value = {
+  //           mobile: row.mobile,
+  //           userName: row.userName,
+  //           map: [location[0], location[1], row.detailInfo],
+  //           userDetailInfo: row.userDetailInfo,
+  //         };
+  //         dialogTableVisible.value = false;
+  //         dialogEditVisible.value = true;
+  //         editAddressId.value = row.id;
+  //       }
+  //     }
+  //   }
+  // });
+  addressEditForm.value = {
+    mobile: row.mobile,
+    userName: row.userName,
+    detailInfo: row.detailInfo,
+    userDetailInfo: row.userDetailInfo,
+    // provinceName: row.provinceName,
+    cityName: [row.provinceName, row.cityName, row.countyName],
+  };
+  detailInfo.value = row.detailInfo;
+  dialogTableVisible.value = false;
+  dialogEditVisible.value = true;
+  editAddressId.value = row.id;
 };
 const selection = (row: addressItem, index: number) => {
   currentAddress.value = index;
@@ -959,6 +1157,9 @@ const delAddressItem = (token: string, accessKey: string, id: string) => {
   return delAddress({ token, accessKey, id });
 };
 const changeCount = (item: countItem) => {
+  if (submitLoading.value) {
+    return;
+  }
   currentCount.value = item.num;
 };
 const clickEdit = () => {
@@ -1011,6 +1212,7 @@ const confirmForm = async (usr: string) => {
   submitLoading.value = false;
   if (res.data.code === 11000) {
     ElMessage({ message: "下单成功！", type: "success" });
+    reportOrder.value = res.data.data;
     startTime();
   } else {
     ElMessage({ message: "下单失败，请重试", type: "error" });
@@ -1089,6 +1291,22 @@ const clickEvaluate = (num: number) => {
 const openReport = () => {
   if (processStatus.value == 4) {
     processStatus.value = 5;
+  }
+};
+const queryPoi = (queryString: string, cb: Function) => {
+  if (queryString) {
+    parsePoi(queryString).then((res) => {
+      cb(res.data.pois);
+    });
+  }
+};
+const inputPoi = (item: string) => {
+  addressEditForm.value.detailInfo = item;
+};
+const handlePoi = (item: any) => {
+  if (item && item.name) {
+    addressEditForm.value.detailInfo = item.name;
+    detailInfo.value = item.name;
   }
 };
 </script>
@@ -1430,5 +1648,42 @@ const openReport = () => {
   width: 304px;
   height: auto;
   transition: all 0.3s;
+}
+:global(.el-autocomplete) {
+  width: 100% !important;
+}
+.complete-container {
+  border-bottom: #f2f2f2 solid 1px;
+  .value {
+    color: #000000;
+    font-size: 1rem;
+  }
+  .link {
+    color: #848484;
+    font-size: 0.8rem;
+  }
+}
+.my-autocomplete {
+  width: 100%;
+}
+.my-autocomplete li {
+  line-height: normal;
+  padding: 7px;
+}
+.my-autocomplete li .name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.my-autocomplete li .addr {
+  font-size: 12px;
+  color: #b4b4b4;
+}
+.my-autocomplete li .highlighted .addr {
+  color: #ddd;
+}
+
+:global(.el-scrollbar) {
+  background: #fff !important;
+  border: none;
 }
 </style>

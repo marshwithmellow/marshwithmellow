@@ -1,4 +1,5 @@
 import axios from "../utils/request";
+
 import { filterForm } from "../utils/utils";
 
 export const doRegisterCode = (data: { phone: string }) =>
@@ -294,5 +295,23 @@ export const sendMail = (data: {
     },
     data: {
       ...data.dto,
+    },
+  });
+
+export const getReportOrder = (data: {
+  token: string;
+  accessKey: string;
+  orderId: string;
+}) =>
+  axios({
+    url: `/rpaCallback/getOrder`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+    },
+    data: {
+      orderId: data.orderId,
     },
   });
