@@ -86,13 +86,7 @@
         </div>
       </el-header>
       <el-main class="main">
-        <div
-          class="big"
-          :style="{
-            cursor: processStatus == 4 ? 'pointer' : 'auto',
-          }"
-          @click="openReport"
-        >
+        <div class="big">
           {{
             processStatus == 1
               ? "正在点餐"
@@ -100,14 +94,21 @@
               ? "正在取餐"
               : processStatus == 3
               ? "正在送餐"
-              : processStatus == 4
-              ? "等待接收点餐报告"
               : "麦当劳外卖"
           }}
+          <div
+            v-if="processStatus == 3"
+            style="cursor: pointer"
+            @click="openReport"
+          >
+            (查看点餐报告)
+          </div>
         </div>
         <div
           class="address"
-          v-if="addressList.length > 0 && processStatus != 5"
+          v-if="
+            addressList.length > 0 && processStatus != 5 && processStatus != 4
+          "
         >
           <img class="hamburger" :src="hamburgerImg" alt="" />
           <div style="margin: 0 30px">
@@ -129,7 +130,10 @@
             电话：{{ addressList[currentAddress].mobile }}
           </div>
         </div>
-        <div class="address" v-else-if="processStatus != 5">
+        <div
+          class="address"
+          v-else-if="processStatus != 5 && processStatus != 4"
+        >
           <div
             style="text-decoration: underline; cursor: pointer"
             @click="dialogEditVisible = true"
@@ -139,7 +143,9 @@
         </div>
         <div
           class="contact"
-          v-if="addressList.length > 0 && processStatus != 5"
+          v-if="
+            addressList.length > 0 && processStatus != 5 && processStatus != 4
+          "
         >
           <div class="label">联系人：</div>
           {{ addressList[currentAddress].userName }}
@@ -178,7 +184,7 @@
             人份
           </div>
         </div>
-        <div class="count" v-else-if="processStatus != 5">
+        <div class="count" v-else-if="processStatus != 5 && processStatus != 4">
           <div class="txt">
             <view class="num">{{ currentCount }}</view>
             人份
@@ -223,12 +229,7 @@
         <el-row
           :gutter="2"
           class="process-container"
-          v-if="
-            processStatus == 1 ||
-            processStatus == 2 ||
-            processStatus == 3 ||
-            processStatus == 4
-          "
+          v-if="processStatus == 1 || processStatus == 2 || processStatus == 3"
         >
           <el-col :span="6">
             <div class="pro">
@@ -278,17 +279,20 @@
                     : processStatus == 3
                     ? 0.75
                     : 1,
-                cursor: processStatus == 4 ? 'pointer' : 'auto',
+                cursor: processStatus == 3 ? 'pointer' : 'auto',
               }"
               @click="openReport"
             >
               <div class="txt">
-                {{ processStatus == 4 ? "等待接收" : "点餐报告" }}
+                {{ processStatus == 3 ? "点餐报告" : "等待接收" }}
               </div>
             </div>
           </el-col>
         </el-row>
-        <div class="count-down" v-if="processStatus != 0 && processStatus != 5">
+        <div
+          class="count-down"
+          v-if="processStatus != 0 && processStatus != 5 && processStatus != 4"
+        >
           <div
             class="column"
             :style="{
@@ -362,13 +366,23 @@
             addressList.length > 0 ? addressList[currentAddress].userName : ""
           }}，很高兴为您完成本次订单。
         </div>
-        <div class="report-container" v-if="processStatus == 5">
+        <div style="color: #000; font-size: 1rem" v-if="processStatus == 4">
+          很抱歉！{{
+            addressList.length > 0 ? addressList[currentAddress].userName : ""
+          }}，本次为您点餐失败。
+        </div>
+        <div
+          class="report-container"
+          v-if="processStatus == 5 || processStatus == 4"
+        >
           <img class="hamburger" :src="reportHamburgerImg" />
           <div class="solid"></div>
           <div class="report-part">
             <div class="desc">本次点餐</div>
             <div class="content">
-              <div class="large">11.9</div>
+              <div class="large">
+                {{ reportOrder.combinationPrice + reportOrder.paidCharge }}
+              </div>
               元
             </div>
             <div class="desc">包含餐食+配送费</div>
@@ -376,7 +390,15 @@
           <div class="report-part">
             <div class="desc">为您节约</div>
             <div class="content">
-              <div class="large">17.1</div>
+              <div class="large">
+                {{
+                  (
+                    reportOrder.originalPrice +
+                    reportOrder.originalCharge -
+                    (reportOrder.combinationPrice + reportOrder.paidCharge)
+                  ).toFixed(2)
+                }}
+              </div>
               元
             </div>
             <div class="desc">相比原餐食和配送价</div>
@@ -384,15 +406,17 @@
           <div class="report-part">
             <div class="desc">相当于</div>
             <div class="content">
-              <div class="large">11.9</div>
+              <div class="large">
+                {{ reportOrder.originalPrice + reportOrder.originalCharge }}
+              </div>
               元
             </div>
             <div class="desc">购买了相同的商品</div>
           </div>
-          <div class="report-part">
+          <div class="report-part" v-if="reportOrder.useTime">
             <div class="desc">并且节约您</div>
             <div class="content">
-              <div class="large">4</div>
+              <div class="large">{{ reportOrder.useTime }}</div>
               分钟
             </div>
             <div class="desc">点单时间</div>
@@ -420,9 +444,80 @@
             </el-button>
           </div>
         </div>
-        <div class="button-group" v-if="processStatus == 5">
+        <div
+          class="button-group"
+          v-if="processStatus == 5 || processStatus == 4"
+        >
           <el-button color="#000" style="border-radius: 12px; width: 100px">
-            05:00
+            <div class="button-count-down">
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-30 * timeObject.index4}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr4"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-30 * timeObject.index3}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr3"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                style="
+                  width: 10px;
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div style="height: 20px">:</div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-30 * timeObject.index2}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr2"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-30 * timeObject.index1}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr1"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+            </div>
           </el-button>
           <el-button
             color="#000"
@@ -432,7 +527,7 @@
             再来一份
           </el-button>
         </div>
-        <div class="order-no" v-if="processStatus != 0 && processStatus != 1">
+        <div class="order-no" v-if="processStatus != 0">
           订单号：{{ reportOrder.orderId }}
         </div>
       </el-main>
@@ -513,7 +608,7 @@
 </template>
 <script setup lang="ts">
 import { ref, onBeforeMount, getCurrentInstance } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, dayjs } from "element-plus";
 import logoImg from "@/assets/images/mcd.jpg";
 import hamburgerImg from "@/assets/images/mcd-hamburger.png";
 import phoneImg from "@/assets/images/mcd-phone.png";
@@ -592,11 +687,16 @@ type reportItem = {
   originalCharge: number;
   combination: string;
   combinationPrice: number;
-  tips: string;
+  paidCharge: number;
   sendText: string;
   detailInfo: string;
   diningPeople: number;
   createTime: string;
+  provinceName: string;
+  cityName: string;
+  countyName: string;
+  userDetailInfo: string;
+  useTime: string;
 };
 // interface poiItem {
 //   adcode: string;
@@ -620,7 +720,7 @@ const dialogEditVisible = ref(false);
 const dialogTableVisible = ref(false);
 const addressList = ref<Array<addressItem>>([]);
 const currentAddress = ref(0);
-const processStatus = ref(0); //进度状态，0是未点餐，1是gpt正在点餐，2是快递员正在取餐，3是快递员正在送餐，4是待查看点餐报告，5是显示点餐报告
+const processStatus = ref(0); //进度状态，0是未点餐，1是gpt正在点餐，2是快递员正在取餐，3是快递员正在送餐，4是点餐失败，5是显示点餐报告
 const validatePhone = (rule: any, value: string, callback: Function) => {
   if (value === "") {
     callback(new Error("请填写联系电话"));
@@ -640,11 +740,37 @@ const reportOrder = ref<reportItem>({
   originalCharge: 0,
   combination: "",
   combinationPrice: 0,
-  tips: "",
   sendText: "",
   detailInfo: "",
   diningPeople: 0,
   createTime: "",
+  provinceName: "",
+  cityName: "",
+  countyName: "",
+  userDetailInfo: "",
+  paidCharge: 0,
+  useTime: "",
+  // orderId: "202308132024114096208",
+  // accessKey: "54780beb15480c85ded51b254f3f1ba7",
+  // orderStatus: 4,
+  // userName: "小李子",
+  // mobile: "13883986208",
+  // originalPrice: 81.0,
+  // originalCharge: 9.0,
+  // combination:
+  //   '["麦辣鸡腿堡","1份中薯条","⭐️中杯雪碧（店铺福利）","麦辣鸡腿堡","1份中薯条","⭐️中杯雪碧（店铺福利）"]',
+  // combinationPrice: 37.96,
+  // sendText:
+  //   '{\n    "姓名": "小李子",\n    "联系电话": "13883986208",\n    "省份": "重庆市",\n    "城市": "市辖区",\n    "地址": "光华·可乐小镇C区",\n    "门牌号": "1栋3-2",\n    "就餐人数": "2",\n    "备注": "",\n    "订单号": "202308132024114096208",\n    "区": "江北区",\n    "商品链接": "【淘宝】https://m.tb.cn/h.520MODN?tk=FAGgdw0PQog CZ0001 「麦当劳 代下单 优惠I券板烧鸡腿堡小吃麦辣鸡腿堡麦旋风薯条冰淇淋」点击链接直接打开 或者 淘宝搜索直接打开",\n    "商品组合": ["麦辣鸡腿堡", "1份中薯条", "⭐️中杯雪碧（店铺福利）", "麦辣鸡腿堡", "1份中薯条", "⭐️中杯雪碧（店铺福利）"],\n    "商品组合价格": "37.96",\n    "原价": "81"\n}',
+  // provinceName: "重庆市",
+  // cityName: "市辖区",
+  // countyName: "江北区",
+  // detailInfo: "光华·可乐小镇C区",
+  // userDetailInfo: "1栋3-2",
+  // diningPeople: 2,
+  // createTime: "2023-08-13 20:24:28",
+  // paidCharge: 0,
+  // useTime: "",
 });
 const detailInfo = ref("");
 const addressEditForm = ref<addressFormItem>({
@@ -861,8 +987,19 @@ const turnSecond = (length: number, token: string, accessKey: string) => {
       orderId: reportOrder.value.orderId,
     }).then((res) => {
       if (res.data.code == 11000 && res.data.data.length > 0) {
-        reportOrder.value = res.data.data[0];
+        const temp = res.data.data[0];
+        reportOrder.value = Object.assign({}, temp, {
+          originalCharge: temp.originalCharge ? temp.originalCharge : 0,
+          paidCharge: temp.paidCharge ? temp.paidCharge : 0,
+          useTime:
+            temp.endTime && temp.runTime
+              ? 10 - dayjs(temp.endTime).diff(dayjs(temp.runTime), "m")
+              : "",
+        });
         processStatus.value = reportOrder.value.orderStatus;
+        if (processStatus.value == 3 || processStatus.value == 4) {
+          clearInterval(timer);
+        }
       }
     });
     // if (timeSecond.value >= 300) {
@@ -1478,6 +1615,27 @@ const handlePoi = (item: any) => {
         align-items: center;
         justify-content: center;
         height: 48px;
+        width: 10px;
+      }
+    }
+    .button-count-down {
+      text-align: center;
+      height: 30px;
+      font-size: 1rem;
+      color: #fff;
+      font-weight: bolder;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      .column {
+        transition: transform 300ms;
+      }
+      .num {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 30px;
         width: 10px;
       }
     }
