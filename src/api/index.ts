@@ -311,7 +311,7 @@ export const getReportOrder = (data: {
       Authorization: data.token,
       accessKey: data.accessKey,
     },
-    data: {
+    params: {
       orderId: data.orderId,
     },
   });

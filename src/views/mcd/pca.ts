@@ -5,7 +5,7 @@ export const pca = [
     children: [
       {
         code: "1101",
-        name: "市辖区",
+        name: "北京市",
         children: [
           { code: "110101", name: "东城区" },
           { code: "110102", name: "西城区" },
@@ -33,7 +33,7 @@ export const pca = [
     children: [
       {
         code: "1201",
-        name: "市辖区",
+        name: "天津市",
         children: [
           { code: "120101", name: "和平区" },
           { code: "120102", name: "河东区" },
@@ -1233,7 +1233,7 @@ export const pca = [
     children: [
       {
         code: "3101",
-        name: "市辖区",
+        name: "上海市",
         children: [
           { code: "310101", name: "黄浦区" },
           { code: "310104", name: "徐汇区" },
@@ -3711,7 +3711,7 @@ export const pca = [
     children: [
       {
         code: "5001",
-        name: "市辖区",
+        name: "重庆市",
         children: [
           { code: "500101", name: "万州区" },
           { code: "500102", name: "涪陵区" },
@@ -3739,12 +3739,6 @@ export const pca = [
           { code: "500154", name: "开州区" },
           { code: "500155", name: "梁平区" },
           { code: "500156", name: "武隆区" },
-        ],
-      },
-      {
-        code: "5002",
-        name: "县",
-        children: [
           { code: "500229", name: "城口县" },
           { code: "500230", name: "丰都县" },
           { code: "500231", name: "垫江县" },
@@ -3759,6 +3753,24 @@ export const pca = [
           { code: "500243", name: "彭水苗族土家族自治县" },
         ],
       },
+      // {
+      //   code: "5002",
+      //   name: "县",
+      //   children: [
+      //     { code: "500229", name: "城口县" },
+      //     { code: "500230", name: "丰都县" },
+      //     { code: "500231", name: "垫江县" },
+      //     { code: "500233", name: "忠县" },
+      //     { code: "500235", name: "云阳县" },
+      //     { code: "500236", name: "奉节县" },
+      //     { code: "500237", name: "巫山县" },
+      //     { code: "500238", name: "巫溪县" },
+      //     { code: "500240", name: "石柱土家族自治县" },
+      //     { code: "500241", name: "秀山土家族苗族自治县" },
+      //     { code: "500242", name: "酉阳土家族苗族自治县" },
+      //     { code: "500243", name: "彭水苗族土家族自治县" },
+      //   ],
+      // },
     ],
   },
   {

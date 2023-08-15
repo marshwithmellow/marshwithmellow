@@ -996,10 +996,19 @@ const turnSecond = (length: number, token: string, accessKey: string) => {
               ? 10 - dayjs(temp.endTime).diff(dayjs(temp.runTime), "m")
               : "",
         });
-        processStatus.value = reportOrder.value.orderStatus;
+        processStatus.value =
+          reportOrder.value.orderStatus == 0
+            ? 1
+            : reportOrder.value.orderStatus;
+        currentCount.value = reportOrder.value.diningPeople;
         if (processStatus.value == 3 || processStatus.value == 4) {
           clearInterval(timer);
+          localStorage.removeItem("mcdOrderId");
         }
+      } else {
+        localStorage.removeItem("mcdOrderId");
+        clearInterval(timer);
+        processStatus.value = 0;
       }
     });
     // if (timeSecond.value >= 300) {
@@ -1031,6 +1040,11 @@ onBeforeMount(() => {
   if (usr) {
     const info = JSON.parse(usr);
     getUserInfo(info.token, info.accessKey);
+    const orderId = localStorage.getItem("mcdOrderId");
+    if (orderId) {
+      reportOrder.value.orderId = orderId;
+      startTime();
+    }
   } else {
     $router.replace({
       name: "singleLogin",
@@ -1350,6 +1364,7 @@ const confirmForm = async (usr: string) => {
   if (res.data.code === 11000) {
     ElMessage({ message: "下单成功！", type: "success" });
     reportOrder.value = res.data.data;
+    localStorage.setItem("mcdOrderId", reportOrder.value.orderId);
     startTime();
   } else {
     ElMessage({ message: "下单失败，请重试", type: "error" });
