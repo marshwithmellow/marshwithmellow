@@ -661,7 +661,10 @@
                   justify-content: center;
                 "
               >
-                <div>送至：</div>
+                <div style="display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: center;">送至：</div>
                 <div
                   style="
                     display: flex;
@@ -686,6 +689,12 @@
                         ? " " + addressList[currentAddress].userDetailInfo
                         : "")
                     }}
+                    {{
+                      addressList[currentAddress].detailInfo +
+                      (addressList[currentAddress].userDetailInfo
+                        ? " " + addressList[currentAddress].userDetailInfo
+                        : "")
+                    }}
                   </div>
                 </div>
               </div>
@@ -702,8 +711,27 @@
               >
                 <img class="phone" :src="phoneImg" alt="" />
               </div>
-              <div style="margin-left: 30px">
-                电话：{{ addressList[currentAddress].mobile }}
+              <div
+                style="
+                  margin: 0 15px;
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div>联系人：</div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    justify-content: center;
+                  "
+                >
+                  <div>{{ addressList[currentAddress].userName }}</div>
+                  <div>{{ addressList[currentAddress].mobile }}</div>
+                </div>
               </div>
             </div>
           </div>
