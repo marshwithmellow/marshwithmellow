@@ -5,7 +5,7 @@
         <el-header class="header">
           <img
             class="logo"
-            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
+            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/blue-logo.png"
             @click="goHome"
           />
           <div
@@ -546,6 +546,21 @@
           </div>
         </el-main>
       </el-container>
+      <el-dialog
+        v-model="showDialog"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+        class="wrap-dialog"
+        :show-close="false"
+        title=""
+      >
+        <mcd-modal
+          ref="login"
+          :inviteCode="inviteCode"
+          @show-message="showMessage"
+          @complete="loginComplete"
+        ></mcd-modal>
+      </el-dialog>
     </div>
     <div v-else>
       <el-container>
@@ -661,10 +676,16 @@
                   justify-content: center;
                 "
               >
-                <div style="display: flex;
-                  flex-direction: row;
-                  align-items: center;
-                  justify-content: center;">送至：</div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  送至：
+                </div>
                 <div
                   style="
                     display: flex;
@@ -830,6 +851,7 @@ import logoImg from "@/assets/images/mcd.jpg";
 import hamburgerImg from "@/assets/images/mcd-hamburger.png";
 import phoneImg from "@/assets/images/mcd-phone.png";
 import reportHamburgerImg from "@/assets/images/report-hamburger.png";
+import McdModal from "@/components/McdModal.vue";
 import {
   doLogout,
   doGetInfo,
@@ -865,6 +887,8 @@ for (let index = 0; index < 4; index++) {
     text: temp + "人份",
   });
 }
+const showDialog = ref(false);
+const inviteCode = ref<any>("");
 const timeSecond = ref(0);
 const submitLoading = ref(false);
 const currentCount = ref(1);
@@ -967,27 +991,6 @@ const reportOrder = ref<reportItem>({
   userDetailInfo: "",
   paidCharge: 0,
   useTime: "",
-  // orderId: "202308132024114096208",
-  // accessKey: "54780beb15480c85ded51b254f3f1ba7",
-  // orderStatus: 4,
-  // userName: "小李子",
-  // mobile: "13883986208",
-  // originalPrice: 81.0,
-  // originalCharge: 9.0,
-  // combination:
-  //   '["麦辣鸡腿堡","1份中薯条","⭐️中杯雪碧（店铺福利）","麦辣鸡腿堡","1份中薯条","⭐️中杯雪碧（店铺福利）"]',
-  // combinationPrice: 37.96,
-  // sendText:
-  //   '{\n    "姓名": "小李子",\n    "联系电话": "13883986208",\n    "省份": "重庆市",\n    "城市": "市辖区",\n    "地址": "光华·可乐小镇C区",\n    "门牌号": "1栋3-2",\n    "就餐人数": "2",\n    "备注": "",\n    "订单号": "202308132024114096208",\n    "区": "江北区",\n    "商品链接": "【淘宝】https://m.tb.cn/h.520MODN?tk=FAGgdw0PQog CZ0001 「麦当劳 代下单 优惠I券板烧鸡腿堡小吃麦辣鸡腿堡麦旋风薯条冰淇淋」点击链接直接打开 或者 淘宝搜索直接打开",\n    "商品组合": ["麦辣鸡腿堡", "1份中薯条", "⭐️中杯雪碧（店铺福利）", "麦辣鸡腿堡", "1份中薯条", "⭐️中杯雪碧（店铺福利）"],\n    "商品组合价格": "37.96",\n    "原价": "81"\n}',
-  // provinceName: "重庆市",
-  // cityName: "市辖区",
-  // countyName: "江北区",
-  // detailInfo: "光华·可乐小镇C区",
-  // userDetailInfo: "1栋3-2",
-  // diningPeople: 2,
-  // createTime: "2023-08-13 20:24:28",
-  // paidCharge: 0,
-  // useTime: "",
 });
 const detailInfo = ref("");
 const addressEditForm = ref<addressFormItem>({
@@ -1257,7 +1260,6 @@ const turnOther = (type: number, length: number) => {
 };
 /************************ todo-定义数据data(END) ************************/
 onBeforeMount(() => {
-  // startTime();
   let usr = localStorage.getItem("userInfo");
   if (usr) {
     const info = JSON.parse(usr);
@@ -1268,12 +1270,16 @@ onBeforeMount(() => {
       startTime();
     }
   } else {
-    $router.replace({
-      name: "singleLogin",
-      query: {
-        redirectUrl: window.location.href,
-      },
-    });
+    if (agent.value) {
+      $router.replace({
+        name: "singleLogin",
+        query: {
+          redirectUrl: window.location.href,
+        },
+      });
+    } else {
+      showDialog.value = true;
+    }
   }
 });
 const getUserInfo = async (token: string, accessKey: string) => {
@@ -1299,12 +1305,16 @@ const getUserInfo = async (token: string, accessKey: string) => {
       accessKey: "",
     };
     nickName.value = "";
-    $router.replace({
-      name: "singleLogin",
-      query: {
-        redirectUrl: window.location.href,
-      },
-    });
+    if (agent.value) {
+      $router.replace({
+        name: "singleLogin",
+        query: {
+          redirectUrl: window.location.href,
+        },
+      });
+    } else {
+      showDialog.value = true;
+    }
   }
 };
 const getMyAddressList = async (token: string, accessKey: string) => {
@@ -1681,6 +1691,19 @@ const handlePoi = (item: any) => {
   if (item && item.name) {
     addressEditForm.value.detailInfo = item.name;
     detailInfo.value = item.name;
+  }
+};
+const showMessage = (params: any) => {
+  ElMessage(params);
+};
+const loginComplete = (data: any) => {
+  if (data) {
+    showDialog.value = false;
+    localStorage.setItem("userInfo", JSON.stringify(data));
+    userInfo.value = data;
+    const firstC = getFirstChar(userInfo.value.name);
+    nickName.value = firstC;
+    getUserInfo(userInfo.value.token, userInfo.value.accessKey);
   }
 };
 </script>
@@ -2166,5 +2189,20 @@ const handlePoi = (item: any) => {
 :global(.el-scrollbar) {
   background: #fff !important;
   border: none;
+}
+:deep(.el-dialog__header) {
+  display: none;
+}
+:deep(.el-dialog__body) {
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: 11px;
+  overflow: hidden;
+}
+:deep(.wrap-dialog) {
+  width: 588px;
+  overflow: hidden;
+  border-radius: 11px;
 }
 </style>
