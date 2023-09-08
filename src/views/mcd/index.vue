@@ -2,12 +2,22 @@
   <div class="px-common-layout px-no-trans">
     <div v-if="!agent">
       <el-container>
-        <el-header class="header">
-          <img
-            class="logo"
-            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/blue-logo.png"
-            @click="goHome"
-          />
+        <el-header
+          class="header"
+          :style="{
+            'box-shadow': showDrawer
+              ? 'none'
+              : '0px 6px 9px rgba(0, 0, 0, 0.16)',
+          }"
+        >
+          <div class="header-left">
+            <img
+              class="logo"
+              src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/blue-logo.png"
+              @click="goHome"
+              alt=""
+            />
+          </div>
           <div
             style="
               flex: 1;
@@ -22,6 +32,9 @@
           </div>
           <div class="header-right">
             <!-- <div class="avatar">{{ nickName }}</div> -->
+            <div class="info" @click="showDrawer = true">
+              <div class="txt">充值我的钱包</div>
+            </div>
             <el-popover
               placement="bottom"
               :width="344"
@@ -561,6 +574,17 @@
           @complete="loginComplete"
         ></mcd-modal>
       </el-dialog>
+      <el-drawer
+        v-model="showDrawer"
+        :with-header="false"
+        direction="ttb"
+        size="50%"
+      >
+        <el-container>
+          <el-aside class="aside"></el-aside>
+          <el-main></el-main>
+        </el-container>
+      </el-drawer>
     </div>
     <div v-else>
       <el-container>
@@ -887,6 +911,7 @@ for (let index = 0; index < 4; index++) {
     text: temp + "人份",
   });
 }
+const showDrawer = ref(false);
 const showDialog = ref(false);
 const inviteCode = ref<any>("");
 const timeSecond = ref(0);
@@ -1711,6 +1736,7 @@ const loginComplete = (data: any) => {
 .px-common-layout {
   background: #f6f9fc;
   .header {
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -1719,18 +1745,35 @@ const loginComplete = (data: any) => {
     width: 100vw;
     background: #ffffff;
     padding: 0 20px;
-    box-shadow: 0px 6px 9px rgba(0, 0, 0, 0.16);
-    .logo {
-      width: 140px;
-      min-width: 140px;
+    z-index: 2048;
+    .header-left {
+      position: absolute;
+      left: 20px;
+      top: 0;
+      height: 100px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      z-index: 99;
+      .logo {
+        width: 140px;
+        min-width: 140px;
+        cursor: pointer;
+        z-index: 99;
+      }
     }
     .center-logo {
       height: 80px;
     }
     .header-right {
-      width: 140px;
-      min-width: 140px;
+      // width: 140px;
+      // min-width: 140px;
+      position: absolute;
+      top: 0;
+      right: 20px;
+      height: 100px;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -1738,8 +1781,8 @@ const loginComplete = (data: any) => {
       .avatar {
         width: 48px;
         height: 48px;
-        background: #818da3;
-        box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
+        background: #6cc8e6;
+        box-shadow: 3px 6px 9px rgba(0, 0, 0, 0.16);
         border-radius: 50%;
         display: flex;
         justify-content: center;
@@ -1751,6 +1794,29 @@ const loginComplete = (data: any) => {
         color: #ffffff;
         z-index: 2;
         cursor: pointer;
+      }
+      .info {
+        background: linear-gradient(
+          90deg,
+          rgba(67, 202, 234, 1) 0%,
+          rgba(148, 81, 235, 0.81) 65%,
+          rgba(235, 72, 160, 1) 100%
+        );
+        height: 40px;
+        padding: 0 24px;
+        margin-right: 20px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        cursor: pointer;
+        .txt {
+          font-size: 1rem;
+          font-family: Gotham-Rounded;
+          font-weight: bold;
+          color: #fff;
+        }
       }
     }
   }
@@ -2204,5 +2270,22 @@ const loginComplete = (data: any) => {
   width: 588px;
   overflow: hidden;
   border-radius: 11px;
+}
+:global(.el-drawer.ttb) {
+  top: 100px;
+}
+:global(.el-drawer__body) {
+  padding: 0;
+}
+.aside {
+  width: 20vw;
+  min-width: 280px;
+  color: #fff;
+  box-sizing: border-box;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 </style>
