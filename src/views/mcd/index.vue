@@ -581,8 +581,61 @@
         size="50%"
       >
         <el-container>
-          <el-aside class="aside"></el-aside>
-          <el-main></el-main>
+          <el-aside class="aside">
+            <div class="label">预充值</div>
+            <el-divider />
+            <div class="label-normal">历史订单</div>
+          </el-aside>
+          <el-main class="main-content">
+            <swiper
+              :initialSlide="0"
+              :loopedSlides="2"
+              slidesPerView="auto"
+              :spaceBetween="0"
+              :scrollbar="false"
+              @swiper="initAlbumSwiper"
+              style="margin-top: 30px"
+              :loop="false"
+              @slideChangeTransitionEnd="changeAlbum"
+              class="album-swiper"
+            >
+              <swiper-slide v-for="(item, index) in albumList" :key="item.id">
+                <div class="album-container">
+                  <!-- <img
+                    :src="item.img"
+                    :style="{
+                      height: '140px',
+                      cursor: 'pointer',
+                    }"
+                    @click="
+                      throttle(() => {
+                        clickAlbum(item);
+                      }, 500)
+                    "
+                  /> -->
+                  <div
+                    class="part"
+                    :style="{ background: `url(${item.img}) 100% no-repeat` }"
+                  >
+                    <div :class="index < 2 ? 'txt' : 'txt2'">
+                      ￥
+                      <div class="big">{{ item.money }}</div>
+                    </div>
+                  </div>
+                  <!-- <div
+                    :class="currentAlbum === item.id ? 'current-txt' : 'txt'"
+                    @click="
+                      throttle(() => {
+                        clickAlbum(item);
+                      }, 500)
+                    "
+                  >
+                    {{ item.year }}
+                  </div> -->
+                </div>
+              </swiper-slide>
+            </swiper>
+          </el-main>
         </el-container>
       </el-drawer>
     </div>
@@ -875,7 +928,15 @@ import logoImg from "@/assets/images/mcd.jpg";
 import hamburgerImg from "@/assets/images/mcd-hamburger.png";
 import phoneImg from "@/assets/images/mcd-phone.png";
 import reportHamburgerImg from "@/assets/images/report-hamburger.png";
+import mcdPay30 from "@/assets/images/mcd-pay-30.png";
+import mcdPay50 from "@/assets/images/mcd-pay-50.png";
+import mcdPay100 from "@/assets/images/mcd-pay-100.png";
+import mcdPay200 from "@/assets/images/mcd-pay-200.png";
 import McdModal from "@/components/McdModal.vue";
+// Import Swiper Vue.js components
+import { Swiper, SwiperSlide } from "swiper/vue";
+// Import Swiper styles
+import "swiper/css";
 import {
   doLogout,
   doGetInfo,
@@ -888,7 +949,7 @@ import {
 } from "@/api/index";
 import { pinyin } from "pinyin-pro";
 import { useRouter } from "vue-router";
-import { isPhone, isHashMode } from "@/utils/utils";
+import { isPhone, isHashMode, throttle } from "@/utils/utils";
 import axios from "axios";
 import useClipboard from "vue-clipboard3";
 import { pca } from "./pca";
@@ -911,6 +972,13 @@ for (let index = 0; index < 4; index++) {
     text: temp + "人份",
   });
 }
+const albumList = ref([
+  { img: mcdPay30, money: "30", id: 30 },
+  { img: mcdPay50, money: "50", id: 50 },
+  { img: mcdPay100, money: "100", id: 100 },
+  { img: mcdPay200, money: "200", id: 200 },
+]);
+const currentAlbum = ref(0);
 const showDrawer = ref(false);
 const showDialog = ref(false);
 const inviteCode = ref<any>("");
@@ -1160,6 +1228,7 @@ const userInfo = ref({
   accessKey: "",
 });
 const nickName = ref("");
+let albumSwiper: any = null;
 /************************ todo-定义数据data(START) ************************/
 const lineHeight = ref(48); //跟字体大小和wraper的高度相关！
 type timeItem = {
@@ -1208,6 +1277,39 @@ const timeObject = ref<timeItem>({
 //     }
 //   }
 // );
+const initAlbumSwiper = (swiper: any) => {
+  albumSwiper = swiper;
+};
+const clickAlbum = (item: any) => {
+  const temp = item.id;
+  if (currentAlbum.value != temp) {
+    if (
+      currentAlbum.value === albumList.value[0].id &&
+      temp === albumList.value[albumList.value.length - 1].id
+    ) {
+      albumSwiper.slidePrev();
+    } else if (
+      currentAlbum.value === albumList.value[albumList.value.length - 1].id &&
+      temp === albumList.value[0].id
+    ) {
+      albumSwiper.slideNext();
+    } else if (temp > currentAlbum.value) {
+      albumSwiper.slideNext();
+    } else if (temp < currentAlbum.value) {
+      albumSwiper.slidePrev();
+    }
+    currentAlbum.value = temp;
+  } else {
+    // currentStep.value = 1;
+  }
+};
+const changeAlbum = (swiper: any) => {
+  if (swiper.realIndex === albumList.value[albumList.value.length - 1].id) {
+    currentAlbum.value = albumList.value[0].id;
+  } else {
+    currentAlbum.value = albumList.value[swiper.realIndex + 1].id;
+  }
+};
 const agent = ref(
   navigator.userAgent.match(
     /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
@@ -2285,7 +2387,75 @@ const loginComplete = (data: any) => {
   min-height: 50vh;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 3vw;
+  .label {
+    font-size: 2rem;
+    font-family: Gotham-Rounded;
+    font-weight: bold;
+    color: #000;
+  }
+  .label-normal {
+    font-size: 2rem;
+    font-family: Gotham-Rounded;
+    font-weight: bold;
+    color: #afadaa;
+  }
+}
+.main-content {
+  box-shadow: inset 6px -1px 12px rgba(0, 0, 0, 0.16);
+}
+.album-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  .part {
+    width: 248px;
+    height: 140px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    .txt {
+      color: #000000;
+      font-size: 1rem;
+      font-family: FUTURA-MEDIUM;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      .big {
+        color: #000000;
+        font-size: 3rem;
+        font-family: FUTURA-MEDIUM;
+      }
+    }
+    .txt2 {
+      color: #ffd800;
+      font-size: 1rem;
+      font-family: FUTURA-MEDIUM;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      .big {
+        color: #ffd800;
+        font-size: 3rem;
+        font-family: FUTURA-MEDIUM;
+      }
+    }
+  }
+}
+.album-swiper {
+  :deep(.swiper-slide) {
+    width: 35% !important;
+    height: auto !important;
+    display: flex;
+    justify-items: center;
+    align-items: center;
+  }
 }
 </style>
