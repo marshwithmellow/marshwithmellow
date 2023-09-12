@@ -286,7 +286,7 @@ export const sendMail = (data: {
   dto: any;
 }) =>
   axios({
-    url: `/userAddress/sendMail`,
+    url: `/userAddress/sendMDLOrder`,
     method: "post",
     headers: {
       "Content-Type": "application/json",
@@ -315,3 +315,9 @@ export const getReportOrder = (data: {
       orderId: data.orderId,
     },
   });
+export const wechatPayMcd = (data: {
+  payAmount: number;
+  osType: number;
+  accessKey: string;
+  currency: string;
+}) => axios({ url: `/wechatPay`, method: "post", data });

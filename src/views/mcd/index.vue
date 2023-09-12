@@ -32,8 +32,14 @@
           </div>
           <div class="header-right">
             <!-- <div class="avatar">{{ nickName }}</div> -->
-            <div class="info" @click="showDrawer = true">
-              <div class="txt">充值我的钱包</div>
+            <div class="info" @click="showDrawer = true" v-if="userInfo.name">
+              <div class="txt">
+                {{
+                  userInfo.rmbBalance == 0
+                    ? "充值我的钱包"
+                    : "AI 钱包：" + userInfo.rmbBalance + " 元"
+                }}
+              </div>
             </div>
             <el-popover
               placement="bottom"
@@ -100,6 +106,23 @@
           </div>
         </el-header>
         <el-main class="main">
+          <div class="tag-container">
+            <div class="tag-part" @click="currentTag = 0">
+              <div :class="currentTag === 0 ? 'check' : 'normal'">
+                <div class="tag">新品优先</div>
+              </div>
+            </div>
+            <div class="tag-part" @click="currentTag = 1">
+              <div :class="currentTag === 1 ? 'check' : 'normal'">
+                <div class="tag">低价大师</div>
+              </div>
+            </div>
+            <div class="tag-part" @click="currentTag = 2">
+              <div :class="currentTag === 2 ? 'check' : 'normal'">
+                <div class="tag">自助点餐</div>
+              </div>
+            </div>
+          </div>
           <div class="big">
             {{
               processStatus == 1
@@ -208,13 +231,50 @@
             </div>
           </div>
           <div class="area" v-if="processStatus == 0">
+            <div class="want-container" v-if="currentTag == 2">
+              <div class="label">我想要:</div>
+              <div class="tags-container">
+                <el-tag
+                  v-for="tag in checkChoose"
+                  :key="tag.id"
+                  class="tags"
+                  closable
+                  color="#000000"
+                  effect="dark"
+                  @close="removeChoose(tag.id)"
+                >
+                  {{ tag.txt }}
+                </el-tag>
+              </div>
+            </div>
             <el-input
               v-model="inputValue"
               :rows="5"
               type="textarea"
               placeholder="首次运行，AI 将自动为您点餐。如果您有用餐偏好，请在这里输入。"
               :disabled="submitLoading"
+              resize="none"
+              class="area-container"
             />
+            <div class="check-container" v-if="currentTag == 2">
+              <el-check-tag
+                :style="{
+                  'margin-left': '20px',
+                  border: item.check
+                    ? '1px #000000 solid'
+                    : '1px #a0a0a0 solid',
+                  background: item.check ? '#000000' : '#ebebeb',
+                  'border-radius': '17px',
+                  color: item.check ? '#ffffff' : '#555555',
+                }"
+                :checked="item.check"
+                v-for="(item, index) in checkList"
+                :key="item.id"
+                @change="onCheck($event, index)"
+              >
+                {{ item.txt }}
+              </el-check-tag>
+            </div>
           </div>
           <el-button
             class="button"
@@ -558,6 +618,10 @@
             订单号：{{ reportOrder.orderId }}
           </div>
         </el-main>
+        <el-footer class="foot-container">
+          这里有一个提示：MBM AI 作为您忠诚的 AI
+          助理，在每次为您下单时，将始终为您遍寻全网最佳优惠，并以节约您的宝贵时间为主旨。
+        </el-footer>
       </el-container>
       <el-dialog
         v-model="showDialog"
@@ -594,44 +658,56 @@
               :spaceBetween="0"
               :scrollbar="false"
               @swiper="initAlbumSwiper"
-              style="margin-top: 30px"
+              style="margin-top: 50px"
               :loop="false"
-              @slideChangeTransitionEnd="changeAlbum"
               class="album-swiper"
             >
               <swiper-slide v-for="(item, index) in albumList" :key="item.id">
                 <div class="album-container">
-                  <!-- <img
-                    :src="item.img"
-                    :style="{
-                      height: '140px',
-                      cursor: 'pointer',
-                    }"
-                    @click="
-                      throttle(() => {
-                        clickAlbum(item);
-                      }, 500)
-                    "
-                  /> -->
                   <div
-                    class="part"
-                    :style="{ background: `url(${item.img}) 100% no-repeat` }"
+                    class="part-container"
+                    :class="currentAlbum === item.id ? 'check' : ''"
                   >
-                    <div :class="index < 2 ? 'txt' : 'txt2'">
-                      ￥
-                      <div class="big">{{ item.money }}</div>
+                    <div
+                      class="part"
+                      :style="{
+                        background:
+                          qrCodeImgUrl && currentAlbum === item.id
+                            ? '#ffffff'
+                            : `url(${item.img}) 100% no-repeat`,
+                      }"
+                      @click="clickAlbum(item)"
+                    >
+                      <img
+                        v-if="qrCodeImgUrl && currentAlbum === item.id"
+                        style="height: 136px; width: 136px"
+                        :src="qrCodeImgUrl"
+                        alt=""
+                      />
+                      <div :class="index < 2 ? 'txt' : 'txt2'" v-else>
+                        ￥
+                        <div class="big">{{ item.money }}</div>
+                      </div>
                     </div>
                   </div>
-                  <!-- <div
-                    :class="currentAlbum === item.id ? 'current-txt' : 'txt'"
-                    @click="
-                      throttle(() => {
-                        clickAlbum(item);
-                      }, 500)
-                    "
+                  <el-button
+                    size="large"
+                    color="#FFD800"
+                    class="pay-disable"
+                    v-if="qrCodeImgUrl && currentAlbum === item.id"
+                    disabled
                   >
-                    {{ item.year }}
-                  </div> -->
+                    <img :src="wechatText" style="height: 25px; width: 112px" />
+                  </el-button>
+                  <el-button
+                    size="large"
+                    color="#FFD800"
+                    class="pay"
+                    v-else-if="currentAlbum === item.id"
+                    @click="payAmount(item)"
+                  >
+                    确认支付
+                  </el-button>
                 </div>
               </swiper-slide>
             </swiper>
@@ -922,7 +998,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onBeforeMount, getCurrentInstance } from "vue";
+import QRCode from "qrcode";
+import {
+  ref,
+  onBeforeMount,
+  getCurrentInstance,
+  watch,
+  computed,
+  onUnmounted,
+} from "vue";
 import { ElMessage, ElMessageBox, dayjs } from "element-plus";
 import logoImg from "@/assets/images/mcd.jpg";
 import hamburgerImg from "@/assets/images/mcd-hamburger.png";
@@ -932,6 +1016,7 @@ import mcdPay30 from "@/assets/images/mcd-pay-30.png";
 import mcdPay50 from "@/assets/images/mcd-pay-50.png";
 import mcdPay100 from "@/assets/images/mcd-pay-100.png";
 import mcdPay200 from "@/assets/images/mcd-pay-200.png";
+import wechatText from "@/assets/images/wechat-pay-text.png";
 import McdModal from "@/components/McdModal.vue";
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from "swiper/vue";
@@ -946,6 +1031,8 @@ import {
   delAddress,
   sendMail,
   getReportOrder,
+  wechatPayMcd,
+  orderDetail,
 } from "@/api/index";
 import { pinyin } from "pinyin-pro";
 import { useRouter } from "vue-router";
@@ -990,6 +1077,7 @@ const proxy: any = getCurrentInstance()?.proxy ?? null;
 const $router = useRouter();
 const inputValue = ref("");
 const evaluateValue = ref("");
+const timers = ref();
 const evaluateButton = ref(0);
 type addressItem = {
   cityName: string;
@@ -1048,6 +1136,7 @@ type reportItem = {
 //   type: string;
 //   typecode: string;
 // }
+const currentTag = ref(1);
 const showUserInfo = ref(false);
 const editAddressId = ref("");
 const dialogEditVisible = ref(false);
@@ -1085,6 +1174,7 @@ const reportOrder = ref<reportItem>({
   paidCharge: 0,
   useTime: "",
 });
+const qrCodeImgUrl = ref("");
 const detailInfo = ref("");
 const addressEditForm = ref<addressFormItem>({
   mobile: "",
@@ -1226,6 +1316,7 @@ const userInfo = ref({
   isAuth: 0,
   accountType: 1,
   accessKey: "",
+  rmbBalance: 0,
 });
 const nickName = ref("");
 let albumSwiper: any = null;
@@ -1265,6 +1356,51 @@ const timeObject = ref<timeItem>({
   arr6: [0, 1, 2],
   index6: 0,
 });
+const checkList = ref([
+  {
+    id: 0,
+    txt: "麦辣鸡腿堡",
+    check: false,
+  },
+  {
+    id: 1,
+    txt: "麦辣鸡翅",
+    check: false,
+  },
+  {
+    id: 2,
+    txt: "板烧鸡腿堡",
+    check: false,
+  },
+  {
+    id: 3,
+    txt: "巨无霸汉堡",
+    check: false,
+  },
+  {
+    id: 4,
+    txt: "双层吉士堡",
+    check: false,
+  },
+  {
+    id: 5,
+    txt: "麦乐鸡5块",
+    check: false,
+  },
+  {
+    id: 6,
+    txt: "薯条",
+    check: false,
+  },
+  {
+    id: 7,
+    txt: "酥酥笋卷",
+    check: false,
+  },
+]);
+const checkChoose = computed(() =>
+  checkList.value.filter((item) => item.check)
+);
 //watch监听机型
 // watch(
 //   () => index5.value,
@@ -1277,37 +1413,36 @@ const timeObject = ref<timeItem>({
 //     }
 //   }
 // );
+watch(
+  () => showDrawer.value,
+  (newVal) => {
+    if (!newVal) {
+      currentAlbum.value = 0;
+    }
+  }
+);
 const initAlbumSwiper = (swiper: any) => {
   albumSwiper = swiper;
 };
 const clickAlbum = (item: any) => {
   const temp = item.id;
   if (currentAlbum.value != temp) {
-    if (
-      currentAlbum.value === albumList.value[0].id &&
-      temp === albumList.value[albumList.value.length - 1].id
-    ) {
-      albumSwiper.slidePrev();
-    } else if (
-      currentAlbum.value === albumList.value[albumList.value.length - 1].id &&
-      temp === albumList.value[0].id
-    ) {
-      albumSwiper.slideNext();
-    } else if (temp > currentAlbum.value) {
-      albumSwiper.slideNext();
-    } else if (temp < currentAlbum.value) {
-      albumSwiper.slidePrev();
-    }
+    // if (
+    //   currentAlbum.value === albumList.value[0].id &&
+    //   temp === albumList.value[albumList.value.length - 1].id
+    // ) {
+    //   albumSwiper.slidePrev();
+    // } else if (
+    //   currentAlbum.value === albumList.value[albumList.value.length - 1].id &&
+    //   temp === albumList.value[0].id
+    // ) {
+    //   albumSwiper.slideNext();
+    // } else if (temp > currentAlbum.value) {
+    //   albumSwiper.slideNext();
+    // } else if (temp < currentAlbum.value) {
+    //   albumSwiper.slidePrev();
+    // }
     currentAlbum.value = temp;
-  } else {
-    // currentStep.value = 1;
-  }
-};
-const changeAlbum = (swiper: any) => {
-  if (swiper.realIndex === albumList.value[albumList.value.length - 1].id) {
-    currentAlbum.value = albumList.value[0].id;
-  } else {
-    currentAlbum.value = albumList.value[swiper.realIndex + 1].id;
   }
 };
 const agent = ref(
@@ -1349,7 +1484,8 @@ const turnSecond = (length: number, token: string, accessKey: string) => {
               : "",
         });
         processStatus.value =
-          reportOrder.value.orderStatus == 0
+          reportOrder.value.orderStatus == 0 ||
+          reportOrder.value.orderStatus == -1
             ? 1
             : reportOrder.value.orderStatus;
         currentCount.value = reportOrder.value.diningPeople;
@@ -1409,6 +1545,11 @@ onBeforeMount(() => {
     }
   }
 });
+onUnmounted(() => {
+  if (timers.value) {
+    clearTimeout(timers.value);
+  }
+});
 const getUserInfo = async (token: string, accessKey: string) => {
   const res = await doGetInfo({ token, accessKey });
   if (res.data.code === 11000) {
@@ -1430,6 +1571,7 @@ const getUserInfo = async (token: string, accessKey: string) => {
       isAuth: 0,
       accountType: 1,
       accessKey: "",
+      rmbBalance: 0,
     };
     nickName.value = "";
     if (agent.value) {
@@ -1459,7 +1601,7 @@ const getMyAddressList = async (token: string, accessKey: string) => {
       addressStatus.value = 0;
     }
   } else {
-    ElMessage(res.data.msg);
+    ElMessage({ offset: 140, message: res.data.msg });
   }
 };
 const saveAddress = () => {
@@ -1540,14 +1682,14 @@ const addAddressItem = async (token: string, accessKey: string, dto: any) => {
     dto,
   });
   if (response.data.code === 11000) {
-    ElMessage({ message: "添加成功", type: "success" });
+    ElMessage({ message: "添加成功", type: "success", offset: 140 });
     dialogEditVisible.value = false;
     getMyAddressList(token, accessKey);
     if (addressStatus.value == 1) {
       dialogTableVisible.value = true;
     }
   } else {
-    ElMessage(response.data.msg);
+    ElMessage({ offset: 140, message: response.data.msg });
   }
 };
 const editAddressItem = async (token: string, accessKey: string, dto: any) => {
@@ -1557,12 +1699,12 @@ const editAddressItem = async (token: string, accessKey: string, dto: any) => {
     dto,
   });
   if (response.data.code === 11000) {
-    ElMessage({ message: "更新成功", type: "success" });
+    ElMessage({ message: "更新成功", type: "success", offset: 140 });
     dialogEditVisible.value = false;
     getMyAddressList(token, accessKey);
     dialogTableVisible.value = true;
   } else {
-    ElMessage(response.data.msg);
+    ElMessage({ offset: 140, message: response.data.msg });
   }
 };
 const parseLocation = (lat: number | string, lng: number | string) => {
@@ -1655,9 +1797,9 @@ const del = (row: addressItem, index: number) => {
             currentAddress.value--;
           }
           getMyAddressList(info.token, info.accessKey);
-          ElMessage({ message: "删除成功", type: "success" });
+          ElMessage({ message: "删除成功", type: "success", offset: 140 });
         } else {
-          ElMessage(res.data.msg);
+          ElMessage({ offset: 140, message: res.data.msg });
         }
       });
     }
@@ -1696,37 +1838,52 @@ const clickRun = async () => {
     return;
   }
   if (addressList.value.length == 0) {
-    ElMessage({ message: "请先填写一个送餐地址", type: "error" });
+    ElMessage({ message: "请先填写一个送餐地址", type: "error", offset: 140 });
     return;
   }
+  let addRemarks = "";
+  if (currentTag.value == 2) {
+    checkChoose.value.forEach((item) => {
+      addRemarks += item.txt + ",";
+    });
+    if (addRemarks.length == 0) {
+      ElMessageBox.alert("请至少选择一项您想要的餐品", "提示", {
+        confirmButtonText: "知道了",
+        type: "warning",
+        showCancelButton: false,
+      });
+      return;
+    }
+  }
   ElMessageBox.confirm("是否确认下单？", "提示").then(() => {
-    ElMessage({ message: "正在下单处理中...", type: "success" });
+    ElMessage({ message: "正在下单处理中...", type: "success", offset: 140 });
     submitLoading.value = true;
     let usr = localStorage.getItem("userInfo");
     if (usr) {
-      confirmForm(usr);
+      confirmForm(usr, addRemarks);
     }
   });
 };
-const confirmForm = async (usr: string) => {
+const confirmForm = async (usr: string, addRemarks: string) => {
   const info = JSON.parse(usr);
   const res = await sendMail({
     token: info.token,
     accessKey: info.accessKey,
     dto: {
       diningPeople: currentCount.value,
-      remarks: inputValue.value,
+      remarks: addRemarks + inputValue.value,
       userAddressId: addressList.value[currentAddress.value].id,
+      charactersType: currentTag.value,
     },
   });
   submitLoading.value = false;
   if (res.data.code === 11000) {
-    ElMessage({ message: "下单成功！", type: "success" });
+    ElMessage({ message: "下单成功！", type: "success", offset: 140 });
     reportOrder.value = res.data.data;
     localStorage.setItem("mcdOrderId", reportOrder.value.orderId);
     startTime();
   } else {
-    ElMessage({ message: "下单失败，请重试", type: "error" });
+    ElMessage({ message: res.data.msg, type: "error", offset: 140 });
   }
 };
 const goHome = () => {
@@ -1759,9 +1916,9 @@ const copyShare = async () => {
   }
   try {
     await toClipboard(url);
-    ElMessage({ message: "复制成功", type: "success" });
+    ElMessage({ message: "复制成功", type: "success", offset: 140 });
   } catch (e) {
-    ElMessage("复制失败");
+    ElMessage({ offset: 140, message: "复制失败" });
   }
 };
 const logout = () => {
@@ -1788,15 +1945,21 @@ const logout = () => {
       isAuth: 0,
       accountType: 1,
       accessKey: "",
+      rmbBalance: 0,
     };
     showUserInfo.value = false;
     goHome();
+    qrCodeImgUrl.value = "";
   });
 };
 const clickEvaluate = (num: number) => {
   if (evaluateButton.value === 0) {
     evaluateButton.value = num;
-    ElMessage({ message: "感谢您的评价！祝您生活愉快", type: "success" });
+    ElMessage({
+      message: "感谢您的评价！祝您生活愉快",
+      type: "success",
+      offset: 140,
+    });
   }
 };
 const openReport = () => {
@@ -1831,6 +1994,65 @@ const loginComplete = (data: any) => {
     const firstC = getFirstChar(userInfo.value.name);
     nickName.value = firstC;
     getUserInfo(userInfo.value.token, userInfo.value.accessKey);
+  }
+};
+const onCheck = (check: boolean, index: number) => {
+  checkList.value[index].check = check;
+};
+const removeChoose = (id: number) => {
+  checkList.value[id].check = false;
+};
+const payAmount = async (item: { img: string; id: number; money: string }) => {
+  const img = await wechatPayMcd({
+    accessKey: userInfo.value.accessKey,
+    osType: agent.value ? 2 : 1,
+    payAmount: +item.id,
+    currency: "RMB",
+  });
+  if (agent.value) {
+    // if (img.data.data.h5Url) {
+    //   window.location.href = img.data.data.h5Url;
+    //   setTimeout(() => {
+    //     loopOrderDetail(img.data.data.orderNo);
+    //   }, 3000);
+    // } else {
+    //   ElMessage({
+    //     type: "error",
+    //     message: "获取微信支付链接失败",
+    //   });
+    // }
+  } else {
+    QRCode.toDataURL(img.data.data.codeUrl).then((res1: any) => {
+      qrCodeImgUrl.value = res1;
+      setTimeout(() => {
+        loopOrderDetail(img.data.data.orderNo);
+      }, 3000);
+    });
+  }
+};
+const loopOrderDetail = async (orderNo: string) => {
+  const orderResult = await orderDetail({
+    orderNo,
+    accessKey: userInfo.value.accessKey,
+  });
+  if (orderResult.data.data.payStatus === 1) {
+    clearTimeout(timers.value);
+    timers.value = "";
+    qrCodeImgUrl.value = "";
+    currentAlbum.value = 0;
+    showDrawer.value = false;
+    setTimeout(() => {
+      ElMessage({
+        type: "success",
+        message: "恭喜您，充值成功。",
+        offset: 140,
+      });
+    }, 500);
+    updateUserInfo();
+  } else {
+    timers.value = setTimeout(() => {
+      loopOrderDetail(orderNo);
+    }, 3000);
   }
 };
 </script>
@@ -1966,11 +2188,70 @@ const loginComplete = (data: any) => {
     }
   }
   .main {
-    height: calc(100vh - 100px);
+    height: calc(100vh - 140px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
+    .address-container {
+    }
+    .tag-container {
+      width: 380px;
+      height: 46px;
+      border-radius: 30px;
+      background: #d9e1e3;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 2px 2px 9px rgba(0, 0, 0, 0.16);
+      .tag-part {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .check {
+          background: linear-gradient(
+            90deg,
+            rgba(67, 202, 234, 1) 0%,
+            rgba(148, 81, 235, 0.81) 55%,
+            rgba(235, 72, 160, 1) 100%
+          );
+          height: 40px;
+          width: 96%;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          border-radius: 18px;
+          mix-blend-mode: multiply;
+          cursor: pointer;
+          .tag {
+            font-family: Gotham-Rounded;
+            font-weight: bold;
+            color: #fff;
+            font-size: 1rem;
+          }
+        }
+        .normal {
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          .tag {
+            color: rgba(0, 0, 0, 0.5);
+            font-family: Gotham-Rounded;
+            font-weight: bold;
+            font-size: 1rem;
+          }
+        }
+      }
+    }
     .big {
       color: #000;
       font-size: 4rem;
@@ -2041,8 +2322,65 @@ const loginComplete = (data: any) => {
       }
     }
     .area {
-      width: 40vw;
+      width: 960px;
       margin-top: 20px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      // padding: 20px 30px;
+      border-radius: 10px;
+      .want-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px 30px 0 30px;
+        .label {
+          color: #8a8b8b;
+          font-size: 20px;
+          white-space: nowrap;
+        }
+        .tags-container {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+          .tags {
+            margin-left: 20px;
+          }
+          :deep(.el-tag--dark) {
+            --el-tag-bg-color: none;
+            --el-tag-border-color: none;
+            // --el-tag-hover-color: none;
+          }
+        }
+      }
+      .area-container {
+        padding: 20px 30px;
+        :deep(.el-textarea__inner) {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          padding: 0;
+        }
+        :deep(.el-textarea__inner:hover) {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+      }
+      .check-container {
+        width: 100%;
+        height: 40px;
+        background: rgba(255, 216, 0, 0.15);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+      }
     }
     .button {
       margin-top: 30px;
@@ -2194,6 +2532,18 @@ const loginComplete = (data: any) => {
       margin-top: 30px;
       color: rgba(0, 0, 0, 0.6);
     }
+  }
+  .foot-container {
+    background: #b967db;
+    height: 40px;
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-family: FUTURA-MEDIUM;
+    color: #ffffff;
+    font-size: 18px;
   }
   .phone-main {
     height: calc(100vh - 60px);
@@ -2358,27 +2708,49 @@ const loginComplete = (data: any) => {
   background: #fff !important;
   border: none;
 }
-:deep(.el-dialog__header) {
+:deep(.wrap-dialog) {
+  width: 588px;
+  overflow: hidden;
+  border-radius: 11px;
+}
+:deep(.wrap-dialog .el-dialog__header) {
   display: none;
 }
-:deep(.el-dialog__body) {
+:deep(.wrap-dialog .el-dialog__body) {
   width: auto;
   height: auto;
   padding: 0;
   border-radius: 11px;
   overflow: hidden;
 }
-:deep(.wrap-dialog) {
-  width: 588px;
-  overflow: hidden;
-  border-radius: 11px;
-}
-:global(.el-drawer.ttb) {
+:deep(.wrap-dialog .el-drawer.ttb) {
   top: 100px;
 }
-:global(.el-drawer__body) {
+:deep(.wrap-dialog .el-drawer__body) {
   padding: 0;
 }
+// .wrap-dialog {
+//   width: 588px;
+//   overflow: hidden;
+//   border-radius: 11px;
+//   :deep(.el-dialog__header) {
+//     display: none !important;
+//   }
+//   :deep(.el-dialog__body) {
+//     width: auto;
+//     height: auto;
+//     padding: 0;
+//     border-radius: 11px;
+//     overflow: hidden;
+//   }
+//   :deep(.el-drawer.ttb) {
+//     top: 100px;
+//   }
+//   :deep(.el-drawer__body) {
+//     padding: 0;
+//   }
+// }
+
 .aside {
   width: 20vw;
   min-width: 280px;
@@ -2411,42 +2783,76 @@ const loginComplete = (data: any) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  .part {
-    width: 248px;
-    height: 140px;
+  justify-content: flex-start;
+  .part-container {
+    width: 294px;
+    height: 168px;
+    margin-bottom: 50px;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    .txt {
-      color: #000000;
-      font-size: 1rem;
-      font-family: FUTURA-MEDIUM;
+    border-radius: 12px;
+    &.check {
+      background: #ffd800;
+    }
+    .part {
+      width: 248px;
+      height: 140px;
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      .big {
+      cursor: pointer;
+      border: 2px #000 solid;
+      border-radius: 12px;
+      .txt {
         color: #000000;
-        font-size: 3rem;
+        font-size: 1rem;
         font-family: FUTURA-MEDIUM;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .big {
+          color: #000000;
+          font-size: 3rem;
+          font-family: FUTURA-MEDIUM;
+        }
       }
-    }
-    .txt2 {
-      color: #ffd800;
-      font-size: 1rem;
-      font-family: FUTURA-MEDIUM;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      .big {
+      .txt2 {
         color: #ffd800;
-        font-size: 3rem;
+        font-size: 1rem;
         font-family: FUTURA-MEDIUM;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .big {
+          color: #ffd800;
+          font-size: 3rem;
+          font-family: FUTURA-MEDIUM;
+        }
       }
     }
+  }
+  .pay {
+    border: #000000 solid 1px;
+    width: 150px;
+    height: 50px;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: FUTURA-MEDIUM;
+  }
+  .pay-disable {
+    background: #f2f2f2;
+    border: #f2f2f2 solid 1px;
+    width: 150px;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
   }
 }
 .album-swiper {
@@ -2455,7 +2861,7 @@ const loginComplete = (data: any) => {
     height: auto !important;
     display: flex;
     justify-items: center;
-    align-items: center;
+    align-items: flex-start;
   }
 }
 </style>

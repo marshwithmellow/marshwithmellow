@@ -285,7 +285,11 @@ const getTelCode = async (val: string) => {
       }
       if (codeRes.data.code === 11000) {
         // ElMessage({ type: "success", message: "验证码已发送" });
-        emits("showMessage", { type: "success", message: "验证码已发送" });
+        emits("showMessage", {
+          type: "success",
+          message: "验证码已发送",
+          offset: 140,
+        });
         const timer = setInterval(() => {
           time.value--;
           if (time.value <= 0) {
@@ -299,11 +303,19 @@ const getTelCode = async (val: string) => {
           status.value = 3;
         }
         // ElMessage({ type: "error", message: codeRes.data.msg });
-        emits("showMessage", { type: "error", message: codeRes.data.msg });
+        emits("showMessage", {
+          type: "error",
+          message: codeRes.data.msg,
+          offset: 140,
+        });
       }
       loginFlag.value = false;
     } else {
-      emits("showMessage", "请输入正确的手机号");
+      emits("showMessage", {
+        type: "error",
+        message: "请输入正确的手机号",
+        offset: 140,
+      });
     }
     // ElMessage("请输入正确的手机号");
   }
@@ -347,7 +359,11 @@ const countDown = async () => {
       const res = await doRegisterCode({ phone });
       if (res.data.code === 11000) {
         // ElMessage({ type: "success", message: "验证码已发送" });
-        emits("showMessage", { type: "success", message: "验证码已发送" });
+        emits("showMessage", {
+          type: "success",
+          message: "验证码已发送",
+          offset: 140,
+        });
         const timer = setInterval(() => {
           time.value--;
           if (time.value <= 0) {
@@ -361,18 +377,27 @@ const countDown = async () => {
           status.value = 3;
         }
         // 没有注册
-        emits("showMessage", { type: "warning", message: res.data.msg });
+        emits("showMessage", {
+          type: "warning",
+          message: res.data.msg,
+          offset: 140,
+        });
         // ElMessage({ type: "warning", message: res.data.msg });
       }
     } else {
       emits("showMessage", {
         type: "warning",
         message: "请输入正确的手机号码",
+        offset: 140,
       });
       // ElMessage({ type: "warning", message: "请输入正确的手机号码" });
     }
   } else {
-    emits("showMessage", { type: "warning", message: "请输入正确的手机号码" });
+    emits("showMessage", {
+      type: "warning",
+      message: "请输入正确的手机号码",
+      offset: 140,
+    });
     // ElMessage({ type: "warning", message: "请输入正确的手机号码" });
   }
 };
@@ -389,7 +414,11 @@ const inputCode = async (code: string) => {
       const res = await doLoginApi(query);
       if (res.data.code === 11000) {
         // ElMessage({ type: "success", message: "手机号验证成功" });
-        emits("showMessage", { type: "success", message: "手机号验证成功" });
+        emits("showMessage", {
+          type: "success",
+          message: "手机号验证成功",
+          offset: 140,
+        });
         status.value = 1;
         sms1.value = "";
         sms2.value = "";
@@ -398,7 +427,11 @@ const inputCode = async (code: string) => {
         emits("complete", res?.data?.data);
       } else {
         // ElMessage({ type: "error", message: res.data.msg });
-        emits("showMessage", { type: "error", message: res.data.msg });
+        emits("showMessage", {
+          type: "error",
+          message: res.data.msg,
+          offset: 140,
+        });
       }
       requestLock.value = false;
     } else {
@@ -412,7 +445,11 @@ const inputCode = async (code: string) => {
 // Nickname
 const inputNickname = async () => {
   if (!nickname.value) {
-    emits("showMessage", "请输入昵称");
+    emits("showMessage", {
+      type: "error",
+      message: "请输入昵称",
+      offset: 140,
+    });
     return;
   }
   // ElMessage("请输入昵称");
@@ -423,7 +460,11 @@ const inputNickname = async () => {
   }
   const res = await registerAccount(query);
   if (res.data.code === 11000) {
-    emits("showMessage", { type: "success", message: "手机号验证成功" });
+    emits("showMessage", {
+      type: "success",
+      message: "手机号验证成功",
+      offset: 140,
+    });
     // ElMessage({ type: "success", message: "手机号验证成功" });
     status.value = 1;
     sms1.value = "";
@@ -433,7 +474,7 @@ const inputNickname = async () => {
     emits("complete", res?.data?.data);
   } else {
     // ElMessage({ type: "error", message: res.data.msg });
-    emits("showMessage", { type: "error", message: res.data.msg });
+    emits("showMessage", { type: "error", message: res.data.msg, offset: 140 });
   }
 };
 // verify input mobile
