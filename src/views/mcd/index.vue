@@ -933,13 +933,12 @@
           <el-autocomplete
             v-model="detailInfo"
             :fetch-suggestions="queryPoi"
-            :trigger-on-focus="false"
             clearable
             popper-class="my-autocomplete"
             placeholder="请填写详细地址"
-            @input="inputPoi"
             @select="handlePoi"
             fit-input-width
+            @blur="blurPoi"
           >
             <template #default="{ item }">
               <div class="complete-container">
@@ -948,6 +947,30 @@
               </div>
             </template>
           </el-autocomplete>
+          <!-- <el-select
+            v-model="detailInfo"
+            multiple
+            filterable
+            remote
+            clearable
+            reserve-keyword
+            popper-class="my-autocomplete"
+            placeholder="请填写详细地址"
+            remote-show-suffix
+            :remote-method="queryPoi"
+          >
+            <el-option
+              v-for="item in detailOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.address"
+            >
+              <div class="complete-container">
+                <div class="value">{{ item.name }}</div>
+                <span class="link">{{ item.address }}</span>
+              </div>
+            </el-option>
+          </el-select> -->
         </template>
       </avue-form>
       <template #footer>
@@ -1036,7 +1059,7 @@ import {
 } from "@/api/index";
 import { pinyin } from "pinyin-pro";
 import { useRouter } from "vue-router";
-import { isPhone, isHashMode, throttle } from "@/utils/utils";
+import { isPhone, isHashMode } from "@/utils/utils";
 import axios from "axios";
 import useClipboard from "vue-clipboard3";
 import { pca } from "./pca";
@@ -1089,15 +1112,20 @@ type addressItem = {
   userId: string;
   userName: string;
   userDetailInfo: string;
+  longitude: string;
+  latitude: string;
+  lab: string;
 };
 type addressFormItem = {
   mobile: string;
   userName: string;
-  // map: Array<number | string>;
   detailInfo: string;
   userDetailInfo: string;
   cityName: Array<string>;
-  // provinceName: string;
+  cityCode: Array<string>;
+  longitude: string;
+  latitude: string;
+  lab: string;
 };
 type reportItem = {
   orderId: string;
@@ -1136,6 +1164,7 @@ type reportItem = {
 //   type: string;
 //   typecode: string;
 // }
+// const detailOptions = ref<Array<poiItem>>([]);
 const currentTag = ref(1);
 const showUserInfo = ref(false);
 const editAddressId = ref("");
@@ -1179,11 +1208,13 @@ const detailInfo = ref("");
 const addressEditForm = ref<addressFormItem>({
   mobile: "",
   userName: "",
-  // map: [],
   userDetailInfo: "",
   detailInfo: "",
   cityName: [],
-  // provinceName: "",
+  cityCode: [],
+  longitude: "",
+  latitude: "",
+  lab: "",
 });
 const addressEditOption = ref({
   submitBtn: false,
@@ -1229,7 +1260,7 @@ const addressEditOption = ref({
     //   span: 12,
     // },
     {
-      label: "省/市",
+      label: "省/市/区",
       prop: "cityName",
       type: "cascader",
       span: 24,
@@ -1241,7 +1272,7 @@ const addressEditOption = ref({
       rules: [
         {
           required: true,
-          message: "请选择省市",
+          message: "请选择省市区",
           trigger: "blur",
         },
       ],
@@ -1594,7 +1625,13 @@ const getMyAddressList = async (token: string, accessKey: string) => {
   });
   if (res.data.code === 11000) {
     if (res.data.data.length > 0) {
-      addressList.value = res.data.data;
+      addressList.value = res.data.data.map((item: addressItem) =>
+        Object.assign({}, item, {
+          longitude: item.longitude ? item.longitude : "",
+          latitude: item.latitude ? item.latitude : "",
+          lab: item.lab ? item.lab : "",
+        })
+      );
     } else {
       dialogTableVisible.value = false;
       addressList.value = [];
@@ -1616,6 +1653,9 @@ const saveAddress = () => {
         provinceName: addressEditForm.value.cityName[0],
         userName: addressEditForm.value.userName,
         userDetailInfo: addressEditForm.value.userDetailInfo,
+        latitude: addressEditForm.value.latitude,
+        longitude: addressEditForm.value.longitude,
+        lab: addressEditForm.value.lab,
       };
       let usr = localStorage.getItem("userInfo");
       if (usr) {
@@ -1720,11 +1760,11 @@ const parseAddress = (detailInfo: string) => {
 const parsePoi = (detailInfo: string) => {
   if (
     addressEditForm.value &&
-    addressEditForm.value.cityName &&
-    addressEditForm.value.cityName.length > 0
+    addressEditForm.value.cityCode &&
+    addressEditForm.value.cityCode.length > 0
   ) {
     return service.get(
-      `https://restapi.amap.com/v5/place/text?key=a9e09a5e99b12541c4f59b218379f78a&region=${addressEditForm.value.cityName[1]}&keywords=${detailInfo}`
+      `https://restapi.amap.com/v5/place/text?key=a9e09a5e99b12541c4f59b218379f78a&region=${addressEditForm.value.cityCode[2]}&keywords=${detailInfo}`
     );
   }
   return service.get(
@@ -1738,11 +1778,13 @@ const add = () => {
   addressEditForm.value = {
     mobile: "",
     userName: "",
-    // map: [],
     detailInfo: "",
-    // provinceName: "",
     cityName: [],
     userDetailInfo: "",
+    cityCode: [],
+    longitude: "",
+    latitude: "",
+    lab: "",
   };
   detailInfo.value = "";
 };
@@ -1767,13 +1809,40 @@ const edit = (row: addressItem) => {
   //     }
   //   }
   // });
+  let provinceCode = "";
+  let cityCode = "";
+  let countyCode = "";
+  for (let index = 0; index < pca.length; index++) {
+    if (pca[index].name == row.provinceName) {
+      provinceCode = pca[index].code;
+      for (let i = 0; i < pca[index].children.length; i++) {
+        if (pca[index].children[i].name == row.cityName) {
+          cityCode = pca[index].children[i].code;
+          for (let j = 0; j < pca[index].children[i].children.length; j++) {
+            if (pca[index].children[i].children[j].name == row.countyName) {
+              countyCode = pca[index].children[i].children[j].code;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
   addressEditForm.value = {
     mobile: row.mobile,
     userName: row.userName,
     detailInfo: row.detailInfo,
     userDetailInfo: row.userDetailInfo,
-    // provinceName: row.provinceName,
     cityName: [row.provinceName, row.cityName, row.countyName],
+    cityCode:
+      provinceCode.length > 0 && cityCode.length > 0 && countyCode.length > 0
+        ? [provinceCode, cityCode, countyCode]
+        : [],
+    latitude: row.latitude,
+    longitude: row.longitude,
+    lab: row.lab,
   };
   detailInfo.value = row.detailInfo;
   dialogTableVisible.value = false;
@@ -1971,16 +2040,36 @@ const queryPoi = (queryString: string, cb: Function) => {
   if (queryString) {
     parsePoi(queryString).then((res) => {
       cb(res.data.pois);
+      // detailOptions.value = res.data.pois;
     });
   }
 };
+// const queryPoi = (queryString: string, cb: Function) => {
+//   if (queryString) {
+//     parsePoi(queryString).then((res) => {
+//       // cb(res.data.pois);
+//       detailOptions.value = res.data.pois;
+//     });
+//   }
+// };
 const inputPoi = (item: string) => {
   addressEditForm.value.detailInfo = item;
 };
+const blurPoi = () => {
+  detailInfo.value = addressEditForm.value.detailInfo;
+};
 const handlePoi = (item: any) => {
   if (item && item.name) {
-    addressEditForm.value.detailInfo = item.name;
-    detailInfo.value = item.name;
+    addressEditForm.value.detailInfo = item.address;
+    detailInfo.value = item.address;
+    if (item.location && item.location.length > 0) {
+      const location = item.location.split(",");
+      addressEditForm.value.longitude = location.length > 0 ? location[0] : "";
+      addressEditForm.value.latitude = location.length > 0 ? location[1] : "";
+    } else {
+      addressEditForm.value.longitude = "";
+      addressEditForm.value.latitude = "";
+    }
   }
 };
 const showMessage = (params: any) => {
