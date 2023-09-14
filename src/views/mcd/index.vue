@@ -106,189 +106,316 @@
           </div>
         </el-header>
         <el-main class="main">
-          <div class="tag-container">
-            <div class="tag-part" @click="currentTag = 0">
-              <div :class="currentTag === 0 ? 'check' : 'normal'">
-                <div class="tag">新品优先</div>
-              </div>
+          <div class="address-container">
+            <div class="part check">
+              <el-icon><HomeFilled /></el-icon>
+              <div class="title">住宅地址</div>
             </div>
-            <div class="tag-part" @click="currentTag = 1">
-              <div :class="currentTag === 1 ? 'check' : 'normal'">
-                <div class="tag">低价大师</div>
-              </div>
-            </div>
-            <div class="tag-part" @click="currentTag = 2">
-              <div :class="currentTag === 2 ? 'check' : 'normal'">
-                <div class="tag">自助点餐</div>
-              </div>
+            <el-divider style="margin: 0" />
+            <div class="part">
+              <el-icon><OfficeBuilding /></el-icon>
+              <div class="title">办公地址</div>
             </div>
           </div>
-          <div class="big">
-            {{
-              processStatus == 1
-                ? "正在点餐"
-                : processStatus == 2
-                ? "正在取餐"
-                : processStatus == 3
-                ? "正在送餐"
-                : "麦当劳外卖"
-            }}
-            <div
-              v-if="processStatus == 3"
-              style="cursor: pointer"
-              @click="openReport"
+          <div class="edit-address" v-if="dialogEditVisible">
+            <div class="back" @click="dialogEditVisible = false">返回</div>
+            <div class="edit-label-container">
+              <div class="label">住宅地址</div>
+              <el-divider />
+            </div>
+            <div class="edit-input-container">
+              <el-input
+                v-model="addressEditForm.userName"
+                placeholder="*联系人："
+              />
+            </div>
+            <div class="edit-input-container">
+              <el-input
+                v-model="addressEditForm.mobile"
+                placeholder="*联系电话："
+              />
+            </div>
+            <div class="edit-input-container">
+              <!-- <el-input
+                v-model="addressEditForm"
+                placeholder="*省/市/区"
+              /> -->
+              <el-cascader
+                v-model="addressEditForm.cityName"
+                :options="pcaData"
+                :props="{ value: 'name', label: 'name' }"
+              />
+            </div>
+            <div class="edit-input-container">
+              <!-- <el-input
+                v-model="addressEditForm.detailInfo"
+                placeholder="*详细地址"
+              /> -->
+              <el-autocomplete
+                v-model="detailInfo"
+                :fetch-suggestions="queryPoi"
+                clearable
+                :trigger-on-focus="false"
+                popper-class="my-autocomplete"
+                placeholder="*详细地址"
+                @select="handlePoi"
+                fit-input-width
+                @blur="blurPoi"
+              >
+                <template #default="{ item }">
+                  <div class="complete-container">
+                    <div class="value">{{ item.name }}</div>
+                    <span class="link">{{
+                      item.adname + " " + item.address
+                    }}</span>
+                  </div>
+                </template>
+              </el-autocomplete>
+            </div>
+            <div class="edit-input-container">
+              <el-input
+                v-model="addressEditForm.userDetailInfo"
+                placeholder="门牌号"
+              />
+            </div>
+            <div class="confirm">好了!</div>
+            <!-- <avue-form
+              ref="editAddressForm"
+              v-model="addressEditForm"
+              :option="addressEditOption"
             >
-              (查看点餐报告)
-            </div>
-          </div>
-          <div
-            class="address"
-            v-if="
-              addressList.length > 0 && processStatus != 5 && processStatus != 4
-            "
-          >
-            <img class="hamburger" :src="hamburgerImg" alt="" />
-            <div style="margin: 0 30px">
-              送至：{{
-                addressList[currentAddress].provinceName +
-                " " +
-                addressList[currentAddress].cityName +
-                " " +
-                addressList[currentAddress].countyName +
-                " " +
-                addressList[currentAddress].detailInfo +
-                (addressList[currentAddress].userDetailInfo
-                  ? " " + addressList[currentAddress].userDetailInfo
-                  : "")
-              }}
-            </div>
-            <img class="phone" :src="phoneImg" alt="" />
-            <div style="margin-left: 30px">
-              电话：{{ addressList[currentAddress].mobile }}
-            </div>
-          </div>
-          <div
-            class="address"
-            v-else-if="processStatus != 5 && processStatus != 4"
-          >
-            <div
-              style="text-decoration: underline; cursor: pointer"
-              @click="dialogEditVisible = true"
-            >
-              填写送餐地址
-            </div>
-          </div>
-          <div
-            class="contact"
-            v-if="
-              addressList.length > 0 && processStatus != 5 && processStatus != 4
-            "
-          >
-            <div class="label">联系人：</div>
-            {{ addressList[currentAddress].userName }}
-            <div
-              v-if="processStatus == 0"
-              :style="{
-                'margin-left': '30px',
-                cursor: submitLoading ? 'not-allowed' : 'pointer',
-                'text-decoration': 'underline',
-              }"
-              @click="clickEdit()"
-            >
-              编辑地址
-            </div>
-          </div>
-          <el-row
-            class="count-container"
-            v-if="processStatus == 0 && !submitLoading"
-          >
-            <el-col :span="6" v-for="item in counts">
-              <div :class="item.num == currentCount ? 'count' : 'count-normal'">
-                <div
-                  class="txt"
-                  @click="changeCount(item)"
-                  style="cursor: pointer"
+              <template #detailInfo="{}">
+                <el-autocomplete
+                  v-model="detailInfo"
+                  :fetch-suggestions="queryPoi"
+                  clearable
+                  :trigger-on-focus="false"
+                  popper-class="my-autocomplete"
+                  placeholder="请填写详细地址"
+                  @select="handlePoi"
+                  fit-input-width
+                  @blur="blurPoi"
                 >
-                  <view class="num">{{ item.num }}</view>
-                  人份
+                  <template #default="{ item }">
+                    <div class="complete-container">
+                      <div class="value">{{ item.name }}</div>
+                      <span class="link">{{
+                        item.adname + " " + item.address
+                      }}</span>
+                    </div>
+                  </template>
+                </el-autocomplete>
+              </template>
+            </avue-form> -->
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+            "
+            v-else
+          >
+            <div class="tag-container">
+              <div class="tag-part" @click="currentTag = 0">
+                <div :class="currentTag === 0 ? 'check' : 'normal'">
+                  <div class="tag">新品优先</div>
                 </div>
               </div>
-            </el-col>
-          </el-row>
-          <div class="count" v-else-if="submitLoading">
-            <div class="txt">
-              <view class="num">{{ currentCount }}</view>
-              人份
-            </div>
-          </div>
-          <div
-            class="count"
-            v-else-if="processStatus != 5 && processStatus != 4"
-          >
-            <div class="txt">
-              <view class="num">{{ currentCount }}</view>
-              人份
-            </div>
-          </div>
-          <div class="area" v-if="processStatus == 0">
-            <div class="want-container" v-if="currentTag == 2">
-              <div class="label">我想要:</div>
-              <div class="tags-container">
-                <el-tag
-                  v-for="tag in checkChoose"
-                  :key="tag.id"
-                  class="tags"
-                  closable
-                  color="#000000"
-                  effect="dark"
-                  @close="removeChoose(tag.id)"
-                >
-                  {{ tag.txt }}
-                </el-tag>
+              <div class="tag-part" @click="currentTag = 1">
+                <div :class="currentTag === 1 ? 'check' : 'normal'">
+                  <div class="tag">低价大师</div>
+                </div>
+              </div>
+              <div class="tag-part" @click="currentTag = 2">
+                <div :class="currentTag === 2 ? 'check' : 'normal'">
+                  <div class="tag">自助点餐</div>
+                </div>
               </div>
             </div>
-            <el-input
-              v-model="inputValue"
-              :rows="5"
-              type="textarea"
-              placeholder="首次运行，AI 将自动为您点餐。如果您有用餐偏好，请在这里输入。"
-              :disabled="submitLoading"
-              resize="none"
-              class="area-container"
-            />
-            <div class="check-container" v-if="currentTag == 2">
-              <el-check-tag
-                :style="{
-                  'margin-left': '20px',
-                  border: item.check
-                    ? '1px #000000 solid'
-                    : '1px #a0a0a0 solid',
-                  background: item.check ? '#000000' : '#ebebeb',
-                  'border-radius': '17px',
-                  color: item.check ? '#ffffff' : '#555555',
-                }"
-                :checked="item.check"
-                v-for="(item, index) in checkList"
-                :key="item.id"
-                @change="onCheck($event, index)"
+            <div class="big">
+              {{
+                processStatus == 1
+                  ? "正在点餐"
+                  : processStatus == 2
+                  ? "正在取餐"
+                  : processStatus == 3
+                  ? "正在送餐"
+                  : "麦当劳外卖"
+              }}
+              <div
+                v-if="processStatus == 3"
+                style="cursor: pointer"
+                @click="openReport"
               >
-                {{ item.txt }}
-              </el-check-tag>
+                (查看点餐报告)
+              </div>
             </div>
-          </div>
-          <el-button
-            class="button"
-            color="#000000"
-            @click="clickRun"
-            :loading="submitLoading"
-            v-if="processStatus == 0"
-          >
-            <template #loading>
-              <div class="custom-loading">
-                <svg class="circular" viewBox="-10, -10, 50, 50">
-                  <path
-                    class="path"
-                    d="
+            <div
+              class="address"
+              v-if="
+                addressList.length > 0 &&
+                processStatus != 5 &&
+                processStatus != 4
+              "
+            >
+              <img class="hamburger" :src="hamburgerImg" alt="" />
+              <div style="margin: 0 30px">
+                送至：{{
+                  addressList[currentAddress].provinceName +
+                  " " +
+                  addressList[currentAddress].cityName +
+                  " " +
+                  addressList[currentAddress].countyName +
+                  " " +
+                  addressList[currentAddress].detailInfo +
+                  (addressList[currentAddress].userDetailInfo
+                    ? " " + addressList[currentAddress].userDetailInfo
+                    : "")
+                }}
+              </div>
+              <img class="phone" :src="phoneImg" alt="" />
+              <div style="margin-left: 30px">
+                电话：{{ addressList[currentAddress].mobile }}
+              </div>
+            </div>
+            <div
+              class="address"
+              v-else-if="processStatus != 5 && processStatus != 4"
+            >
+              <!-- <div
+                style="text-decoration: underline; cursor: pointer"
+                @click="dialogEditVisible = true"
+              >
+                填写送餐地址
+              </div> -->
+              <img class="hamburger" :src="hamburgerImg" alt="" />
+              <div style="margin-left: 20px">新建：</div>
+              <div class="part check">
+                <el-icon><HomeFilled /></el-icon>
+                <div class="title">住宅地址</div>
+              </div>
+              <div class="part">
+                <el-icon><OfficeBuilding /></el-icon>
+                <div class="title">办公地址</div>
+              </div>
+            </div>
+            <div
+              class="contact"
+              v-if="
+                addressList.length > 0 &&
+                processStatus != 5 &&
+                processStatus != 4
+              "
+            >
+              <div class="label">联系人：</div>
+              {{ addressList[currentAddress].userName }}
+              <div
+                v-if="processStatus == 0"
+                :style="{
+                  'margin-left': '30px',
+                  cursor: submitLoading ? 'not-allowed' : 'pointer',
+                  'text-decoration': 'underline',
+                }"
+                @click="clickEdit()"
+              >
+                编辑地址
+              </div>
+            </div>
+            <el-row
+              class="count-container"
+              v-if="processStatus == 0 && !submitLoading"
+            >
+              <el-col :span="6" v-for="item in counts">
+                <div
+                  :class="item.num == currentCount ? 'count' : 'count-normal'"
+                >
+                  <div
+                    class="txt"
+                    @click="changeCount(item)"
+                    style="cursor: pointer"
+                  >
+                    <view class="num">{{ item.num }}</view>
+                    人份
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+            <div class="count" v-else-if="submitLoading">
+              <div class="txt">
+                <view class="num">{{ currentCount }}</view>
+                人份
+              </div>
+            </div>
+            <div
+              class="count"
+              v-else-if="processStatus != 5 && processStatus != 4"
+            >
+              <div class="txt">
+                <view class="num">{{ currentCount }}</view>
+                人份
+              </div>
+            </div>
+            <div class="area" v-if="processStatus == 0">
+              <div class="want-container" v-if="currentTag == 2">
+                <div class="label">我想要:</div>
+                <div class="tags-container">
+                  <el-tag
+                    v-for="tag in checkChoose"
+                    :key="tag.id"
+                    class="tags"
+                    closable
+                    color="#000000"
+                    effect="dark"
+                    @close="removeChoose(tag.id)"
+                  >
+                    {{ tag.txt }}
+                  </el-tag>
+                </div>
+              </div>
+              <el-input
+                v-model="inputValue"
+                :rows="5"
+                type="textarea"
+                placeholder="首次运行，AI 将自动为您点餐。如果您有用餐偏好，请在这里输入。"
+                :disabled="submitLoading"
+                resize="none"
+                class="area-container"
+              />
+              <div class="check-container" v-if="currentTag == 2">
+                <el-check-tag
+                  :style="{
+                    'margin-left': '20px',
+                    border: item.check
+                      ? '1px #000000 solid'
+                      : '1px #a0a0a0 solid',
+                    background: item.check ? '#000000' : '#ebebeb',
+                    'border-radius': '17px',
+                    color: item.check ? '#ffffff' : '#555555',
+                  }"
+                  :checked="item.check"
+                  v-for="(item, index) in checkList"
+                  :key="item.id"
+                  @change="onCheck($event, index)"
+                >
+                  {{ item.txt }}
+                </el-check-tag>
+              </div>
+            </div>
+            <el-button
+              class="button"
+              color="#000000"
+              @click="clickRun"
+              :loading="submitLoading"
+              v-if="processStatus == 0"
+            >
+              <template #loading>
+                <div class="custom-loading">
+                  <svg class="circular" viewBox="-10, -10, 50, 50">
+                    <path
+                      class="path"
+                      d="
             M 30 15
             L 28 17
             M 25.61 25.61
@@ -296,326 +423,327 @@
             A 15 15, 0, 1, 1, 27.99 7.5
             L 15 15
           "
-                    style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"
-                  />
-                </svg>
-              </div>
-            </template>
-            {{ submitLoading ? "正在下单..." : "下单" }}
-          </el-button>
-          <el-row
-            :gutter="2"
-            class="process-container"
-            v-if="
-              processStatus == 1 || processStatus == 2 || processStatus == 3
-            "
-          >
-            <el-col :span="6">
-              <div class="pro">
-                <div class="txt">
-                  {{ processStatus == 1 ? "正在点餐" : "已点餐" }}
+                      style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"
+                    />
+                  </svg>
                 </div>
-              </div>
-            </el-col>
-            <el-col :span="6">
-              <div
-                class="pro"
-                :style="{ opacity: processStatus == 1 ? 0.75 : 1 }"
-              >
-                <div class="txt">
-                  {{
-                    processStatus == 1 || processStatus == 2
-                      ? "正在取餐"
-                      : "已取餐"
-                  }}
-                </div>
-              </div>
-            </el-col>
-            <el-col :span="6">
-              <div
-                class="pro"
-                :style="{
-                  opacity:
-                    processStatus == 1 ? 0.5 : processStatus == 2 ? 0.75 : 1,
-                }"
-              >
-                <div class="txt">
-                  {{
-                    processStatus == 1 ||
-                    processStatus == 2 ||
-                    processStatus == 3
-                      ? "正在送餐"
-                      : "已送餐"
-                  }}
-                </div>
-              </div>
-            </el-col>
-            <el-col :span="6">
-              <div
-                class="pro"
-                :style="{
-                  opacity:
-                    processStatus == 1 || processStatus == 2
-                      ? 0.5
-                      : processStatus == 3
-                      ? 0.75
-                      : 1,
-                  cursor: processStatus == 3 ? 'pointer' : 'auto',
-                }"
-                @click="openReport"
-              >
-                <div class="txt">
-                  {{ processStatus == 3 ? "点餐报告" : "等待接收" }}
-                </div>
-              </div>
-            </el-col>
-          </el-row>
-          <div
-            class="count-down"
-            v-if="
-              processStatus != 0 && processStatus != 5 && processStatus != 4
-            "
-          >
-            <div
-              class="column"
-              :style="{
-                transform: `translateY(${-lineHeight * timeObject.index4}px)`,
-              }"
-            >
-              <div
-                class="num"
-                v-for="(item, index) in timeObject.arr4"
-                :key="index"
-              >
-                <div>{{ item }}</div>
-              </div>
-            </div>
-            <div
-              class="column"
-              :style="{
-                transform: `translateY(${-lineHeight * timeObject.index3}px)`,
-              }"
-            >
-              <div
-                class="num"
-                v-for="(item, index) in timeObject.arr3"
-                :key="index"
-              >
-                <div>{{ item }}</div>
-              </div>
-            </div>
-            <div
-              style="
-                width: 10px;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: center;
+              </template>
+              {{ submitLoading ? "正在下单..." : "下单" }}
+            </el-button>
+            <el-row
+              :gutter="2"
+              class="process-container"
+              v-if="
+                processStatus == 1 || processStatus == 2 || processStatus == 3
               "
             >
-              <div style="height: 30px">:</div>
-            </div>
+              <el-col :span="6">
+                <div class="pro">
+                  <div class="txt">
+                    {{ processStatus == 1 ? "正在点餐" : "已点餐" }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div
+                  class="pro"
+                  :style="{ opacity: processStatus == 1 ? 0.75 : 1 }"
+                >
+                  <div class="txt">
+                    {{
+                      processStatus == 1 || processStatus == 2
+                        ? "正在取餐"
+                        : "已取餐"
+                    }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div
+                  class="pro"
+                  :style="{
+                    opacity:
+                      processStatus == 1 ? 0.5 : processStatus == 2 ? 0.75 : 1,
+                  }"
+                >
+                  <div class="txt">
+                    {{
+                      processStatus == 1 ||
+                      processStatus == 2 ||
+                      processStatus == 3
+                        ? "正在送餐"
+                        : "已送餐"
+                    }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div
+                  class="pro"
+                  :style="{
+                    opacity:
+                      processStatus == 1 || processStatus == 2
+                        ? 0.5
+                        : processStatus == 3
+                        ? 0.75
+                        : 1,
+                    cursor: processStatus == 3 ? 'pointer' : 'auto',
+                  }"
+                  @click="openReport"
+                >
+                  <div class="txt">
+                    {{ processStatus == 3 ? "点餐报告" : "等待接收" }}
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
             <div
-              class="column"
-              :style="{
-                transform: `translateY(${-lineHeight * timeObject.index2}px)`,
-              }"
+              class="count-down"
+              v-if="
+                processStatus != 0 && processStatus != 5 && processStatus != 4
+              "
             >
               <div
-                class="num"
-                v-for="(item, index) in timeObject.arr2"
-                :key="index"
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index4}px)`,
+                }"
               >
-                <div>{{ item }}</div>
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr4"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index3}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr3"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                style="
+                  width: 10px;
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div style="height: 30px">:</div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index2}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr2"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index1}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr1"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+            </div>
+            <div style="color: #000; font-size: 1rem" v-if="processStatus == 5">
+              Hi，{{
+                addressList.length > 0
+                  ? addressList[currentAddress].userName
+                  : ""
+              }}，很高兴为您完成本次订单。
+            </div>
+            <div style="color: #000; font-size: 1rem" v-if="processStatus == 4">
+              很抱歉！{{
+                addressList.length > 0
+                  ? addressList[currentAddress].userName
+                  : ""
+              }}，本次为您点餐失败。
+            </div>
+            <div
+              class="report-container"
+              v-if="processStatus == 5 || processStatus == 4"
+            >
+              <img class="hamburger" :src="reportHamburgerImg" />
+              <div class="solid"></div>
+              <div class="report-part">
+                <div class="desc">本次点餐</div>
+                <div class="content">
+                  <div class="large">
+                    {{ reportOrder.combinationPrice + reportOrder.paidCharge }}
+                  </div>
+                  元
+                </div>
+                <div class="desc">包含餐食+配送费</div>
+              </div>
+              <div class="report-part">
+                <div class="desc">为您节约</div>
+                <div class="content">
+                  <div class="large">
+                    {{
+                      (
+                        reportOrder.originalPrice +
+                        reportOrder.originalCharge -
+                        (reportOrder.combinationPrice + reportOrder.paidCharge)
+                      ).toFixed(2)
+                    }}
+                  </div>
+                  元
+                </div>
+                <div class="desc">相比原餐食和配送价</div>
+              </div>
+              <div class="report-part">
+                <div class="desc">相当于</div>
+                <div class="content">
+                  <div class="large">
+                    {{ reportOrder.originalPrice + reportOrder.originalCharge }}
+                  </div>
+                  元
+                </div>
+                <div class="desc">购买了相同的商品</div>
+              </div>
+              <div class="report-part" v-if="reportOrder.useTime">
+                <div class="desc">并且节约您</div>
+                <div class="content">
+                  <div class="large">{{ reportOrder.useTime }}</div>
+                  分钟
+                </div>
+                <div class="desc">点单时间</div>
+              </div>
+            </div>
+            <div class="evaluate" v-if="processStatus == 5">
+              <el-input
+                v-model="evaluateValue"
+                :rows="5"
+                type="textarea"
+                placeholder="欢迎您留下评价。"
+              />
+              <div class="evaluate-group">
+                <el-button
+                  :class="evaluateButton == 1 ? 'selected' : 'normal'"
+                  @click="clickEvaluate(1)"
+                >
+                  喜欢
+                </el-button>
+                <el-button
+                  :class="evaluateButton == 2 ? 'selected' : 'normal'"
+                  @click="clickEvaluate(2)"
+                >
+                  不喜欢
+                </el-button>
               </div>
             </div>
             <div
-              class="column"
-              :style="{
-                transform: `translateY(${-lineHeight * timeObject.index1}px)`,
-              }"
+              class="button-group"
+              v-if="processStatus == 5 || processStatus == 4"
             >
-              <div
-                class="num"
-                v-for="(item, index) in timeObject.arr1"
-                :key="index"
-              >
-                <div>{{ item }}</div>
-              </div>
-            </div>
-          </div>
-          <div style="color: #000; font-size: 1rem" v-if="processStatus == 5">
-            Hi，{{
-              addressList.length > 0
-                ? addressList[currentAddress].userName
-                : ""
-            }}，很高兴为您完成本次订单。
-          </div>
-          <div style="color: #000; font-size: 1rem" v-if="processStatus == 4">
-            很抱歉！{{
-              addressList.length > 0
-                ? addressList[currentAddress].userName
-                : ""
-            }}，本次为您点餐失败。
-          </div>
-          <div
-            class="report-container"
-            v-if="processStatus == 5 || processStatus == 4"
-          >
-            <img class="hamburger" :src="reportHamburgerImg" />
-            <div class="solid"></div>
-            <div class="report-part">
-              <div class="desc">本次点餐</div>
-              <div class="content">
-                <div class="large">
-                  {{ reportOrder.combinationPrice + reportOrder.paidCharge }}
+              <el-button color="#000" style="border-radius: 12px; width: 100px">
+                <div class="button-count-down">
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index4}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr4"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index3}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr3"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      width: 10px;
+                      display: flex;
+                      flex-direction: row;
+                      align-items: center;
+                      justify-content: center;
+                    "
+                  >
+                    <div style="height: 20px">:</div>
+                  </div>
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index2}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr2"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index1}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr1"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
                 </div>
-                元
-              </div>
-              <div class="desc">包含餐食+配送费</div>
-            </div>
-            <div class="report-part">
-              <div class="desc">为您节约</div>
-              <div class="content">
-                <div class="large">
-                  {{
-                    (
-                      reportOrder.originalPrice +
-                      reportOrder.originalCharge -
-                      (reportOrder.combinationPrice + reportOrder.paidCharge)
-                    ).toFixed(2)
-                  }}
-                </div>
-                元
-              </div>
-              <div class="desc">相比原餐食和配送价</div>
-            </div>
-            <div class="report-part">
-              <div class="desc">相当于</div>
-              <div class="content">
-                <div class="large">
-                  {{ reportOrder.originalPrice + reportOrder.originalCharge }}
-                </div>
-                元
-              </div>
-              <div class="desc">购买了相同的商品</div>
-            </div>
-            <div class="report-part" v-if="reportOrder.useTime">
-              <div class="desc">并且节约您</div>
-              <div class="content">
-                <div class="large">{{ reportOrder.useTime }}</div>
-                分钟
-              </div>
-              <div class="desc">点单时间</div>
-            </div>
-          </div>
-          <div class="evaluate" v-if="processStatus == 5">
-            <el-input
-              v-model="evaluateValue"
-              :rows="5"
-              type="textarea"
-              placeholder="欢迎您留下评价。"
-            />
-            <div class="evaluate-group">
-              <el-button
-                :class="evaluateButton == 1 ? 'selected' : 'normal'"
-                @click="clickEvaluate(1)"
-              >
-                喜欢
               </el-button>
               <el-button
-                :class="evaluateButton == 2 ? 'selected' : 'normal'"
-                @click="clickEvaluate(2)"
+                color="#000"
+                style="border-radius: 12px; width: 100px"
+                @click="processStatus = 0"
               >
-                不喜欢
+                再来一份
               </el-button>
             </div>
-          </div>
-          <div
-            class="button-group"
-            v-if="processStatus == 5 || processStatus == 4"
-          >
-            <el-button color="#000" style="border-radius: 12px; width: 100px">
-              <div class="button-count-down">
-                <div
-                  class="column"
-                  :style="{
-                    transform: `translateY(${-30 * timeObject.index4}px)`,
-                  }"
-                >
-                  <div
-                    class="num"
-                    v-for="(item, index) in timeObject.arr4"
-                    :key="index"
-                  >
-                    <div>{{ item }}</div>
-                  </div>
-                </div>
-                <div
-                  class="column"
-                  :style="{
-                    transform: `translateY(${-30 * timeObject.index3}px)`,
-                  }"
-                >
-                  <div
-                    class="num"
-                    v-for="(item, index) in timeObject.arr3"
-                    :key="index"
-                  >
-                    <div>{{ item }}</div>
-                  </div>
-                </div>
-                <div
-                  style="
-                    width: 10px;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <div style="height: 20px">:</div>
-                </div>
-                <div
-                  class="column"
-                  :style="{
-                    transform: `translateY(${-30 * timeObject.index2}px)`,
-                  }"
-                >
-                  <div
-                    class="num"
-                    v-for="(item, index) in timeObject.arr2"
-                    :key="index"
-                  >
-                    <div>{{ item }}</div>
-                  </div>
-                </div>
-                <div
-                  class="column"
-                  :style="{
-                    transform: `translateY(${-30 * timeObject.index1}px)`,
-                  }"
-                >
-                  <div
-                    class="num"
-                    v-for="(item, index) in timeObject.arr1"
-                    :key="index"
-                  >
-                    <div>{{ item }}</div>
-                  </div>
-                </div>
-              </div>
-            </el-button>
-            <el-button
-              color="#000"
-              style="border-radius: 12px; width: 100px"
-              @click="processStatus = 0"
-            >
-              再来一份
-            </el-button>
-          </div>
-          <div class="order-no" v-if="processStatus != 0">
-            订单号：{{ reportOrder.orderId }}
+            <div class="order-no" v-if="processStatus != 0">
+              订单号：{{ reportOrder.orderId }}
+            </div>
           </div>
         </el-main>
         <el-footer class="foot-container">
@@ -923,7 +1051,7 @@
         </el-main>
       </el-container>
     </div>
-    <el-dialog v-model="dialogEditVisible" title="新增送餐地址">
+    <!-- <el-dialog v-model="dialogEditVisible" title="新增送餐地址">
       <avue-form
         ref="editAddressForm"
         v-model="addressEditForm"
@@ -934,6 +1062,7 @@
             v-model="detailInfo"
             :fetch-suggestions="queryPoi"
             clearable
+            :trigger-on-focus="false"
             popper-class="my-autocomplete"
             placeholder="请填写详细地址"
             @select="handlePoi"
@@ -943,34 +1072,10 @@
             <template #default="{ item }">
               <div class="complete-container">
                 <div class="value">{{ item.name }}</div>
-                <span class="link">{{ item.address }}</span>
+                <span class="link">{{ item.adname + " " + item.address }}</span>
               </div>
             </template>
           </el-autocomplete>
-          <!-- <el-select
-            v-model="detailInfo"
-            multiple
-            filterable
-            remote
-            clearable
-            reserve-keyword
-            popper-class="my-autocomplete"
-            placeholder="请填写详细地址"
-            remote-show-suffix
-            :remote-method="queryPoi"
-          >
-            <el-option
-              v-for="item in detailOptions"
-              :key="item.id"
-              :label="item.name"
-              :value="item.address"
-            >
-              <div class="complete-container">
-                <div class="value">{{ item.name }}</div>
-                <span class="link">{{ item.address }}</span>
-              </div>
-            </el-option>
-          </el-select> -->
         </template>
       </avue-form>
       <template #footer>
@@ -979,7 +1084,7 @@
           <el-button type="primary" @click="saveAddress"> 保存 </el-button>
         </span>
       </template>
-    </el-dialog>
+    </el-dialog> -->
     <el-dialog v-model="dialogTableVisible" title="编辑送餐地址">
       <avue-crud ref="crud" :option="addressTableOption" :data="addressList">
         <template #menu-left="{}">
@@ -1062,6 +1167,7 @@ import { useRouter } from "vue-router";
 import { isPhone, isHashMode } from "@/utils/utils";
 import axios from "axios";
 import useClipboard from "vue-clipboard3";
+import { HomeFilled, OfficeBuilding } from "@element-plus/icons-vue";
 import { pca } from "./pca";
 // 使用插件
 const { toClipboard } = useClipboard();
@@ -1182,6 +1288,7 @@ const validatePhone = (rule: any, value: string, callback: Function) => {
     callback();
   }
 };
+const pcaData = ref(pca);
 const reportOrder = ref<reportItem>({
   orderId: "",
   accessKey: "",
@@ -1219,6 +1326,7 @@ const addressEditForm = ref<addressFormItem>({
 const addressEditOption = ref({
   submitBtn: false,
   emptyBtn: false,
+  labelPosition: "top",
   column: [
     {
       label: "联系人",
@@ -1236,7 +1344,8 @@ const addressEditOption = ref({
     {
       label: "联系电话",
       prop: "mobile",
-      span: 12,
+      span: 11,
+      offset: 1,
       rules: [
         {
           required: true,
@@ -1449,6 +1558,44 @@ watch(
   (newVal) => {
     if (!newVal) {
       currentAlbum.value = 0;
+    }
+  }
+);
+watch(
+  () => addressEditForm.value.cityName,
+  (newVal, oldVal) => {
+    console.log(newVal);
+    if (oldVal.length != 0) {
+      let provinceCode = "";
+      let cityCode = "";
+      let countyCode = "";
+      for (let index = 0; index < pca.length; index++) {
+        if (pca[index].name == newVal[0]) {
+          provinceCode = pca[index].code;
+          for (let i = 0; i < pca[index].children.length; i++) {
+            if (pca[index].children[i].name == newVal[1]) {
+              cityCode = pca[index].children[i].code;
+              for (let j = 0; j < pca[index].children[i].children.length; j++) {
+                if (pca[index].children[i].children[j].name == newVal[2]) {
+                  countyCode = pca[index].children[i].children[j].code;
+                  break;
+                }
+              }
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (
+        provinceCode.length > 0 &&
+        cityCode.length > 0 &&
+        countyCode.length > 0
+      ) {
+        addressEditForm.value.cityCode = [provinceCode, cityCode, countyCode];
+        addressEditForm.value.detailInfo = "";
+        detailInfo.value = "";
+      }
     }
   }
 );
@@ -1728,6 +1875,18 @@ const addAddressItem = async (token: string, accessKey: string, dto: any) => {
     if (addressStatus.value == 1) {
       dialogTableVisible.value = true;
     }
+    addressEditForm.value = {
+      mobile: "",
+      userName: "",
+      detailInfo: "",
+      cityName: [],
+      userDetailInfo: "",
+      cityCode: [],
+      longitude: "",
+      latitude: "",
+      lab: "",
+    };
+    detailInfo.value = "";
   } else {
     ElMessage({ offset: 140, message: response.data.msg });
   }
@@ -1743,6 +1902,18 @@ const editAddressItem = async (token: string, accessKey: string, dto: any) => {
     dialogEditVisible.value = false;
     getMyAddressList(token, accessKey);
     dialogTableVisible.value = true;
+    addressEditForm.value = {
+      mobile: "",
+      userName: "",
+      detailInfo: "",
+      cityName: [],
+      userDetailInfo: "",
+      cityCode: [],
+      longitude: "",
+      latitude: "",
+      lab: "",
+    };
+    detailInfo.value = "";
   } else {
     ElMessage({ offset: 140, message: response.data.msg });
   }
@@ -1758,6 +1929,7 @@ const parseAddress = (detailInfo: string) => {
   );
 };
 const parsePoi = (detailInfo: string) => {
+  console.log(addressEditForm.value.cityCode);
   if (
     addressEditForm.value &&
     addressEditForm.value.cityCode &&
@@ -2060,8 +2232,8 @@ const blurPoi = () => {
 };
 const handlePoi = (item: any) => {
   if (item && item.name) {
-    addressEditForm.value.detailInfo = item.address;
-    detailInfo.value = item.address;
+    addressEditForm.value.detailInfo = item.address + item.name;
+    detailInfo.value = item.address + item.name;
     if (item.location && item.location.length > 0) {
       const location = item.location.split(",");
       addressEditForm.value.longitude = location.length > 0 ? location[0] : "";
@@ -2283,7 +2455,85 @@ const loopOrderDetail = async (orderNo: string) => {
     align-items: center;
     justify-content: center;
     position: relative;
+    .edit-address {
+      height: 70vh;
+      width: 60vw;
+      background: #ffffff;
+      border-radius: 29px;
+      padding: 50px 30px;
+      border: #cecbcb 1px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      .back {
+        position: absolute;
+        top: 30px;
+        left: 50px;
+        font-size: 1rem;
+        color: #59d0ec;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .edit-label-container {
+        .label {
+          color: #59d0ec;
+          font-size: 3rem;
+          line-height: 3rem;
+        }
+      }
+      .edit-input-container {
+        border: #121212 1px solid;
+        width: 20vw;
+        height: 50px;
+        border-radius: 11px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 5px 8px;
+        :deep(.el-input__wrapper) {
+          box-shadow: none;
+        }
+        :deep(.el-cascader) {
+          width: 100%;
+        }
+      }
+      .confirm {
+        color: #59d0ec;
+        font-size: 3rem;
+        cursor: pointer;
+      }
+    }
     .address-container {
+      position: absolute;
+      top: 20vh;
+      left: 30px;
+      background: #ffffff;
+      padding: 12px;
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16);
+      border-radius: 17px;
+      .part {
+        padding: 5px 10px;
+        border-radius: 15px;
+        margin: 6px 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: #43caea;
+        &.check {
+          background: #43caea;
+          color: #ffffff;
+        }
+        .title {
+          font-size: 1rem;
+          margin-left: 10px;
+        }
+      }
     }
     .tag-container {
       width: 380px;
@@ -2360,6 +2610,27 @@ const loopOrderDetail = async (orderNo: string) => {
       .phone {
         height: 30px;
         width: 18px;
+      }
+      .part {
+        padding: 5px 15px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        color: #43caea;
+        border: #43caea 1px solid;
+        margin-left: 30px;
+        cursor: pointer;
+        &.check {
+          background: #43caea;
+          color: #ffffff;
+        }
+        .title {
+          font-size: 1rem;
+          margin-left: 20px;
+        }
       }
     }
     .contact {
