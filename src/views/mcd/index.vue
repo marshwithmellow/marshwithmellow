@@ -106,52 +106,83 @@
           </div>
         </el-header>
         <el-main class="main">
-          <div class="address-container">
-            <div class="part check">
-              <el-icon><HomeFilled /></el-icon>
-              <div class="title">住宅地址</div>
+          <div class="address-container" v-if="addressList.length > 0">
+            <div v-for="(item, index) in addressList" :key="item.id">
+              <div
+                class="part"
+                :class="
+                  currentAddress == index && !dialogEditVisible ? 'check' : ''
+                "
+                @click="chooseAddress(index)"
+              >
+                <el-icon v-if="item.lab == '办公地址'">
+                  <OfficeBuilding />
+                </el-icon>
+                <el-icon v-else><HomeFilled /></el-icon>
+                <div class="title">{{ item.lab }}</div>
+              </div>
+              <el-divider v-if="addressList.length < 5" style="margin: 0" />
             </div>
-            <el-divider style="margin: 0" />
-            <div class="part">
-              <el-icon><OfficeBuilding /></el-icon>
-              <div class="title">办公地址</div>
+            <div v-if="addressList.length < 5">
+              <div
+                class="part"
+                @click="add(addressList.length)"
+                :class="dialogEditVisible ? 'check' : ''"
+              >
+                <el-icon><Plus /></el-icon>
+                <div class="title">新建地址</div>
+              </div>
             </div>
           </div>
           <div class="edit-address" v-if="dialogEditVisible">
-            <div class="back" @click="dialogEditVisible = false">返回</div>
+            <div class="back" @click="addressBack">返回</div>
+            <div class="del" @click="del" v-if="editAddressId.length > 0">
+              删除
+            </div>
             <div class="edit-label-container">
-              <div class="label">住宅地址</div>
+              <div class="label">{{ addressEditForm.lab }}</div>
               <el-divider />
             </div>
-            <div class="edit-input-container">
+            <div
+              class="edit-input-container"
+              :class="addressRules[0] ? 'rule' : ''"
+            >
               <el-input
+                @focus="addressRules[0] = false"
                 v-model="addressEditForm.userName"
                 placeholder="*联系人："
               />
             </div>
-            <div class="edit-input-container">
+            <div
+              class="edit-input-container"
+              :class="addressRules[1] ? 'rule' : ''"
+            >
               <el-input
+                @focus="addressRules[1] = false"
                 v-model="addressEditForm.mobile"
                 placeholder="*联系电话："
+                :maxlength="11"
+                @blur="blurTel"
               />
             </div>
-            <div class="edit-input-container">
-              <!-- <el-input
-                v-model="addressEditForm"
-                placeholder="*省/市/区"
-              /> -->
+            <div
+              class="edit-input-container"
+              :class="addressRules[2] ? 'rule' : ''"
+            >
               <el-cascader
+                @focus="addressRules[2] = false"
                 v-model="addressEditForm.cityName"
                 :options="pcaData"
                 :props="{ value: 'name', label: 'name' }"
+                placeholder="*省/市/区"
               />
             </div>
-            <div class="edit-input-container">
-              <!-- <el-input
-                v-model="addressEditForm.detailInfo"
-                placeholder="*详细地址"
-              /> -->
+            <div
+              class="edit-input-container"
+              :class="addressRules[3] ? 'rule' : ''"
+            >
               <el-autocomplete
+                @focus="addressRules[3] = false"
                 v-model="detailInfo"
                 :fetch-suggestions="queryPoi"
                 clearable
@@ -165,9 +196,9 @@
                 <template #default="{ item }">
                   <div class="complete-container">
                     <div class="value">{{ item.name }}</div>
-                    <span class="link">{{
-                      item.adname + " " + item.address
-                    }}</span>
+                    <span class="link">
+                      {{ item.adname + " " + item.address }}
+                    </span>
                   </div>
                 </template>
               </el-autocomplete>
@@ -178,35 +209,7 @@
                 placeholder="门牌号"
               />
             </div>
-            <div class="confirm">好了!</div>
-            <!-- <avue-form
-              ref="editAddressForm"
-              v-model="addressEditForm"
-              :option="addressEditOption"
-            >
-              <template #detailInfo="{}">
-                <el-autocomplete
-                  v-model="detailInfo"
-                  :fetch-suggestions="queryPoi"
-                  clearable
-                  :trigger-on-focus="false"
-                  popper-class="my-autocomplete"
-                  placeholder="请填写详细地址"
-                  @select="handlePoi"
-                  fit-input-width
-                  @blur="blurPoi"
-                >
-                  <template #default="{ item }">
-                    <div class="complete-container">
-                      <div class="value">{{ item.name }}</div>
-                      <span class="link">{{
-                        item.adname + " " + item.address
-                      }}</span>
-                    </div>
-                  </template>
-                </el-autocomplete>
-              </template>
-            </avue-form> -->
+            <div class="confirm" @click="saveAddress">好了!</div>
           </div>
           <div
             style="
@@ -275,10 +278,6 @@
                     : "")
                 }}
               </div>
-              <img class="phone" :src="phoneImg" alt="" />
-              <div style="margin-left: 30px">
-                电话：{{ addressList[currentAddress].mobile }}
-              </div>
             </div>
             <div
               class="address"
@@ -292,11 +291,11 @@
               </div> -->
               <img class="hamburger" :src="hamburgerImg" alt="" />
               <div style="margin-left: 20px">新建：</div>
-              <div class="part check">
+              <div class="part" @click="add(0)">
                 <el-icon><HomeFilled /></el-icon>
                 <div class="title">住宅地址</div>
               </div>
-              <div class="part">
+              <div class="part" @click="add(1)">
                 <el-icon><OfficeBuilding /></el-icon>
                 <div class="title">办公地址</div>
               </div>
@@ -311,6 +310,10 @@
             >
               <div class="label">联系人：</div>
               {{ addressList[currentAddress].userName }}
+              <img class="phone" :src="phoneImg" alt="" />
+              <div style="margin-left: 10px">
+                电话：{{ addressList[currentAddress].mobile }}
+              </div>
               <div
                 v-if="processStatus == 0"
                 :style="{
@@ -318,7 +321,7 @@
                   cursor: submitLoading ? 'not-allowed' : 'pointer',
                   'text-decoration': 'underline',
                 }"
-                @click="clickEdit()"
+                @click="edit()"
               >
                 编辑地址
               </div>
@@ -1085,7 +1088,7 @@
         </span>
       </template>
     </el-dialog> -->
-    <el-dialog v-model="dialogTableVisible" title="编辑送餐地址">
+    <!-- <el-dialog v-model="dialogTableVisible" title="编辑送餐地址">
       <avue-crud ref="crud" :option="addressTableOption" :data="addressList">
         <template #menu-left="{}">
           <el-button type="primary" icon="el-icon-plus" @click="add()">
@@ -1122,7 +1125,7 @@
           </el-button>
         </template>
       </avue-crud>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 <script setup lang="ts">
@@ -1167,7 +1170,7 @@ import { useRouter } from "vue-router";
 import { isPhone, isHashMode } from "@/utils/utils";
 import axios from "axios";
 import useClipboard from "vue-clipboard3";
-import { HomeFilled, OfficeBuilding } from "@element-plus/icons-vue";
+import { HomeFilled, OfficeBuilding, Plus } from "@element-plus/icons-vue";
 import { pca } from "./pca";
 // 使用插件
 const { toClipboard } = useClipboard();
@@ -1444,6 +1447,7 @@ const addressTableOption = ref({
     },
   ],
 });
+const addressRules = ref<Array<boolean>>([false, false, false, false]);
 const userInfo = ref({
   mobile: "",
   id: "",
@@ -1541,6 +1545,7 @@ const checkList = ref([
 const checkChoose = computed(() =>
   checkList.value.filter((item) => item.check)
 );
+const browserLocation = ref<Array<string>>([]);
 //watch监听机型
 // watch(
 //   () => index5.value,
@@ -1564,7 +1569,6 @@ watch(
 watch(
   () => addressEditForm.value.cityName,
   (newVal, oldVal) => {
-    console.log(newVal);
     if (oldVal.length != 0) {
       let provinceCode = "";
       let cityCode = "";
@@ -1722,6 +1726,34 @@ onBeforeMount(() => {
       showDialog.value = true;
     }
   }
+  navigator.geolocation.getCurrentPosition((position) => {
+    if (position.coords.latitude && position.coords.longitude) {
+      parseLocation(position.coords.latitude, position.coords.longitude).then(
+        (res) => {
+          if (
+            res.data.status == 1 &&
+            res.data.regeocode &&
+            res.data.regeocode.addressComponent
+          ) {
+            if (res.data.regeocode.addressComponent.city.length > 0) {
+              browserLocation.value = [
+                res.data.regeocode.addressComponent.province,
+                res.data.regeocode.addressComponent.city,
+                res.data.regeocode.addressComponent.district,
+              ];
+            } else {
+              browserLocation.value = [
+                res.data.regeocode.addressComponent.province,
+                res.data.regeocode.addressComponent.province,
+                res.data.regeocode.addressComponent.district,
+              ];
+            }
+            console.log(res.data.regeocode.addressComponent);
+          }
+        }
+      );
+    }
+  });
 });
 onUnmounted(() => {
   if (timers.value) {
@@ -1788,79 +1820,94 @@ const getMyAddressList = async (token: string, accessKey: string) => {
     ElMessage({ offset: 140, message: res.data.msg });
   }
 };
+// const saveAddress = () => {
+//   proxy?.$refs["editAddressForm"].validate((valid: boolean, done: Function) => {
+//     if (valid) {
+//       done();
+//       const temp = {
+//         cityName: addressEditForm.value.cityName[1],
+//         countyName: addressEditForm.value.cityName[2],
+//         detailInfo: addressEditForm.value.detailInfo,
+//         mobile: addressEditForm.value.mobile,
+//         provinceName: addressEditForm.value.cityName[0],
+//         userName: addressEditForm.value.userName,
+//         userDetailInfo: addressEditForm.value.userDetailInfo,
+//         latitude: addressEditForm.value.latitude,
+//         longitude: addressEditForm.value.longitude,
+//         lab: addressEditForm.value.lab,
+//       };
+//       let usr = localStorage.getItem("userInfo");
+//       if (usr) {
+//         const info = JSON.parse(usr);
+//         if (addressStatus.value == 0 || addressStatus.value == 1) {
+//           addAddressItem(info.token, info.accessKey, temp);
+//         } else {
+//           editAddressItem(
+//             info.token,
+//             info.accessKey,
+//             Object.assign({}, temp, {
+//               id: editAddressId.value,
+//             })
+//           );
+//         }
+//       }
+//     } else {
+//       return false;
+//     }
+//   });
+// };
 const saveAddress = () => {
-  proxy?.$refs["editAddressForm"].validate((valid: boolean, done: Function) => {
-    if (valid) {
-      done();
-      const temp = {
-        cityName: addressEditForm.value.cityName[1],
-        countyName: addressEditForm.value.cityName[2],
-        detailInfo: addressEditForm.value.detailInfo,
-        mobile: addressEditForm.value.mobile,
-        provinceName: addressEditForm.value.cityName[0],
-        userName: addressEditForm.value.userName,
-        userDetailInfo: addressEditForm.value.userDetailInfo,
-        latitude: addressEditForm.value.latitude,
-        longitude: addressEditForm.value.longitude,
-        lab: addressEditForm.value.lab,
-      };
-      let usr = localStorage.getItem("userInfo");
-      if (usr) {
-        const info = JSON.parse(usr);
-        if (addressStatus.value == 0 || addressStatus.value == 1) {
-          addAddressItem(info.token, info.accessKey, temp);
-        } else {
-          editAddressItem(
-            info.token,
-            info.accessKey,
-            Object.assign({}, temp, {
-              id: editAddressId.value,
-            })
-          );
-        }
-      }
-      // if (addressEditForm.value.map.length > 0) {
-      //   parseLocation(
-      //     addressEditForm.value.map[0],
-      //     addressEditForm.value.map[1]
-      //   ).then((res) => {
-      //     if (res.status == 200 && res.data.status == "1") {
-      //       if (res.data.regeocode && res.data.regeocode.addressComponent) {
-      //         const temp = {
-      //           cityName:
-      //             typeof res.data.regeocode.addressComponent.city === "string"
-      //               ? res.data.regeocode.addressComponent.city
-      //               : res.data.regeocode.addressComponent.province,
-      //           countyName: res.data.regeocode.addressComponent.country,
-      //           detailInfo: addressEditForm.value.map[2],
-      //           mobile: addressEditForm.value.mobile,
-      //           provinceName: res.data.regeocode.addressComponent.province,
-      //           userName: addressEditForm.value.userName,
-      //           userDetailInfo: addressEditForm.value.userDetailInfo,
-      //         };
-      //         let usr = localStorage.getItem("userInfo");
-      //         if (usr) {
-      //           const info = JSON.parse(usr);
-      //           if (addressStatus.value == 0 || addressStatus.value == 1) {
-      //             addAddressItem(info.token, info.accessKey, temp);
-      //           } else {
-      //             editAddressItem(
-      //               info.token,
-      //               info.accessKey,
-      //               Object.assign({}, temp, {
-      //                 id: editAddressId.value,
-      //               })
-      //             );
-      //           }
-      //         }
-      //       }
-      //     }
-      //   });
-      // }
+  if (!addressEditForm.value.userName) {
+    addressRules.value[0] = true;
+    showMessage({ offset: 140, message: "请填写联系人", type: "error" });
+    return;
+  }
+  if (!isPhone(addressEditForm.value.mobile)) {
+    addressRules.value[1] = true;
+    showMessage({
+      offset: 140,
+      message: "请填写正确的手机号码",
+      type: "error",
+    });
+    return;
+  }
+  if (addressEditForm.value.cityName.length == 0) {
+    addressRules.value[2] = true;
+    showMessage({ offset: 140, message: "请选择省市区", type: "error" });
+    return;
+  }
+  if (!addressEditForm.value.detailInfo) {
+    addressRules.value[3] = true;
+    showMessage({ offset: 140, message: "请填写详细地址", type: "error" });
+    return;
+  }
+  const temp = {
+    cityName: addressEditForm.value.cityName[1],
+    countyName: addressEditForm.value.cityName[2],
+    detailInfo: addressEditForm.value.detailInfo,
+    mobile: addressEditForm.value.mobile,
+    provinceName: addressEditForm.value.cityName[0],
+    userName: addressEditForm.value.userName,
+    userDetailInfo: addressEditForm.value.userDetailInfo,
+    latitude: addressEditForm.value.latitude,
+    longitude: addressEditForm.value.longitude,
+    lab: addressEditForm.value.lab,
+  };
+  let usr = localStorage.getItem("userInfo");
+  if (usr) {
+    const info = JSON.parse(usr);
+    if (addressStatus.value == 0 || addressStatus.value == 1) {
+      addAddressItem(info.token, info.accessKey, temp);
     } else {
-      return false;
+      editAddressItem(
+        info.token,
+        info.accessKey,
+        Object.assign({}, temp, {
+          id: editAddressId.value,
+        })
+      );
     }
-  });
+  }
 };
 const addAddressItem = async (token: string, accessKey: string, dto: any) => {
   const response = await addAddress({
@@ -1920,7 +1967,7 @@ const editAddressItem = async (token: string, accessKey: string, dto: any) => {
 };
 const parseLocation = (lat: number | string, lng: number | string) => {
   return service.get(
-    `https://restapi.amap.com/v3/geocode/regeo?location=${lat},${lng}&key=a9e09a5e99b12541c4f59b218379f78a&radius=1000&extensions=all`
+    `https://restapi.amap.com/v3/geocode/regeo?location=${lng},${lat}&key=a9e09a5e99b12541c4f59b218379f78a`
   );
 };
 const parseAddress = (detailInfo: string) => {
@@ -1929,7 +1976,6 @@ const parseAddress = (detailInfo: string) => {
   );
 };
 const parsePoi = (detailInfo: string) => {
-  console.log(addressEditForm.value.cityCode);
   if (
     addressEditForm.value &&
     addressEditForm.value.cityCode &&
@@ -1943,10 +1989,67 @@ const parsePoi = (detailInfo: string) => {
     `https://restapi.amap.com/v5/place/text?key=a9e09a5e99b12541c4f59b218379f78a&keywords=${detailInfo}`
   );
 };
-const add = () => {
+const add = (index: number) => {
   addressStatus.value = 1;
   dialogEditVisible.value = true;
   dialogTableVisible.value = false;
+  let temp = "";
+  if (addressList.value.length == 1 && addressList.value[0].lab == "办公地址") {
+    temp = "住宅地址";
+  }
+  let tempCityCode = [];
+  if (browserLocation.value.length > 0) {
+    for (let index = 0; index < pca.length; index++) {
+      if (pca[index].name == browserLocation.value[0]) {
+        tempCityCode.push(pca[index].code);
+        for (let i = 0; i < pca[index].children.length; i++) {
+          if (pca[index].children[i].name == browserLocation.value[1]) {
+            tempCityCode.push(pca[index].children[i].code);
+            for (let j = 0; j < pca[index].children[i].children.length; j++) {
+              if (
+                pca[index].children[i].children[j].name ==
+                browserLocation.value[2]
+              ) {
+                tempCityCode.push(pca[index].children[i].children[j].code);
+                break;
+              }
+            }
+            break;
+          }
+        }
+        break;
+      }
+    }
+  }
+  addressEditForm.value = {
+    mobile: "",
+    userName: "",
+    detailInfo: "",
+    cityName: tempCityCode.length > 0 ? browserLocation.value : [],
+    userDetailInfo: "",
+    cityCode: tempCityCode,
+    longitude: "",
+    latitude: "",
+    lab:
+      temp.length > 0
+        ? temp
+        : index == 0
+        ? "住宅地址"
+        : index == 1
+        ? "办公地址"
+        : `新建地址${index + 1}`,
+  };
+  detailInfo.value = "";
+  editAddressId.value = "";
+  addressRules.value = [false, false, false, false];
+};
+const chooseAddress = (index: number) => {
+  if (dialogEditVisible.value) {
+    dialogEditVisible.value = false;
+  }
+  if (index != currentAddress.value) {
+    currentAddress.value = index;
+  }
   addressEditForm.value = {
     mobile: "",
     userName: "",
@@ -1960,38 +2063,82 @@ const add = () => {
   };
   detailInfo.value = "";
 };
-const edit = (row: addressItem) => {
-  addressStatus.value = 2;
-  // parseAddress(row.detailInfo).then((res) => {
-  //   if (res.status == 200 && res.data.status == "1") {
-  //     if (res.data.geocodes && res.data.geocodes.length > 0) {
-  //       let location = res.data.geocodes[0].location;
-  //       if (location) {
-  //         location = location.split(",");
-  //         addressEditForm.value = {
-  //           mobile: row.mobile,
-  //           userName: row.userName,
-  //           map: [location[0], location[1], row.detailInfo],
-  //           userDetailInfo: row.userDetailInfo,
-  //         };
-  //         dialogTableVisible.value = false;
-  //         dialogEditVisible.value = true;
-  //         editAddressId.value = row.id;
-  //       }
-  //     }
-  //   }
-  // });
+const addressBack = () => {
+  dialogEditVisible.value = false;
+  addressEditForm.value = {
+    mobile: "",
+    userName: "",
+    detailInfo: "",
+    cityName: [],
+    userDetailInfo: "",
+    cityCode: [],
+    longitude: "",
+    latitude: "",
+    lab: "",
+  };
+};
+// const edit = (row: addressItem) => {
+//   addressStatus.value = 2;
+//   let provinceCode = "";
+//   let cityCode = "";
+//   let countyCode = "";
+//   for (let index = 0; index < pca.length; index++) {
+//     if (pca[index].name == row.provinceName) {
+//       provinceCode = pca[index].code;
+//       for (let i = 0; i < pca[index].children.length; i++) {
+//         if (pca[index].children[i].name == row.cityName) {
+//           cityCode = pca[index].children[i].code;
+//           for (let j = 0; j < pca[index].children[i].children.length; j++) {
+//             if (pca[index].children[i].children[j].name == row.countyName) {
+//               countyCode = pca[index].children[i].children[j].code;
+//               break;
+//             }
+//           }
+//           break;
+//         }
+//       }
+//       break;
+//     }
+//   }
+//   addressEditForm.value = {
+//     mobile: row.mobile,
+//     userName: row.userName,
+//     detailInfo: row.detailInfo,
+//     userDetailInfo: row.userDetailInfo,
+//     cityName: [row.provinceName, row.cityName, row.countyName],
+//     cityCode:
+//       provinceCode.length > 0 && cityCode.length > 0 && countyCode.length > 0
+//         ? [provinceCode, cityCode, countyCode]
+//         : [],
+//     latitude: row.latitude,
+//     longitude: row.longitude,
+//     lab: row.lab,
+//   };
+//   detailInfo.value = row.detailInfo;
+//   dialogTableVisible.value = false;
+//   dialogEditVisible.value = true;
+//   editAddressId.value = row.id;
+// };
+const edit = () => {
   let provinceCode = "";
   let cityCode = "";
   let countyCode = "";
   for (let index = 0; index < pca.length; index++) {
-    if (pca[index].name == row.provinceName) {
+    if (
+      pca[index].name == addressList.value[currentAddress.value].provinceName
+    ) {
       provinceCode = pca[index].code;
       for (let i = 0; i < pca[index].children.length; i++) {
-        if (pca[index].children[i].name == row.cityName) {
+        if (
+          pca[index].children[i].name ==
+          addressList.value[currentAddress.value].cityName
+        ) {
           cityCode = pca[index].children[i].code;
           for (let j = 0; j < pca[index].children[i].children.length; j++) {
-            if (pca[index].children[i].children[j].name == row.countyName) {
+            if (
+              pca[index].children[i].children[j].name ==
+              addressList.value[currentAddress.value].countyName
+            ) {
               countyCode = pca[index].children[i].children[j].code;
               break;
             }
@@ -2003,46 +2150,86 @@ const edit = (row: addressItem) => {
     }
   }
   addressEditForm.value = {
-    mobile: row.mobile,
-    userName: row.userName,
-    detailInfo: row.detailInfo,
-    userDetailInfo: row.userDetailInfo,
-    cityName: [row.provinceName, row.cityName, row.countyName],
+    mobile: addressList.value[currentAddress.value].mobile,
+    userName: addressList.value[currentAddress.value].userName,
+    detailInfo: addressList.value[currentAddress.value].detailInfo,
+    userDetailInfo: addressList.value[currentAddress.value].userDetailInfo,
+    cityName: [
+      addressList.value[currentAddress.value].provinceName,
+      addressList.value[currentAddress.value].cityName,
+      addressList.value[currentAddress.value].countyName,
+    ],
     cityCode:
       provinceCode.length > 0 && cityCode.length > 0 && countyCode.length > 0
         ? [provinceCode, cityCode, countyCode]
         : [],
-    latitude: row.latitude,
-    longitude: row.longitude,
-    lab: row.lab,
+    latitude: addressList.value[currentAddress.value].latitude,
+    longitude: addressList.value[currentAddress.value].longitude,
+    lab: addressList.value[currentAddress.value].lab,
   };
-  detailInfo.value = row.detailInfo;
+  detailInfo.value = addressList.value[currentAddress.value].detailInfo;
   dialogTableVisible.value = false;
   dialogEditVisible.value = true;
-  editAddressId.value = row.id;
+  editAddressId.value = addressList.value[currentAddress.value].id;
+  addressStatus.value = 2;
 };
 const selection = (row: addressItem, index: number) => {
   currentAddress.value = index;
   dialogTableVisible.value = false;
 };
-const del = (row: addressItem, index: number) => {
+// const del = (row: addressItem, index: number) => {
+//   ElMessageBox.confirm("是否删除该送餐地址？", "提示").then(() => {
+//     let usr = localStorage.getItem("userInfo");
+//     if (usr) {
+//       const info = JSON.parse(usr);
+//       delAddressItem(info.token, info.accessKey, row.id).then((res) => {
+//         if (res.data.code === 11000) {
+//           if (currentAddress.value == index) {
+//             currentAddress.value = 0;
+//           } else if (currentAddress.value > index) {
+//             currentAddress.value--;
+//           }
+//           getMyAddressList(info.token, info.accessKey);
+//           ElMessage({ message: "删除成功", type: "success", offset: 140 });
+//         } else {
+//           ElMessage({ offset: 140, message: res.data.msg });
+//         }
+//       });
+//     }
+//   });
+// };
+const del = () => {
   ElMessageBox.confirm("是否删除该送餐地址？", "提示").then(() => {
     let usr = localStorage.getItem("userInfo");
     if (usr) {
       const info = JSON.parse(usr);
-      delAddressItem(info.token, info.accessKey, row.id).then((res) => {
-        if (res.data.code === 11000) {
-          if (currentAddress.value == index) {
-            currentAddress.value = 0;
-          } else if (currentAddress.value > index) {
-            currentAddress.value--;
+      delAddressItem(info.token, info.accessKey, editAddressId.value).then(
+        (res) => {
+          if (res.data.code === 11000) {
+            dialogEditVisible.value = false;
+            // if (currentAddress.value == index) {
+            //   currentAddress.value = 0;
+            // } else if (currentAddress.value > index) {
+            //   currentAddress.value--;
+            // }
+            addressEditForm.value = {
+              mobile: "",
+              userName: "",
+              detailInfo: "",
+              cityName: [],
+              userDetailInfo: "",
+              cityCode: [],
+              longitude: "",
+              latitude: "",
+              lab: "",
+            };
+            getMyAddressList(info.token, info.accessKey);
+            ElMessage({ message: "删除成功", type: "success", offset: 140 });
+          } else {
+            ElMessage({ offset: 140, message: res.data.msg });
           }
-          getMyAddressList(info.token, info.accessKey);
-          ElMessage({ message: "删除成功", type: "success", offset: 140 });
-        } else {
-          ElMessage({ offset: 140, message: res.data.msg });
         }
-      });
+      );
     }
   });
 };
@@ -2060,7 +2247,8 @@ const clickEdit = () => {
     return;
   }
   addressStatus.value = 0;
-  dialogTableVisible.value = true;
+  // dialogTableVisible.value = true;
+  edit();
 };
 // 处理首字母nickname
 const getFirstChar = (str: string) => {
@@ -2229,6 +2417,24 @@ const inputPoi = (item: string) => {
 };
 const blurPoi = () => {
   detailInfo.value = addressEditForm.value.detailInfo;
+  if (detailInfo.value.length == 0) {
+    addressRules.value[3] = true;
+    showMessage({
+      offset: 140,
+      message: "请在下拉选项里选择详细地址",
+      type: "warning",
+    });
+  }
+};
+const blurTel = () => {
+  if (!isPhone(addressEditForm.value.mobile)) {
+    addressRules.value[1] = true;
+    showMessage({
+      offset: 140,
+      message: "请填写正确的手机号码",
+      type: "error",
+    });
+  }
 };
 const handlePoi = (item: any) => {
   if (item && item.name) {
@@ -2476,6 +2682,15 @@ const loopOrderDetail = async (orderNo: string) => {
         text-decoration: underline;
         cursor: pointer;
       }
+      .del {
+        position: absolute;
+        top: 30px;
+        right: 50px;
+        font-size: 1rem;
+        color: #f56c6c;
+        text-decoration: underline;
+        cursor: pointer;
+      }
       .edit-label-container {
         .label {
           color: #59d0ec;
@@ -2494,6 +2709,9 @@ const loopOrderDetail = async (orderNo: string) => {
         align-items: center;
         justify-content: flex-start;
         padding: 5px 8px;
+        &.rule {
+          border: #f56c6c 1px solid;
+        }
         :deep(.el-input__wrapper) {
           box-shadow: none;
         }
@@ -2515,6 +2733,7 @@ const loopOrderDetail = async (orderNo: string) => {
       padding: 12px;
       box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16);
       border-radius: 17px;
+      z-index: 999;
       .part {
         padding: 5px 10px;
         border-radius: 15px;
@@ -2525,6 +2744,7 @@ const loopOrderDetail = async (orderNo: string) => {
         justify-content: center;
         background: transparent;
         color: #43caea;
+        cursor: pointer;
         &.check {
           background: #43caea;
           color: #ffffff;
@@ -2623,7 +2843,7 @@ const loopOrderDetail = async (orderNo: string) => {
         border: #43caea 1px solid;
         margin-left: 30px;
         cursor: pointer;
-        &.check {
+        &:hover {
           background: #43caea;
           color: #ffffff;
         }
@@ -2641,6 +2861,11 @@ const loopOrderDetail = async (orderNo: string) => {
       color: #000;
       font-size: 1.5rem;
       margin-top: 10px;
+      .phone {
+        margin-left: 30px;
+        height: 30px;
+        width: 18px;
+      }
       .label {
         font-weight: bold;
       }
