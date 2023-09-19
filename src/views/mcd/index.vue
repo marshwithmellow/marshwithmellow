@@ -111,7 +111,10 @@
               <div
                 class="part"
                 :class="
-                  currentAddress == index && !dialogEditVisible ? 'check' : ''
+                  currentAddress == index &&
+                  (!dialogEditVisible || addressStatus != 1)
+                    ? 'check'
+                    : ''
                 "
                 @click="chooseAddress(index)"
               >
@@ -127,7 +130,7 @@
               <div
                 class="part"
                 @click="add(addressList.length)"
-                :class="dialogEditVisible ? 'check' : ''"
+                :class="dialogEditVisible && addressStatus == 1 ? 'check' : ''"
               >
                 <el-icon><Plus /></el-icon>
                 <div class="title">新建地址</div>
@@ -140,8 +143,14 @@
               删除
             </div>
             <div class="edit-label-container">
-              <div class="label">{{ addressEditForm.lab }}</div>
-              <el-divider />
+              <!-- <div class="label">{{ addressEditForm.lab }}</div> -->
+              <el-input
+                v-model="detailLab"
+                placeholder=""
+                class="label"
+                @blur="blurLab"
+              />
+              <el-divider style="margin: 0 0 20px 0" />
             </div>
             <div
               class="edit-input-container"
@@ -209,7 +218,13 @@
                 placeholder="门牌号"
               />
             </div>
-            <div class="confirm" @click="saveAddress">好了!</div>
+            <div
+              class="confirm"
+              :style="{ opacity: addDisabled ? '1' : '0.5' }"
+              @click="saveAddress"
+            >
+              好了!
+            </div>
           </div>
           <div
             style="
@@ -1054,78 +1069,6 @@
         </el-main>
       </el-container>
     </div>
-    <!-- <el-dialog v-model="dialogEditVisible" title="新增送餐地址">
-      <avue-form
-        ref="editAddressForm"
-        v-model="addressEditForm"
-        :option="addressEditOption"
-      >
-        <template #detailInfo="{}">
-          <el-autocomplete
-            v-model="detailInfo"
-            :fetch-suggestions="queryPoi"
-            clearable
-            :trigger-on-focus="false"
-            popper-class="my-autocomplete"
-            placeholder="请填写详细地址"
-            @select="handlePoi"
-            fit-input-width
-            @blur="blurPoi"
-          >
-            <template #default="{ item }">
-              <div class="complete-container">
-                <div class="value">{{ item.name }}</div>
-                <span class="link">{{ item.adname + " " + item.address }}</span>
-              </div>
-            </template>
-          </el-autocomplete>
-        </template>
-      </avue-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogEditVisible = false">取消</el-button>
-          <el-button type="primary" @click="saveAddress"> 保存 </el-button>
-        </span>
-      </template>
-    </el-dialog> -->
-    <!-- <el-dialog v-model="dialogTableVisible" title="编辑送餐地址">
-      <avue-crud ref="crud" :option="addressTableOption" :data="addressList">
-        <template #menu-left="{}">
-          <el-button type="primary" icon="el-icon-plus" @click="add()">
-            新增
-          </el-button>
-        </template>
-        <template #menu="{ size, row, index }">
-          <el-button
-            @click="selection(row, index)"
-            icon="el-icon-check"
-            text
-            type="primary"
-            :size="size"
-          >
-            选择
-          </el-button>
-          <el-button
-            @click="edit(row)"
-            icon="el-icon-edit"
-            text
-            type="primary"
-            :size="size"
-          >
-            编辑
-          </el-button>
-          <el-button
-            @click="del(row, index)"
-            icon="el-icon-delete"
-            text
-            type="danger"
-            :size="size"
-          >
-            删除
-          </el-button>
-        </template>
-      </avue-crud>
-    </el-dialog> -->
   </div>
 </template>
 <script setup lang="ts">
@@ -1282,15 +1225,6 @@ const dialogTableVisible = ref(false);
 const addressList = ref<Array<addressItem>>([]);
 const currentAddress = ref(0);
 const processStatus = ref(0); //进度状态，0是未点餐，1是gpt正在点餐，2是快递员正在取餐，3是快递员正在送餐，4是点餐失败，5是显示点餐报告
-const validatePhone = (rule: any, value: string, callback: Function) => {
-  if (value === "") {
-    callback(new Error("请填写联系电话"));
-  } else if (!isPhone(value)) {
-    callback(new Error("请填写正确的手机号码"));
-  } else {
-    callback();
-  }
-};
 const pcaData = ref(pca);
 const reportOrder = ref<reportItem>({
   orderId: "",
@@ -1315,6 +1249,7 @@ const reportOrder = ref<reportItem>({
 });
 const qrCodeImgUrl = ref("");
 const detailInfo = ref("");
+const detailLab = ref("");
 const addressEditForm = ref<addressFormItem>({
   mobile: "",
   userName: "",
@@ -1325,127 +1260,6 @@ const addressEditForm = ref<addressFormItem>({
   longitude: "",
   latitude: "",
   lab: "",
-});
-const addressEditOption = ref({
-  submitBtn: false,
-  emptyBtn: false,
-  labelPosition: "top",
-  column: [
-    {
-      label: "联系人",
-      prop: "userName",
-      type: "input",
-      rules: [
-        {
-          required: true,
-          message: "请填写联系人",
-          trigger: "blur",
-        },
-      ],
-      span: 12,
-    },
-    {
-      label: "联系电话",
-      prop: "mobile",
-      span: 11,
-      offset: 1,
-      rules: [
-        {
-          required: true,
-          message: "请填写联系电话",
-          trigger: "blur",
-        },
-        { validator: validatePhone, trigger: "blur" },
-      ],
-    },
-    // {
-    //   label: "选择位置",
-    //   prop: "map",
-    //   type: "map",
-    //   rules: [
-    //     {
-    //       required: true,
-    //       message: "请选择地理位置",
-    //       trigger: "change",
-    //     },
-    //   ],
-    //   span: 12,
-    // },
-    {
-      label: "省/市/区",
-      prop: "cityName",
-      type: "cascader",
-      span: 24,
-      props: {
-        label: "name",
-        value: "name",
-      },
-      dicData: pca,
-      rules: [
-        {
-          required: true,
-          message: "请选择省市区",
-          trigger: "blur",
-        },
-      ],
-    },
-    {
-      label: "详细地址",
-      prop: "detailInfo",
-      rules: [
-        {
-          required: true,
-          message: "请填写详细地址",
-          trigger: "blur",
-        },
-      ],
-      span: 12,
-    },
-    {
-      label: "门牌号",
-      prop: "userDetailInfo",
-      type: "input",
-      span: 12,
-    },
-  ],
-});
-const addressTableOption = ref({
-  viewBtn: false,
-  refreshBtn: false,
-  columnBtn: false,
-  addBtn: false,
-  editBtn: false,
-  delBtn: false,
-  column: [
-    {
-      label: "联系人",
-      prop: "userName",
-    },
-    {
-      label: "联系电话",
-      prop: "mobile",
-    },
-    {
-      label: "省份",
-      prop: "provinceName",
-    },
-    {
-      label: "城市",
-      prop: "cityName",
-    },
-    {
-      label: "区域",
-      prop: "countyName",
-    },
-    {
-      label: "详细地址",
-      prop: "detailInfo",
-    },
-    {
-      label: "门牌号",
-      prop: "userDetailInfo",
-    },
-  ],
 });
 const addressRules = ref<Array<boolean>>([false, false, false, false]);
 const userInfo = ref({
@@ -1603,27 +1417,20 @@ watch(
     }
   }
 );
+const addDisabled = computed(() => {
+  return (
+    addressEditForm.value.userName &&
+    addressEditForm.value.mobile &&
+    addressEditForm.value.cityName.length > 0 &&
+    addressEditForm.value.detailInfo
+  );
+});
 const initAlbumSwiper = (swiper: any) => {
   albumSwiper = swiper;
 };
 const clickAlbum = (item: any) => {
   const temp = item.id;
   if (currentAlbum.value != temp) {
-    // if (
-    //   currentAlbum.value === albumList.value[0].id &&
-    //   temp === albumList.value[albumList.value.length - 1].id
-    // ) {
-    //   albumSwiper.slidePrev();
-    // } else if (
-    //   currentAlbum.value === albumList.value[albumList.value.length - 1].id &&
-    //   temp === albumList.value[0].id
-    // ) {
-    //   albumSwiper.slideNext();
-    // } else if (temp > currentAlbum.value) {
-    //   albumSwiper.slideNext();
-    // } else if (temp < currentAlbum.value) {
-    //   albumSwiper.slidePrev();
-    // }
     currentAlbum.value = temp;
   }
 };
@@ -1804,12 +1611,19 @@ const getMyAddressList = async (token: string, accessKey: string) => {
   });
   if (res.data.code === 11000) {
     if (res.data.data.length > 0) {
-      addressList.value = res.data.data.map((item: addressItem) =>
-        Object.assign({}, item, {
-          longitude: item.longitude ? item.longitude : "",
-          latitude: item.latitude ? item.latitude : "",
-          lab: item.lab ? item.lab : "",
-        })
+      addressList.value = res.data.data.map(
+        (item: addressItem, index: number) =>
+          Object.assign({}, item, {
+            longitude: item.longitude ? item.longitude : "",
+            latitude: item.latitude ? item.latitude : "",
+            lab: item.lab
+              ? item.lab
+              : index == 0
+              ? "住宅地址"
+              : index == 1
+              ? "办公地址"
+              : `新建地址${index + 1}`,
+          })
       );
     } else {
       dialogTableVisible.value = false;
@@ -1820,42 +1634,6 @@ const getMyAddressList = async (token: string, accessKey: string) => {
     ElMessage({ offset: 140, message: res.data.msg });
   }
 };
-// const saveAddress = () => {
-//   proxy?.$refs["editAddressForm"].validate((valid: boolean, done: Function) => {
-//     if (valid) {
-//       done();
-//       const temp = {
-//         cityName: addressEditForm.value.cityName[1],
-//         countyName: addressEditForm.value.cityName[2],
-//         detailInfo: addressEditForm.value.detailInfo,
-//         mobile: addressEditForm.value.mobile,
-//         provinceName: addressEditForm.value.cityName[0],
-//         userName: addressEditForm.value.userName,
-//         userDetailInfo: addressEditForm.value.userDetailInfo,
-//         latitude: addressEditForm.value.latitude,
-//         longitude: addressEditForm.value.longitude,
-//         lab: addressEditForm.value.lab,
-//       };
-//       let usr = localStorage.getItem("userInfo");
-//       if (usr) {
-//         const info = JSON.parse(usr);
-//         if (addressStatus.value == 0 || addressStatus.value == 1) {
-//           addAddressItem(info.token, info.accessKey, temp);
-//         } else {
-//           editAddressItem(
-//             info.token,
-//             info.accessKey,
-//             Object.assign({}, temp, {
-//               id: editAddressId.value,
-//             })
-//           );
-//         }
-//       }
-//     } else {
-//       return false;
-//     }
-//   });
-// };
 const saveAddress = () => {
   if (!addressEditForm.value.userName) {
     addressRules.value[0] = true;
@@ -1891,7 +1669,8 @@ const saveAddress = () => {
     userDetailInfo: addressEditForm.value.userDetailInfo,
     latitude: addressEditForm.value.latitude,
     longitude: addressEditForm.value.longitude,
-    lab: addressEditForm.value.lab,
+    // lab: addressEditForm.value.lab,
+    lab: detailLab.value,
   };
   let usr = localStorage.getItem("userInfo");
   if (usr) {
@@ -2040,6 +1819,7 @@ const add = (index: number) => {
         : `新建地址${index + 1}`,
   };
   detailInfo.value = "";
+  detailLab.value = addressEditForm.value.lab;
   editAddressId.value = "";
   addressRules.value = [false, false, false, false];
 };
@@ -2077,48 +1857,6 @@ const addressBack = () => {
     lab: "",
   };
 };
-// const edit = (row: addressItem) => {
-//   addressStatus.value = 2;
-//   let provinceCode = "";
-//   let cityCode = "";
-//   let countyCode = "";
-//   for (let index = 0; index < pca.length; index++) {
-//     if (pca[index].name == row.provinceName) {
-//       provinceCode = pca[index].code;
-//       for (let i = 0; i < pca[index].children.length; i++) {
-//         if (pca[index].children[i].name == row.cityName) {
-//           cityCode = pca[index].children[i].code;
-//           for (let j = 0; j < pca[index].children[i].children.length; j++) {
-//             if (pca[index].children[i].children[j].name == row.countyName) {
-//               countyCode = pca[index].children[i].children[j].code;
-//               break;
-//             }
-//           }
-//           break;
-//         }
-//       }
-//       break;
-//     }
-//   }
-//   addressEditForm.value = {
-//     mobile: row.mobile,
-//     userName: row.userName,
-//     detailInfo: row.detailInfo,
-//     userDetailInfo: row.userDetailInfo,
-//     cityName: [row.provinceName, row.cityName, row.countyName],
-//     cityCode:
-//       provinceCode.length > 0 && cityCode.length > 0 && countyCode.length > 0
-//         ? [provinceCode, cityCode, countyCode]
-//         : [],
-//     latitude: row.latitude,
-//     longitude: row.longitude,
-//     lab: row.lab,
-//   };
-//   detailInfo.value = row.detailInfo;
-//   dialogTableVisible.value = false;
-//   dialogEditVisible.value = true;
-//   editAddressId.value = row.id;
-// };
 const edit = () => {
   let provinceCode = "";
   let cityCode = "";
@@ -2168,36 +1906,12 @@ const edit = () => {
     lab: addressList.value[currentAddress.value].lab,
   };
   detailInfo.value = addressList.value[currentAddress.value].detailInfo;
+  detailLab.value = addressList.value[currentAddress.value].lab;
   dialogTableVisible.value = false;
   dialogEditVisible.value = true;
   editAddressId.value = addressList.value[currentAddress.value].id;
   addressStatus.value = 2;
 };
-const selection = (row: addressItem, index: number) => {
-  currentAddress.value = index;
-  dialogTableVisible.value = false;
-};
-// const del = (row: addressItem, index: number) => {
-//   ElMessageBox.confirm("是否删除该送餐地址？", "提示").then(() => {
-//     let usr = localStorage.getItem("userInfo");
-//     if (usr) {
-//       const info = JSON.parse(usr);
-//       delAddressItem(info.token, info.accessKey, row.id).then((res) => {
-//         if (res.data.code === 11000) {
-//           if (currentAddress.value == index) {
-//             currentAddress.value = 0;
-//           } else if (currentAddress.value > index) {
-//             currentAddress.value--;
-//           }
-//           getMyAddressList(info.token, info.accessKey);
-//           ElMessage({ message: "删除成功", type: "success", offset: 140 });
-//         } else {
-//           ElMessage({ offset: 140, message: res.data.msg });
-//         }
-//       });
-//     }
-//   });
-// };
 const del = () => {
   ElMessageBox.confirm("是否删除该送餐地址？", "提示").then(() => {
     let usr = localStorage.getItem("userInfo");
@@ -2241,14 +1955,6 @@ const changeCount = (item: countItem) => {
     return;
   }
   currentCount.value = item.num;
-};
-const clickEdit = () => {
-  if (submitLoading.value) {
-    return;
-  }
-  addressStatus.value = 0;
-  // dialogTableVisible.value = true;
-  edit();
 };
 // 处理首字母nickname
 const getFirstChar = (str: string) => {
@@ -2400,20 +2106,8 @@ const queryPoi = (queryString: string, cb: Function) => {
   if (queryString) {
     parsePoi(queryString).then((res) => {
       cb(res.data.pois);
-      // detailOptions.value = res.data.pois;
     });
   }
-};
-// const queryPoi = (queryString: string, cb: Function) => {
-//   if (queryString) {
-//     parsePoi(queryString).then((res) => {
-//       // cb(res.data.pois);
-//       detailOptions.value = res.data.pois;
-//     });
-//   }
-// };
-const inputPoi = (item: string) => {
-  addressEditForm.value.detailInfo = item;
 };
 const blurPoi = () => {
   detailInfo.value = addressEditForm.value.detailInfo;
@@ -2434,6 +2128,15 @@ const blurTel = () => {
       message: "请填写正确的手机号码",
       type: "error",
     });
+  }
+};
+const blurLab = () => {
+  if (detailLab.value.length == 0) {
+    if (addressStatus.value == 2) {
+      detailLab.value = addressList.value[currentAddress.value].lab;
+    } else {
+      detailLab.value = addressEditForm.value.lab;
+    }
   }
 };
 const handlePoi = (item: any) => {
@@ -2692,10 +2395,22 @@ const loopOrderDetail = async (orderNo: string) => {
         cursor: pointer;
       }
       .edit-label-container {
+        width: 300px;
         .label {
           color: #59d0ec;
           font-size: 3rem;
           line-height: 3rem;
+        }
+        :deep(.el-input__wrapper) {
+          box-shadow: none;
+        }
+        :deep(.el-cascader) {
+          width: 100%;
+        }
+        :deep(.el-input__inner) {
+          text-align: center;
+          color: #59d0ec;
+          --el-input-inner-height: auto !important;
         }
       }
       .edit-input-container {
