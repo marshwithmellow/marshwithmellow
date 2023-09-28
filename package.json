@@ -24,6 +24,7 @@
     "pinyin-pro": "^3.14.0",
     "qrcode": "^1.5.3",
     "swiper": "^9.4.1",
+    "text-clamp-for-vue3": "^0.0.9",
     "vue": "^3.2.47",
     "vue-clipboard3": "^2.0.0",
     "vue-router": "^4.1.6",

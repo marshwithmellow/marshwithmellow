@@ -31,7 +31,6 @@
             <img class="center-logo" :src="logoImg" alt="" />
           </div>
           <div class="header-right">
-            <!-- <div class="avatar">{{ nickName }}</div> -->
             <div class="info" @click="showDrawer = true" v-if="userInfo.name">
               <div class="txt">
                 {{
@@ -788,76 +787,145 @@
         v-model="showDrawer"
         :with-header="false"
         direction="ttb"
-        size="50%"
+        :size="468"
       >
         <el-container>
-          <el-aside class="aside">
-            <div class="label">预充值</div>
-            <el-divider />
-            <div class="label-normal">历史订单</div>
-          </el-aside>
-          <el-main class="main-content">
-            <swiper
-              :initialSlide="0"
-              :loopedSlides="2"
-              slidesPerView="auto"
-              :spaceBetween="0"
-              :scrollbar="false"
-              @swiper="initAlbumSwiper"
-              style="margin-top: 50px"
-              :loop="false"
-              class="album-swiper"
-            >
-              <swiper-slide v-for="(item, index) in albumList" :key="item.id">
-                <div class="album-container">
+          <el-header style="height: 100px; padding: 0"></el-header>
+          <el-container>
+            <el-aside class="aside">
+              <div class="aside-left">
+                <div class="label-container">
                   <div
-                    class="part-container"
-                    :class="currentAlbum === item.id ? 'check' : ''"
+                    class="label"
+                    :class="currentAside == 0 ? 'check' : ''"
+                    @click="currentAside = 0"
                   >
+                    预充值
+                  </div>
+                  <div class="price-container" v-if="currentPrice.length > 0">
+                    ￥
+                    <div class="price">{{ currentPrice }}</div>
+                  </div>
+                </div>
+                <el-divider style="margin: 15px 0" />
+                <div
+                  class="label"
+                  :class="currentAside == 1 ? 'check' : ''"
+                  @click="currentAside = 1"
+                >
+                  历史订单
+                </div>
+              </div>
+            </el-aside>
+            <el-main class="main-content">
+              <swiper
+                :initialSlide="0"
+                :loopedSlides="2"
+                slidesPerView="auto"
+                :spaceBetween="0"
+                :scrollbar="false"
+                style="margin-top: 50px"
+                :loop="false"
+                class="album-swiper"
+                v-show="currentAside == 0"
+              >
+                <swiper-slide v-for="(item, index) in albumList" :key="item.id">
+                  <div class="album-container">
                     <div
-                      class="part"
-                      :style="{
-                        background:
-                          qrCodeImgUrl && currentAlbum === item.id
-                            ? '#ffffff'
-                            : `url(${item.img}) 100% no-repeat`,
-                      }"
-                      @click="clickAlbum(item)"
+                      class="part-container"
+                      :class="currentAlbum === item.id ? 'check' : ''"
                     >
-                      <img
-                        v-if="qrCodeImgUrl && currentAlbum === item.id"
-                        style="height: 136px; width: 136px"
-                        :src="qrCodeImgUrl"
-                        alt=""
-                      />
-                      <div :class="index < 2 ? 'txt' : 'txt2'" v-else>
-                        ￥
-                        <div class="big">{{ item.money }}</div>
+                      <div
+                        class="part"
+                        :style="{
+                          background:
+                            qrCodeImgUrl && currentAlbum === item.id
+                              ? '#ffffff'
+                              : `url(${item.img}) 100% no-repeat`,
+                        }"
+                        @click="clickAlbum(item)"
+                      >
+                        <img
+                          v-if="qrCodeImgUrl && currentAlbum === item.id"
+                          style="height: 136px; width: 136px"
+                          :src="qrCodeImgUrl"
+                          alt=""
+                        />
+                        <div :class="index < 2 ? 'txt' : 'txt2'" v-else>
+                          ￥
+                          <div class="big">{{ item.money }}</div>
+                        </div>
                       </div>
                     </div>
+                    <el-button
+                      size="large"
+                      color="#FFD800"
+                      class="pay-disable"
+                      v-if="qrCodeImgUrl && currentAlbum === item.id"
+                      disabled
+                    >
+                      <img
+                        :src="wechatText"
+                        style="height: 25px; width: 112px"
+                      />
+                    </el-button>
+                    <el-button
+                      size="large"
+                      color="#FFD800"
+                      class="pay"
+                      v-else-if="currentAlbum === item.id"
+                      @click="payAmount(item)"
+                    >
+                      确认支付
+                    </el-button>
                   </div>
-                  <el-button
-                    size="large"
-                    color="#FFD800"
-                    class="pay-disable"
-                    v-if="qrCodeImgUrl && currentAlbum === item.id"
-                    disabled
-                  >
-                    <img :src="wechatText" style="height: 25px; width: 112px" />
-                  </el-button>
-                  <el-button
-                    size="large"
-                    color="#FFD800"
-                    class="pay"
-                    v-else-if="currentAlbum === item.id"
-                    @click="payAmount(item)"
-                  >
-                    确认支付
-                  </el-button>
-                </div>
-              </swiper-slide>
-            </swiper>
-          </el-main>
+                </swiper-slide>
+              </swiper>
+              <swiper
+                :initialSlide="0"
+                :loopedSlides="2"
+                slidesPerView="auto"
+                :spaceBetween="0"
+                :scrollbar="false"
+                :loop="false"
+                class="history-swiper"
+                v-show="currentAside == 1"
+              >
+                <swiper-slide
+                  v-for="(item, index) in historyList"
+                  :key="item.orderId"
+                >
+                  <div class="history-container">
+                    <div class="history-row">
+                      <div class="history-left">下单时间</div>
+                      <div class="history-right">{{ item.createTime }}</div>
+                    </div>
+                    <div class="history-row">
+                      <div class="history-left">收货地址</div>
+                      <div class="history-right">
+                        <div>{{ item.userName + " " + item.mobile }}</div>
+                        <div>
+                          {{
+                            item.provinceName +
+                            " " +
+                            item.cityName +
+                            " " +
+                            item.countyName +
+                            " " +
+                            item.detailInfo
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="history-row">
+                      <div class="history-left">下单时间</div>
+                      <div class="history-right">{{ item.createTime }}</div>
+                    </div>
+                  </div>
+                </swiper-slide>
+              </swiper>
+            </el-main>
+          </el-container>
         </el-container>
       </el-drawer>
     </div>
@@ -1218,6 +1286,8 @@ type reportItem = {
 // }
 // const detailOptions = ref<Array<poiItem>>([]);
 const currentTag = ref(1);
+const currentPrice = ref("");
+const currentAside = ref(0);
 const showUserInfo = ref(false);
 const editAddressId = ref("");
 const dialogEditVisible = ref(false);
@@ -1247,6 +1317,7 @@ const reportOrder = ref<reportItem>({
   paidCharge: 0,
   useTime: "",
 });
+const historyList = ref<Array<reportItem>>([]);
 const qrCodeImgUrl = ref("");
 const detailInfo = ref("");
 const detailLab = ref("");
@@ -1277,7 +1348,6 @@ const userInfo = ref({
   rmbBalance: 0,
 });
 const nickName = ref("");
-let albumSwiper: any = null;
 /************************ todo-定义数据data(START) ************************/
 const lineHeight = ref(48); //跟字体大小和wraper的高度相关！
 type timeItem = {
@@ -1425,13 +1495,15 @@ const addDisabled = computed(() => {
     addressEditForm.value.detailInfo
   );
 });
-const initAlbumSwiper = (swiper: any) => {
-  albumSwiper = swiper;
-};
 const clickAlbum = (item: any) => {
   const temp = item.id;
   if (currentAlbum.value != temp) {
     currentAlbum.value = temp;
+    currentPrice.value = "";
+    qrCodeImgUrl.value = "";
+    if (timers.value) {
+      clearInterval(timers.value);
+    }
   }
 };
 const agent = ref(
@@ -1574,6 +1646,7 @@ const getUserInfo = async (token: string, accessKey: string) => {
     const firstC = getFirstChar(userInfo.value.name);
     nickName.value = firstC;
     getMyAddressList(token, accessKey);
+    getOrderList(token, accessKey);
   } else if (res.data.code === 12004) {
     localStorage.removeItem("userInfo");
     userInfo.value = {
@@ -1602,6 +1675,16 @@ const getUserInfo = async (token: string, accessKey: string) => {
       showDialog.value = true;
     }
   }
+};
+const getOrderList = async (token: string, accessKey: string) => {
+  getReportOrder({
+    token,
+    accessKey,
+  }).then((res) => {
+    if (res.data.code == 11000) {
+      historyList.value = res.data.data;
+    }
+  });
 };
 const getMyAddressList = async (token: string, accessKey: string) => {
   const res = await getAddressList({
@@ -2193,10 +2276,11 @@ const payAmount = async (item: { img: string; id: number; money: string }) => {
     // }
   } else {
     QRCode.toDataURL(img.data.data.codeUrl).then((res1: any) => {
+      currentPrice.value = item.id + "";
       qrCodeImgUrl.value = res1;
-      setTimeout(() => {
+      if (qrCodeImgUrl.value) {
         loopOrderDetail(img.data.data.orderNo);
-      }, 3000);
+      }
     });
   }
 };
@@ -2211,6 +2295,7 @@ const loopOrderDetail = async (orderNo: string) => {
     qrCodeImgUrl.value = "";
     currentAlbum.value = 0;
     showDrawer.value = false;
+    currentPrice.value = "";
     setTimeout(() => {
       ElMessage({
         type: "success",
@@ -3012,6 +3097,7 @@ const loopOrderDetail = async (orderNo: string) => {
   width: 588px;
   overflow: hidden;
   border-radius: 11px;
+  background: #000;
 }
 :deep(.wrap-dialog .el-dialog__header) {
   display: none;
@@ -3027,6 +3113,9 @@ const loopOrderDetail = async (orderNo: string) => {
   top: 100px;
 }
 :deep(.wrap-dialog .el-drawer__body) {
+  padding: 0;
+}
+:deep(.el-drawer .el-drawer__body) {
   padding: 0;
 }
 // .wrap-dialog {
@@ -3052,31 +3141,55 @@ const loopOrderDetail = async (orderNo: string) => {
 // }
 
 .aside {
-  width: 20vw;
-  min-width: 280px;
+  width: 375px;
+  min-width: 375px;
   color: #fff;
   box-sizing: border-box;
-  min-height: 50vh;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0 3vw;
-  .label {
-    font-size: 2rem;
-    font-family: Gotham-Rounded;
-    font-weight: bold;
-    color: #000;
-  }
-  .label-normal {
-    font-size: 2rem;
-    font-family: Gotham-Rounded;
-    font-weight: bold;
-    color: #afadaa;
+  min-height: 368px;
+  padding: 0 50px;
+  .aside-left {
+    height: 268px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    .label-container {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      .price-container {
+        color: #000000;
+        font-size: 1rem;
+        font-family: FUTURA-MEDIUM;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .price {
+          color: #000000;
+          font-size: 2rem;
+          font-family: FUTURA-MEDIUM;
+        }
+      }
+    }
+    .label {
+      font-size: 2rem;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #afadaa;
+      cursor: pointer;
+      &.check {
+        color: #000;
+      }
+    }
   }
 }
 .main-content {
   box-shadow: inset 6px -1px 12px rgba(0, 0, 0, 0.16);
+  padding: 0 0 20px;
 }
 .album-container {
   width: 100%;
@@ -3155,13 +3268,55 @@ const loopOrderDetail = async (orderNo: string) => {
     justify-content: center;
   }
 }
+.history-container {
+  width: 264px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  .history-row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    .history-left {
+      color: #8a8b8b;
+      font-size: 1rem;
+      width: 65px;
+    }
+    .history-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #000000;
+      font-size: 1rem;
+    }
+  }
+}
 .album-swiper {
   :deep(.swiper-slide) {
-    width: 35% !important;
+    width: 339px !important;
     height: auto !important;
     display: flex;
     justify-items: center;
     align-items: flex-start;
+    &:first-child {
+      margin-left: 100px;
+    }
+  }
+}
+.history-swiper {
+  :deep(.swiper-slide) {
+    width: 400px !important;
+    height: auto !important;
+    display: flex;
+    justify-items: center;
+    align-items: flex-start;
+    &:first-child {
+      margin-left: 68px;
+    }
   }
 }
 </style>

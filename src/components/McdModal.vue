@@ -5,135 +5,137 @@
       <div class="mask"></div>
     </div>
     <div class="avatar">M</div>
-    <div v-if="status === 1" class="one-key" @click="status = 2">
-      本机号码一键登录
-    </div>
-    <div class="ipt-box" v-if="status === 2">
-      <div class="tel-container" style="width: 78px">
-        <input
-          ref="telInput1"
-          :maxlength="3"
-          class="tel1"
-          v-model="tel1"
-          :placeholder="telholder1"
-          @focus="telholder1 = ''"
-          @paste="pasteTel"
-          @blur="telholder1 = 'xxx'"
-          @input="telInput(0)"
+    <div class="content">
+      <div style="padding-top: 70px" v-if="status === 1">
+        <div class="one-key" @click="status = 2">本机号码一键登录</div>
+      </div>
+      <div class="ipt-box" v-if="status === 2">
+        <div class="tel-container" style="width: 78px">
+          <input
+            ref="telInput1"
+            :maxlength="3"
+            class="tel1"
+            v-model="tel1"
+            :placeholder="telholder1"
+            @focus="telholder1 = ''"
+            @paste="pasteTel"
+            @blur="telholder1 = 'xxx'"
+            @input="telInput(0)"
+          />
+        </div>
+        <div class="tel-container" style="width: 102px">
+          <input
+            ref="telInput2"
+            :maxlength="4"
+            class="tel2"
+            v-model="tel2"
+            :placeholder="telholder2"
+            @focus="telholder2 = ''"
+            @blur="telholder2 = 'xxxx'"
+            @paste="pasteTel"
+            @input="telInput(1)"
+            @keyup.delete.native="deleteTel(1)"
+          />
+        </div>
+        <div class="tel-container" style="width: 102px">
+          <input
+            ref="telInput3"
+            :maxlength="4"
+            class="tel3"
+            v-model="tel3"
+            :placeholder="telholder3"
+            @focus="telholder3 = ''"
+            @blur="telholder3 = 'xxxx'"
+            @paste="pasteTel"
+            @input="telInput(2)"
+            @keyup.delete.native="deleteTel(2)"
+          />
+        </div>
+      </div>
+      <div class="square-box" v-if="status === 3">
+        <div class="bb">
+          <div class="square">
+            <input
+              type="tel"
+              ref="smsInput1"
+              :maxlength="1"
+              class="tel"
+              v-model="sms1"
+              placeholder=""
+              @paste="pasteSms"
+              @input="smsInput(0)"
+              @keyup.delete.native="deleteSms(0)"
+            />
+          </div>
+          <div class="square square2">
+            <input
+              type="tel"
+              ref="smsInput2"
+              :maxlength="1"
+              class="tel"
+              v-model="sms2"
+              placeholder=""
+              @paste="pasteSms"
+              @input="smsInput(1)"
+              @keyup.delete.native="deleteSms(1)"
+            />
+          </div>
+          <div class="square square3">
+            <input
+              type="tel"
+              ref="smsInput3"
+              :maxlength="1"
+              class="tel"
+              v-model="sms3"
+              placeholder=""
+              @paste="pasteSms"
+              @input="smsInput(2)"
+              @keyup.delete.native="deleteSms(2)"
+            />
+          </div>
+          <div class="square square4">
+            <input
+              type="tel"
+              ref="smsInput4"
+              :maxlength="1"
+              class="tel"
+              v-model="sms4"
+              placeholder=""
+              @paste="pasteSms"
+              @input="smsInput(3)"
+              @keyup.delete.native="deleteSms(3)"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="nickname-box" v-if="status === 4">
+        <el-input
+          :maxlength="13"
+          class="tel"
+          v-model="nickname"
+          placeholder="怎么称呼你？"
+          @keyup.enter.native="inputNickname"
         />
+        <div class="btm"></div>
       </div>
-      <div class="tel-container" style="width: 102px">
-        <input
-          ref="telInput2"
-          :maxlength="4"
-          class="tel2"
-          v-model="tel2"
-          :placeholder="telholder2"
-          @focus="telholder2 = ''"
-          @blur="telholder2 = 'xxxx'"
-          @paste="pasteTel"
-          @input="telInput(1)"
-          @keyup.delete.native="deleteTel(1)"
-        />
+      <div
+        class="resend"
+        :class="time < 60 ? 'disable' : ''"
+        v-if="status === 3 || status === 2"
+        @click="countDown"
+      >
+        {{ status === 2 ? "发送验证码" : "重新发送" }}
+        <span class="countdown" v-if="time < 60"> ({{ time }}s) </span>
       </div>
-      <div class="tel-container" style="width: 102px">
-        <input
-          ref="telInput3"
-          :maxlength="4"
-          class="tel3"
-          v-model="tel3"
-          :placeholder="telholder3"
-          @focus="telholder3 = ''"
-          @blur="telholder3 = 'xxxx'"
-          @paste="pasteTel"
-          @input="telInput(2)"
-          @keyup.delete.native="deleteTel(2)"
-        />
+      <div class="back" v-if="status === 3" @click="status = 2">
+        <el-icon><Back /></el-icon>
+        <div style="margin-left: 8px">返回</div>
       </div>
-    </div>
-    <div class="square-box" v-if="status === 3">
-      <div class="bb">
-        <div class="square">
-          <input
-            type="tel"
-            ref="smsInput1"
-            :maxlength="1"
-            class="tel"
-            v-model="sms1"
-            placeholder=""
-            @paste="pasteSms"
-            @input="smsInput(0)"
-            @keyup.delete.native="deleteSms(0)"
-          />
-        </div>
-        <div class="square square2">
-          <input
-            type="tel"
-            ref="smsInput2"
-            :maxlength="1"
-            class="tel"
-            v-model="sms2"
-            placeholder=""
-            @paste="pasteSms"
-            @input="smsInput(1)"
-            @keyup.delete.native="deleteSms(1)"
-          />
-        </div>
-        <div class="square square3">
-          <input
-            type="tel"
-            ref="smsInput3"
-            :maxlength="1"
-            class="tel"
-            v-model="sms3"
-            placeholder=""
-            @paste="pasteSms"
-            @input="smsInput(2)"
-            @keyup.delete.native="deleteSms(2)"
-          />
-        </div>
-        <div class="square square4">
-          <input
-            type="tel"
-            ref="smsInput4"
-            :maxlength="1"
-            class="tel"
-            v-model="sms4"
-            placeholder=""
-            @paste="pasteSms"
-            @input="smsInput(3)"
-            @keyup.delete.native="deleteSms(3)"
-          />
-        </div>
+      <div class="tip" v-if="status !== 4 && status !== 3">
+        <div class="point"><div class="in-circle"></div></div>
+        首次登录将自动注册您的 MBM 账号
+        <a class="underline">隐私政策</a>
       </div>
-    </div>
-    <div class="nickname-box" v-if="status === 4">
-      <el-input
-        :maxlength="13"
-        class="tel"
-        v-model="nickname"
-        placeholder="怎么称呼你？"
-        @keyup.enter.native="inputNickname"
-      />
-      <div class="btm"></div>
-    </div>
-    <div
-      class="resend"
-      :class="time < 60 ? 'disable' : ''"
-      v-if="status === 3 || status === 2"
-      @click="countDown"
-    >
-      {{ status === 2 ? "发送验证码" : "重新发送" }}
-      <span class="countdown" v-if="time < 60"> ({{ time }}s) </span>
-    </div>
-    <div class="back" v-if="status === 3" @click="status = 2">
-      <el-icon><Back /></el-icon>
-      <div style="margin-left: 8px">返回</div>
-    </div>
-    <div class="tip" v-if="status !== 4 && status !== 3">
-      <div class="point"><div class="in-circle"></div></div>
-      首次登录将自动注册您的 MBM 账号
-      <a class="underline">隐私政策</a>
     </div>
   </div>
 </template>
@@ -498,7 +500,7 @@ defineExpose({
 .dialog {
   width: 588px;
   height: 477px;
-  background: #ffffff;
+  background: #000;
   border: 1px solid #707070;
   box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.16);
   border-radius: 11px;
@@ -520,6 +522,11 @@ defineExpose({
       z-index: 2;
     }
   }
+  .content {
+    background: #ffffff;
+    height: 234px;
+    // padding-top: 70px;
+  }
   .avatar {
     width: 77px;
     height: 77px;
@@ -540,6 +547,7 @@ defineExpose({
     font-family: FUTURA-MEDIUM;
     font-weight: bold;
     color: #ffffff;
+    z-index: 999;
   }
   .one-key {
     width: 285px;
@@ -550,7 +558,7 @@ defineExpose({
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    margin: 70px auto 30px;
+    margin: 0 auto 30px;
     font-size: 24px;
     font-family: FUTURA-MEDIUM;
     font-weight: 500;
@@ -559,10 +567,11 @@ defineExpose({
   }
   .ipt-box {
     position: relative;
-    margin: 20px auto 10px;
+    margin: 0 auto 10px;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-top: 20px;
     .tel {
       border: none;
       :deep(.el-input__wrapper) {
@@ -678,7 +687,8 @@ defineExpose({
   }
   .square-box {
     position: relative;
-    margin: 50px auto 19px;
+    margin: 0 auto 19px;
+    padding-top: 50px;
     .tel {
       width: 100%;
       border: none;

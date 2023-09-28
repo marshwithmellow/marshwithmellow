@@ -301,7 +301,7 @@ export const sendMail = (data: {
 export const getReportOrder = (data: {
   token: string;
   accessKey: string;
-  orderId: string;
+  orderId?: string;
 }) =>
   axios({
     url: `/rpaCallback/getOrder`,
@@ -311,9 +311,13 @@ export const getReportOrder = (data: {
       Authorization: data.token,
       accessKey: data.accessKey,
     },
-    params: {
-      orderId: data.orderId,
-    },
+    params: data.orderId
+      ? {
+          orderId: data.orderId,
+        }
+      : {
+          accessKey: data.accessKey,
+        },
   });
 export const wechatPayMcd = (data: {
   payAmount: number;

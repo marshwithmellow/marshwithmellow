@@ -75,6 +75,16 @@ const router = createRouter({
       name: "mcd",
       component: () => import("../views/mcd/index.vue"),
     },
+    {
+      path: "/career",
+      name: "career",
+      component: () => import("../views/career/index.vue"),
+    },
+    {
+      path: "/careerChat",
+      name: "careerChat",
+      component: () => import("../views/career/chat.vue"),
+    },
   ],
 });
 
