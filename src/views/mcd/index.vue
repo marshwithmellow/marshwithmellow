@@ -105,7 +105,10 @@
           </div>
         </el-header>
         <el-main class="main">
-          <div class="address-container" v-if="addressList.length > 0">
+          <div
+            class="address-container"
+            v-if="addressList.length > 0 && processStatus == 0"
+          >
             <div v-for="(item, index) in addressList" :key="item.id">
               <div
                 class="part"
@@ -234,7 +237,7 @@
             "
             v-else
           >
-            <div class="tag-container">
+            <div class="tag-container" v-show="false">
               <div class="tag-part" @click="currentTag = 0">
                 <div :class="currentTag === 0 ? 'check' : 'normal'">
                   <div class="tag">新品优先</div>
@@ -269,6 +272,7 @@
                 (查看点餐报告)
               </div>
             </div>
+            <div class="big-desc">(营业时间：10:30-21:00)</div>
             <div
               class="address"
               v-if="
@@ -426,6 +430,7 @@
               @click="clickRun"
               :loading="submitLoading"
               v-if="processStatus == 0"
+              :disabled="submitDisabled"
             >
               <template #loading>
                 <div class="custom-loading">
@@ -445,7 +450,13 @@
                   </svg>
                 </div>
               </template>
-              {{ submitLoading ? "正在下单..." : "下单" }}
+              {{
+                submitLoading
+                  ? "正在下单..."
+                  : submitDisabled
+                  ? "稍后回来"
+                  : "下单"
+              }}
             </el-button>
             <el-row
               :gutter="2"
@@ -764,8 +775,10 @@
           </div>
         </el-main>
         <el-footer class="foot-container">
-          这里有一个提示：MBM AI 作为您忠诚的 AI
-          助理，在每次为您下单时，将始终为您遍寻全网最佳优惠，并以节约您的宝贵时间为主旨。
+          <a style="color: #ffffff" href="tel:18511623202">
+            客服电话：18511623202
+            张先生,微信同手机,有任何问题或优化建议可联系我们。
+          </a>
         </el-footer>
       </el-container>
       <el-dialog
@@ -890,12 +903,35 @@
                 :loop="false"
                 class="history-swiper"
                 v-show="currentAside == 1"
+                v-if="historyList.length > 0"
               >
-                <swiper-slide
-                  v-for="(item, index) in historyList"
-                  :key="item.orderId"
-                >
+                <swiper-slide v-for="item in historyList" :key="item.orderId">
                   <div class="history-container">
+                    <div
+                      class="history-row"
+                      style="
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: flex-start;
+                      "
+                    >
+                      <div
+                        class="history-left"
+                        style="
+                          display: flex;
+                          flex-direction: row;
+                          align-items: center;
+                          justify-content: flex-start;
+                        "
+                      >
+                        <img :src="logoImg" class="history-logo" />
+                      </div>
+                      <div class="history-right">
+                        <div class="big">AI麦当劳外卖</div>
+                        <div class="desc">{{ item.diningPeople }}人份</div>
+                      </div>
+                    </div>
                     <div class="history-row">
                       <div class="history-left">下单时间</div>
                       <div class="history-right">{{ item.createTime }}</div>
@@ -918,12 +954,30 @@
                       </div>
                     </div>
                     <div class="history-row">
-                      <div class="history-left">下单时间</div>
-                      <div class="history-right">{{ item.createTime }}</div>
+                      <div class="history-left">点餐内容</div>
+                      <div class="history-right">
+                        <div>{{ item.combinationArray }}</div>
+                        <div v-if="item.combinationPrice">
+                          {{ item.combinationPrice }}
+                          元（包含餐品+配送费+服务费）
+                        </div>
+                        <div v-if="item.originalPrice && item.combinationPrice">
+                          为您节约{{
+                            item.originalPrice - item.combinationPrice
+                          }}元
+                        </div>
+                      </div>
+                    </div>
+                    <div class="history-row">
+                      <div class="history-left">订单编号</div>
+                      <div class="history-right">{{ item.orderId }}</div>
                     </div>
                   </div>
                 </swiper-slide>
               </swiper>
+              <div v-else v-show="currentAside == 1">
+                <el-empty description="这里空空如也！" />
+              </div>
             </el-main>
           </el-container>
         </el-container>
@@ -934,7 +988,7 @@
         <el-header class="phone-header">
           <img
             class="logo"
-            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/white-logo.png"
+            src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/blue-logo.png"
             @click="goHome"
           />
           <div
@@ -950,7 +1004,16 @@
             <img class="center-logo" :src="logoImg" alt="" />
           </div>
           <div class="header-right">
-            <el-popover
+            <div class="info" @click="showDrawer = true" v-if="userInfo.name">
+              <div class="txt">
+                {{
+                  userInfo.rmbBalance == 0
+                    ? "充值我的钱包"
+                    : "AI 钱包：" + userInfo.rmbBalance + " 元"
+                }}
+              </div>
+            </div>
+            <!-- <el-popover
               placement="bottom"
               :width="344"
               trigger="click"
@@ -1004,138 +1067,932 @@
                   </span>
                 </div>
               </div>
-            </el-popover>
+            </el-popover> -->
           </div>
         </el-header>
         <el-main class="phone-main">
-          <div class="big">
-            {{
-              processStatus == 1
-                ? "正在点餐"
-                : processStatus == 2
-                ? "正在取餐"
-                : processStatus == 3
-                ? "正在送餐"
-                : "麦当劳外卖"
-            }}
+          <div class="edit-address" v-if="dialogEditVisible">
+            <div class="back" @click="addressBack">返回</div>
+            <div class="del" @click="del" v-if="editAddressId.length > 0">
+              删除
+            </div>
+            <div class="edit-label-container">
+              <!-- <div class="label">{{ addressEditForm.lab }}</div> -->
+              <el-input
+                v-model="detailLab"
+                placeholder=""
+                class="label"
+                @blur="blurLab"
+              />
+              <el-divider style="margin: 0 0 20px 0" />
+            </div>
             <div
-              v-if="processStatus == 3"
-              style="cursor: pointer"
-              @click="openReport"
+              class="edit-input-container"
+              :class="addressRules[0] ? 'rule' : ''"
             >
-              (查看点餐报告)
+              <el-input
+                @focus="addressRules[0] = false"
+                v-model="addressEditForm.userName"
+                placeholder="*联系人："
+              />
+            </div>
+            <div
+              class="edit-input-container"
+              :class="addressRules[1] ? 'rule' : ''"
+            >
+              <el-input
+                @focus="addressRules[1] = false"
+                v-model="addressEditForm.mobile"
+                placeholder="*联系电话："
+                :maxlength="11"
+                @blur="blurTel"
+              />
+            </div>
+            <div
+              class="edit-input-container"
+              :class="addressRules[2] ? 'rule' : ''"
+              @click="openCascader"
+            >
+              <!-- <el-cascader
+                @focus="addressRules[2] = false"
+                v-model="addressEditForm.cityName"
+                :options="pcaData"
+                :props="{ value: 'name', label: 'name' }"
+                placeholder="*省/市/区"
+              /> -->
+              <!-- <el-input
+                @focus="addressRules[2] = false"
+                v-model="cascaderValue"
+                placeholder="*省/市/区"
+                disabled
+                @click="cascaderShow = true"
+              /> -->
+              <div
+                class="input-content"
+                :style="{
+                  color:
+                    addressEditForm.cityName.length > 0 ? '#606266' : '#c0c4cc',
+                }"
+              >
+                {{
+                  addressEditForm.cityName.length > 0
+                    ? addressEditForm.cityName[0] +
+                      "/" +
+                      addressEditForm.cityName[1] +
+                      "/" +
+                      addressEditForm.cityName[2]
+                    : "*省/市/区"
+                }}
+              </div>
+              <span class="el-input__suffix">
+                <span class="el-input__suffix-inner">
+                  <i class="el-icon el-input__icon icon-arrow-down">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 1024 1024"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M831.872 340.864 512 652.672 192.128 340.864a30.592 30.592 0 0 0-42.752 0 29.12 29.12 0 0 0 0 41.6L489.664 714.24a32 32 0 0 0 44.672 0l340.288-331.712a29.12 29.12 0 0 0 0-41.728 30.592 30.592 0 0 0-42.752 0z"
+                      ></path>
+                    </svg>
+                  </i>
+                </span>
+              </span>
+            </div>
+            <div
+              class="edit-input-container"
+              :class="addressRules[3] ? 'rule' : ''"
+            >
+              <el-autocomplete
+                @focus="addressRules[3] = false"
+                v-model="detailInfo"
+                :fetch-suggestions="queryPoi"
+                clearable
+                :trigger-on-focus="false"
+                popper-class="my-autocomplete"
+                placeholder="*详细地址"
+                @select="handlePoi"
+                fit-input-width
+                @blur="blurPoi"
+              >
+                <template #default="{ item }">
+                  <div class="complete-container">
+                    <div class="value">{{ item.name }}</div>
+                    <span class="link">
+                      {{ item.adname + " " + item.address }}
+                    </span>
+                  </div>
+                </template>
+              </el-autocomplete>
+            </div>
+            <div class="edit-input-container">
+              <el-input
+                v-model="addressEditForm.userDetailInfo"
+                placeholder="门牌号"
+              />
+            </div>
+            <div
+              class="confirm"
+              :style="{ opacity: addDisabled ? '1' : '0.5' }"
+              @click="saveAddress"
+            >
+              好了!
             </div>
           </div>
           <div
-            class="address"
-            v-if="
-              addressList.length > 0 && processStatus != 5 && processStatus != 4
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
             "
+            v-else
           >
-            <div class="hamburger-container">
-              <img class="hamburger" :src="hamburgerImg" alt="" />
+            <div class="big">
+              {{
+                processStatus == 1
+                  ? "正在点餐"
+                  : processStatus == 2
+                  ? "正在取餐"
+                  : processStatus == 3
+                  ? "正在送餐"
+                  : "麦当劳外卖"
+              }}
               <div
-                style="
-                  margin: 0 30px;
-                  display: flex;
-                  flex-direction: row;
-                  align-items: center;
-                  justify-content: center;
-                "
+                v-if="processStatus == 3"
+                style="cursor: pointer"
+                @click="openReport"
               >
-                <div
-                  style="
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  送至：
+                (查看点餐报告)
+              </div>
+            </div>
+            <div class="big-desc">(营业时间：10:30-21:00)</div>
+            <div class="tag-container" v-show="false">
+              <div class="tag-part" @click="currentTag = 0">
+                <div :class="currentTag === 0 ? 'check' : 'normal'">
+                  <div class="tag">新品优先</div>
                 </div>
-                <div
-                  style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: flex-start;
-                    justify-content: center;
-                  "
-                >
-                  <div>
-                    {{
-                      addressList[currentAddress].provinceName +
-                      " " +
-                      addressList[currentAddress].cityName +
-                      " " +
-                      addressList[currentAddress].countyName
-                    }}
-                  </div>
-                  <div>
-                    {{
-                      addressList[currentAddress].detailInfo +
-                      (addressList[currentAddress].userDetailInfo
-                        ? " " + addressList[currentAddress].userDetailInfo
-                        : "")
-                    }}
-                    {{
-                      addressList[currentAddress].detailInfo +
-                      (addressList[currentAddress].userDetailInfo
-                        ? " " + addressList[currentAddress].userDetailInfo
-                        : "")
-                    }}
-                  </div>
+              </div>
+              <div class="tag-part" @click="currentTag = 1">
+                <div :class="currentTag === 1 ? 'check' : 'normal'">
+                  <div class="tag">低价大师</div>
+                </div>
+              </div>
+              <div class="tag-part" @click="currentTag = 2">
+                <div :class="currentTag === 2 ? 'check' : 'normal'">
+                  <div class="tag">自助点餐</div>
                 </div>
               </div>
             </div>
-            <div class="phone-container">
-              <div
-                style="
-                  width: 36px;
-                  display: flex;
-                  flex-direction: row;
-                  align-items: center;
-                  justify-content: center;
-                "
-              >
-                <img class="phone" :src="phoneImg" alt="" />
-              </div>
-              <div
-                style="
-                  margin: 0 15px;
-                  display: flex;
-                  flex-direction: row;
-                  align-items: center;
-                  justify-content: center;
-                "
-              >
-                <div>联系人：</div>
-                <div
-                  style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: flex-start;
-                    justify-content: center;
-                  "
-                >
-                  <div>{{ addressList[currentAddress].userName }}</div>
-                  <div>{{ addressList[currentAddress].mobile }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="address"
-            v-else-if="processStatus != 5 && processStatus != 4"
-          >
-            <div
-              style="text-decoration: underline; cursor: pointer"
-              @click="dialogEditVisible = true"
+            <el-popover
+              placement="bottom"
+              :width="320"
+              trigger="click"
+              v-if="
+                addressList.length > 0 &&
+                processStatus != 5 &&
+                processStatus != 4
+              "
+              v-model:visible="addressPopoverVisible"
+              :disabled="processStatus != 0"
             >
-              填写送餐地址
+              <template #reference>
+                <div class="address">
+                  <el-icon :size="18"><Location /></el-icon>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: flex-start;
+                      justify-content: flex-start;
+                      margin: 0 12px;
+                      width: 100%;
+                    "
+                  >
+                    <div class="hamburger-container">
+                      {{
+                        addressList[currentAddress].provinceName +
+                        " " +
+                        addressList[currentAddress].cityName +
+                        " " +
+                        addressList[currentAddress].countyName
+                      }}
+                      {{
+                        addressList[currentAddress].detailInfo +
+                        (addressList[currentAddress].userDetailInfo
+                          ? " " + addressList[currentAddress].userDetailInfo
+                          : "")
+                      }}
+                    </div>
+                    <div class="phone-container">
+                      <div>{{ addressList[currentAddress].userName }}</div>
+                      <div style="margin-left: 10px">
+                        {{ addressList[currentAddress].mobile }}
+                      </div>
+                    </div>
+                  </div>
+                  <el-icon :size="18"><ArrowDown /></el-icon>
+                </div>
+              </template>
+              <el-scrollbar :max-height="200">
+                <div
+                  class="address-list-container"
+                  v-for="(item, index) in addressList"
+                  :key="item.id"
+                  @click="chooseAddress(index)"
+                >
+                  <el-icon
+                    :size="18"
+                    :style="{
+                      color: index == currentAddress ? '#ffbc0d' : '#aaa',
+                    }"
+                  >
+                    <CircleCheckFilled v-if="index == currentAddress" />
+                    <CircleCheck v-else />
+                  </el-icon>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: flex-start;
+                      justify-content: flex-start;
+                      margin: 0 12px;
+                      width: 100%;
+                    "
+                  >
+                    <div class="hamburger-container">
+                      {{
+                        item.provinceName +
+                        " " +
+                        item.cityName +
+                        " " +
+                        item.countyName
+                      }}
+                      {{
+                        item.detailInfo +
+                        (item.userDetailInfo ? " " + item.userDetailInfo : "")
+                      }}
+                    </div>
+                    <div class="phone-container">
+                      <div>{{ item.userName }}</div>
+                      <div style="margin-left: 10px">
+                        {{ item.mobile }}
+                      </div>
+                    </div>
+                  </div>
+                  <el-icon @click.stop="editPhoneAddress(index)" :size="18">
+                    <Edit />
+                  </el-icon>
+                </div>
+              </el-scrollbar>
+              <div
+                style="width: 100%; padding: 12px 0 0"
+                v-if="addressList.length < 5"
+              >
+                <el-button
+                  color="#ffbc0d"
+                  style="width: 100%; color: #000"
+                  round
+                  size="large"
+                  @click="add(addressList.length)"
+                >
+                  添加地址
+                </el-button>
+              </div>
+            </el-popover>
+            <div
+              class="address"
+              v-else-if="processStatus != 5 && processStatus != 4"
+            >
+              <div
+                style="text-decoration: underline; cursor: pointer"
+                @click="add(0)"
+              >
+                填写送餐地址
+              </div>
+            </div>
+            <el-row
+              class="count-container"
+              v-if="processStatus == 0 && !submitLoading"
+            >
+              <el-col :span="6" v-for="item in counts">
+                <div
+                  :class="item.num == currentCount ? 'count' : 'count-normal'"
+                >
+                  <div
+                    class="txt"
+                    @click="changeCount(item)"
+                    style="cursor: pointer"
+                  >
+                    <view class="num">{{ item.num }}</view>
+                    人份
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+            <div class="count" v-else-if="submitLoading">
+              <div class="txt">
+                <view class="num">{{ currentCount }}</view>
+                人份
+              </div>
+            </div>
+            <div
+              class="count"
+              v-else-if="processStatus != 5 && processStatus != 4"
+            >
+              <div class="txt">
+                <view class="num">{{ currentCount }}</view>
+                人份
+              </div>
+            </div>
+            <div class="area" v-if="processStatus == 0">
+              <div class="want-container" v-if="currentTag == 2">
+                <div class="label">我想要:</div>
+                <div class="tags-container">
+                  <el-tag
+                    v-for="tag in checkChoose"
+                    :key="tag.id"
+                    class="tags"
+                    closable
+                    color="#000000"
+                    effect="dark"
+                    @close="removeChoose(tag.id)"
+                  >
+                    {{ tag.txt }}
+                  </el-tag>
+                </div>
+              </div>
+              <el-input
+                v-model="inputValue"
+                :rows="5"
+                type="textarea"
+                placeholder="首次运行，AI 将自动为您点餐。如果您有用餐偏好，请在这里输入。"
+                :disabled="submitLoading"
+                resize="none"
+                class="area-container"
+              />
+              <!-- <div class="check-container" v-if="currentTag == 2">
+                <el-check-tag
+                  :style="{
+                    'margin-left': '20px',
+                    border: item.check
+                      ? '1px #000000 solid'
+                      : '1px #a0a0a0 solid',
+                    background: item.check ? '#000000' : '#ebebeb',
+                    'border-radius': '17px',
+                    color: item.check ? '#ffffff' : '#555555',
+                  }"
+                  :checked="item.check"
+                  v-for="(item, index) in checkList"
+                  :key="item.id"
+                  @change="onCheck($event, index)"
+                >
+                  {{ item.txt }}
+                </el-check-tag>
+              </div> -->
+            </div>
+            <el-button
+              class="button"
+              color="#000000"
+              @click="clickRun"
+              :loading="submitLoading"
+              v-if="processStatus == 0"
+              :disabled="submitDisabled"
+            >
+              <template #loading>
+                <div class="custom-loading">
+                  <svg class="circular" viewBox="-10, -10, 50, 50">
+                    <path
+                      class="path"
+                      d="
+            M 30 15
+            L 28 17
+            M 25.61 25.61
+            A 15 15, 0, 0, 1, 15 30
+            A 15 15, 0, 1, 1, 27.99 7.5
+            L 15 15
+          "
+                      style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"
+                    />
+                  </svg>
+                </div>
+              </template>
+              {{
+                submitLoading
+                  ? "正在下单..."
+                  : submitDisabled
+                  ? "稍后回来"
+                  : "下单"
+              }}
+            </el-button>
+            <el-row
+              :gutter="2"
+              class="process-container"
+              v-if="
+                processStatus == 1 || processStatus == 2 || processStatus == 3
+              "
+            >
+              <el-col :span="6">
+                <div class="pro">
+                  <div class="txt">
+                    {{ processStatus == 1 ? "正在点餐" : "已点餐" }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div
+                  class="pro"
+                  :style="{ opacity: processStatus == 1 ? 0.75 : 1 }"
+                >
+                  <div class="txt">
+                    {{
+                      processStatus == 1 || processStatus == 2
+                        ? "正在取餐"
+                        : "已取餐"
+                    }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div
+                  class="pro"
+                  :style="{
+                    opacity:
+                      processStatus == 1 ? 0.5 : processStatus == 2 ? 0.75 : 1,
+                  }"
+                >
+                  <div class="txt">
+                    {{
+                      processStatus == 1 ||
+                      processStatus == 2 ||
+                      processStatus == 3
+                        ? "正在送餐"
+                        : "已送餐"
+                    }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="6">
+                <div
+                  class="pro"
+                  :style="{
+                    opacity:
+                      processStatus == 1 || processStatus == 2
+                        ? 0.5
+                        : processStatus == 3
+                        ? 0.75
+                        : 1,
+                    cursor: processStatus == 3 ? 'pointer' : 'auto',
+                  }"
+                  @click="openReport"
+                >
+                  <div class="txt">
+                    {{ processStatus == 3 ? "点餐报告" : "等待接收" }}
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+            <div
+              class="count-down"
+              v-if="
+                processStatus != 0 && processStatus != 5 && processStatus != 4
+              "
+            >
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index4}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr4"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index3}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr3"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                style="
+                  width: 10px;
+                  display: flex;
+                  flex-direction: row;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div style="height: 30px">:</div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index2}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr2"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+              <div
+                class="column"
+                :style="{
+                  transform: `translateY(${-lineHeight * timeObject.index1}px)`,
+                }"
+              >
+                <div
+                  class="num"
+                  v-for="(item, index) in timeObject.arr1"
+                  :key="index"
+                >
+                  <div>{{ item }}</div>
+                </div>
+              </div>
+            </div>
+            <div style="color: #000; font-size: 16px" v-if="processStatus == 5">
+              Hi，{{
+                addressList.length > 0
+                  ? addressList[currentAddress].userName
+                  : ""
+              }}，很高兴为您完成本次订单。
+            </div>
+            <div style="color: #000; font-size: 16px" v-if="processStatus == 4">
+              很抱歉！{{
+                addressList.length > 0
+                  ? addressList[currentAddress].userName
+                  : ""
+              }}，本次为您点餐失败。
+            </div>
+            <div
+              class="report-container"
+              v-if="processStatus == 5 || processStatus == 4"
+            >
+              <!-- <img class="hamburger" :src="reportHamburgerImg" />
+              <div class="solid"></div> -->
+              <div class="report-part">
+                <div class="desc">本次点餐</div>
+                <div class="content">
+                  <div class="large">
+                    {{ reportOrder.combinationPrice + reportOrder.paidCharge }}
+                  </div>
+                  元
+                </div>
+                <div class="desc">包含餐食+配送费</div>
+              </div>
+              <div class="report-part">
+                <div class="desc">为您节约</div>
+                <div class="content">
+                  <div class="large">
+                    {{
+                      (
+                        reportOrder.originalPrice +
+                        reportOrder.originalCharge -
+                        (reportOrder.combinationPrice + reportOrder.paidCharge)
+                      ).toFixed(2)
+                    }}
+                  </div>
+                  元
+                </div>
+                <div class="desc">相比原餐食和配送价</div>
+              </div>
+              <div class="report-part">
+                <div class="desc">相当于</div>
+                <div class="content">
+                  <div class="large">
+                    {{ reportOrder.originalPrice + reportOrder.originalCharge }}
+                  </div>
+                  元
+                </div>
+                <div class="desc">购买了相同的商品</div>
+              </div>
+              <div class="report-part" v-if="reportOrder.useTime">
+                <div class="desc">并且节约您</div>
+                <div class="content">
+                  <div class="large">{{ reportOrder.useTime }}</div>
+                  分钟
+                </div>
+                <div class="desc">点单时间</div>
+              </div>
+            </div>
+            <div class="evaluate" v-if="processStatus == 5">
+              <el-input
+                v-model="evaluateValue"
+                :rows="5"
+                type="textarea"
+                placeholder="欢迎您留下评价。"
+              />
+              <div class="evaluate-group">
+                <el-button
+                  :class="evaluateButton == 1 ? 'selected' : 'normal'"
+                  @click="clickEvaluate(1)"
+                >
+                  喜欢
+                </el-button>
+                <el-button
+                  :class="evaluateButton == 2 ? 'selected' : 'normal'"
+                  @click="clickEvaluate(2)"
+                >
+                  不喜欢
+                </el-button>
+              </div>
+            </div>
+            <div
+              class="button-group"
+              v-if="processStatus == 5 || processStatus == 4"
+            >
+              <el-button color="#000" style="border-radius: 12px; width: 100px">
+                <div class="button-count-down">
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index4}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr4"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index3}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr3"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      width: 10px;
+                      display: flex;
+                      flex-direction: row;
+                      align-items: center;
+                      justify-content: center;
+                    "
+                  >
+                    <div style="height: 20px">:</div>
+                  </div>
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index2}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr2"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                  <div
+                    class="column"
+                    :style="{
+                      transform: `translateY(${-30 * timeObject.index1}px)`,
+                    }"
+                  >
+                    <div
+                      class="num"
+                      v-for="(item, index) in timeObject.arr1"
+                      :key="index"
+                    >
+                      <div>{{ item }}</div>
+                    </div>
+                  </div>
+                </div>
+              </el-button>
+              <el-button
+                color="#000"
+                style="border-radius: 12px; width: 100px"
+                @click="processStatus = 0"
+              >
+                再来一份
+              </el-button>
+            </div>
+            <div class="order-no" v-if="processStatus != 0">
+              订单号：{{ reportOrder.orderId }}
             </div>
           </div>
         </el-main>
+        <el-footer class="phone-foot-container">
+          <a style="color: #ffffff" href="tel:18511623202">
+            客服电话：18511623202
+            张先生,微信同手机,有任何问题或优化建议可联系我们。
+          </a>
+        </el-footer>
       </el-container>
+      <el-drawer
+        v-model="showDrawer"
+        :with-header="false"
+        direction="ttb"
+        :size="308"
+      >
+        <el-container>
+          <el-header style="height: 60px; padding: 0"></el-header>
+          <el-container>
+            <el-aside class="phone-aside">
+              <div class="aside-left">
+                <div class="label-container">
+                  <div
+                    class="label"
+                    :class="currentAside == 0 ? 'check' : ''"
+                    @click="currentAside = 0"
+                  >
+                    预充值
+                  </div>
+                  <div class="price-container" v-if="currentPrice.length > 0">
+                    ￥
+                    <div class="price">{{ currentPrice }}</div>
+                  </div>
+                </div>
+                <el-divider style="margin: 15px 0" />
+                <div
+                  class="label"
+                  :class="currentAside == 1 ? 'check' : ''"
+                  @click="currentAside = 1"
+                >
+                  历史订单
+                </div>
+              </div>
+            </el-aside>
+            <el-main class="phone-main-content">
+              <el-scrollbar height="248px" v-show="currentAside == 0">
+                <div
+                  class="phone-album-container"
+                  v-for="(item, index) in albumList"
+                  :key="item.id"
+                >
+                  <div
+                    class="part-container"
+                    :class="currentAlbum === item.id ? 'check' : ''"
+                  >
+                    <div
+                      class="part"
+                      :style="{
+                        background:
+                          qrCodeImgUrl && currentAlbum === item.id
+                            ? '#ffffff'
+                            : `url(${item.img}) 100% no-repeat`,
+                      }"
+                      @click="clickAlbum(item)"
+                    >
+                      <img
+                        v-if="qrCodeImgUrl && currentAlbum === item.id"
+                        style="height: 136px; width: 136px"
+                        :src="qrCodeImgUrl"
+                        alt=""
+                      />
+                      <div :class="index < 2 ? 'txt' : 'txt2'" v-else>
+                        ￥
+                        <div class="big">{{ item.money }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <el-button
+                    size="large"
+                    color="#FFD800"
+                    class="pay-disable"
+                    v-if="qrCodeImgUrl && currentAlbum === item.id"
+                    disabled
+                  >
+                    <img :src="wechatText" style="height: 25px; width: 112px" />
+                  </el-button>
+                  <el-button
+                    size="large"
+                    color="#FFD800"
+                    class="pay"
+                    v-else-if="currentAlbum === item.id"
+                    @click="payAmount(item)"
+                  >
+                    确认支付
+                  </el-button>
+                </div>
+              </el-scrollbar>
+              <el-scrollbar
+                height="248px"
+                v-show="currentAside == 1"
+                v-if="historyList.length > 0"
+              >
+                <div
+                  class="phone-history-container"
+                  v-for="(item, index) in historyList"
+                  :key="item.orderId"
+                >
+                  <div
+                    class="history-row"
+                    style="
+                      display: flex;
+                      flex-direction: row;
+                      align-items: center;
+                      justify-content: flex-start;
+                    "
+                  >
+                    <div
+                      class="history-left"
+                      style="
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: flex-start;
+                      "
+                    >
+                      <img :src="logoImg" class="history-logo" />
+                    </div>
+                    <div class="history-right">
+                      <div class="big">AI麦当劳外卖</div>
+                      <div class="desc">{{ item.diningPeople }}人份</div>
+                    </div>
+                  </div>
+                  <div class="history-row">
+                    <div class="history-left">下单时间</div>
+                    <div class="history-right">{{ item.createTime }}</div>
+                  </div>
+                  <div class="history-row">
+                    <div class="history-left">收货地址</div>
+                    <div class="history-right">
+                      <div>{{ item.userName + " " + item.mobile }}</div>
+                      <div>
+                        {{
+                          item.provinceName +
+                          " " +
+                          item.cityName +
+                          " " +
+                          item.countyName +
+                          " " +
+                          item.detailInfo
+                        }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="history-row">
+                    <div class="history-left">点餐内容</div>
+                    <div class="history-right">
+                      <div>{{ item.combinationArray }}</div>
+                      <div>
+                        {{ item.combinationPrice }}元（包含餐品+配送费+服务费）
+                      </div>
+                      <div>
+                        为您节约{{
+                          item.originalPrice - item.combinationPrice
+                        }}元
+                      </div>
+                    </div>
+                  </div>
+                  <div class="history-row">
+                    <div class="history-left">订单编号</div>
+                    <div class="history-right">{{ item.orderId }}</div>
+                  </div>
+                  <el-divider
+                    v-if="index != historyList.length - 1"
+                    style="margin: 10px 0"
+                  />
+                </div>
+              </el-scrollbar>
+              <div v-else v-show="currentAside == 1">
+                <el-empty description="这里空空如也！" :image-size="100" />
+              </div>
+            </el-main>
+          </el-container>
+        </el-container>
+      </el-drawer>
+      <van-popup v-model:show="cascaderShow" round position="bottom">
+        <van-cascader
+          v-model="cascaderValue"
+          title="请选择所在地区"
+          :options="pcaData"
+          @close="cascaderShow = false"
+          :field-names="{ text: 'name', value: 'code', children: 'children' }"
+          @finish="cascaderFinish"
+        />
+      </van-popup>
     </div>
   </div>
 </template>
@@ -1160,6 +2017,8 @@ import mcdPay100 from "@/assets/images/mcd-pay-100.png";
 import mcdPay200 from "@/assets/images/mcd-pay-200.png";
 import wechatText from "@/assets/images/wechat-pay-text.png";
 import McdModal from "@/components/McdModal.vue";
+import { Popup, Cascader } from "vant";
+import { isWeiXinBrowser } from "@/utils/utils";
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from "swiper/vue";
 // Import Swiper styles
@@ -1181,7 +2040,16 @@ import { useRouter } from "vue-router";
 import { isPhone, isHashMode } from "@/utils/utils";
 import axios from "axios";
 import useClipboard from "vue-clipboard3";
-import { HomeFilled, OfficeBuilding, Plus } from "@element-plus/icons-vue";
+import {
+  HomeFilled,
+  OfficeBuilding,
+  Plus,
+  Location,
+  ArrowDown,
+  Edit,
+  CircleCheck,
+  CircleCheckFilled,
+} from "@element-plus/icons-vue";
 import { pca } from "./pca";
 // 使用插件
 const { toClipboard } = useClipboard();
@@ -1222,6 +2090,9 @@ const inputValue = ref("");
 const evaluateValue = ref("");
 const timers = ref();
 const evaluateButton = ref(0);
+const addressPopoverVisible = ref(false);
+const cascaderValue = ref("");
+const cascaderShow = ref(false);
 type addressItem = {
   cityName: string;
   countyName: string;
@@ -1257,6 +2128,7 @@ type reportItem = {
   originalCharge: number;
   combination: string;
   combinationPrice: number;
+  combinationArray: string;
   paidCharge: number;
   sendText: string;
   detailInfo: string;
@@ -1285,7 +2157,7 @@ type reportItem = {
 //   typecode: string;
 // }
 // const detailOptions = ref<Array<poiItem>>([]);
-const currentTag = ref(1);
+const currentTag = ref(0);
 const currentPrice = ref("");
 const currentAside = ref(0);
 const showUserInfo = ref(false);
@@ -1306,6 +2178,7 @@ const reportOrder = ref<reportItem>({
   originalCharge: 0,
   combination: "",
   combinationPrice: 0,
+  combinationArray: "",
   sendText: "",
   detailInfo: "",
   diningPeople: 0,
@@ -1430,6 +2303,7 @@ const checkChoose = computed(() =>
   checkList.value.filter((item) => item.check)
 );
 const browserLocation = ref<Array<string>>([]);
+const submitDisabled = ref(false);
 //watch监听机型
 // watch(
 //   () => index5.value,
@@ -1584,6 +2458,7 @@ const turnOther = (type: number, length: number) => {
 };
 /************************ todo-定义数据data(END) ************************/
 onBeforeMount(() => {
+  window.location.href = "http://mbmzone.com/mcd#/";
   let usr = localStorage.getItem("userInfo");
   if (usr) {
     const info = JSON.parse(usr);
@@ -1682,7 +2557,22 @@ const getOrderList = async (token: string, accessKey: string) => {
     accessKey,
   }).then((res) => {
     if (res.data.code == 11000) {
-      historyList.value = res.data.data;
+      historyList.value = res.data.data.map((item: reportItem) => {
+        let array = "";
+        if (item.combination) {
+          const temp = JSON.parse(item.combination);
+          if (temp.length > 0) {
+            temp.forEach((item: string, index: number) => {
+              array +=
+                (item ? item.substring(0, item.indexOf("=")) : "") +
+                (index != temp.length - 1 ? "+" : "");
+            });
+          }
+        }
+        return Object.assign({}, item, {
+          combinationArray: array,
+        });
+      });
     }
   });
 };
@@ -1796,6 +2686,9 @@ const addAddressItem = async (token: string, accessKey: string, dto: any) => {
       lab: "",
     };
     detailInfo.value = "";
+    if (agent.value) {
+      cascaderValue.value = "";
+    }
   } else {
     ElMessage({ offset: 140, message: response.data.msg });
   }
@@ -1823,6 +2716,9 @@ const editAddressItem = async (token: string, accessKey: string, dto: any) => {
       lab: "",
     };
     detailInfo.value = "";
+    if (agent.value) {
+      cascaderValue.value = "";
+    }
   } else {
     ElMessage({ offset: 140, message: response.data.msg });
   }
@@ -1909,6 +2805,9 @@ const add = (index: number) => {
 const chooseAddress = (index: number) => {
   if (dialogEditVisible.value) {
     dialogEditVisible.value = false;
+    if (agent.value) {
+      cascaderValue.value = "";
+    }
   }
   if (index != currentAddress.value) {
     currentAddress.value = index;
@@ -1925,6 +2824,9 @@ const chooseAddress = (index: number) => {
     lab: "",
   };
   detailInfo.value = "";
+  if (agent.value) {
+    addressPopoverVisible.value = false;
+  }
 };
 const addressBack = () => {
   dialogEditVisible.value = false;
@@ -1995,6 +2897,57 @@ const edit = () => {
   editAddressId.value = addressList.value[currentAddress.value].id;
   addressStatus.value = 2;
 };
+const editPhoneAddress = (temp: number) => {
+  let provinceCode = "";
+  let cityCode = "";
+  let countyCode = "";
+  for (let index = 0; index < pca.length; index++) {
+    if (pca[index].name == addressList.value[temp].provinceName) {
+      provinceCode = pca[index].code;
+      for (let i = 0; i < pca[index].children.length; i++) {
+        if (pca[index].children[i].name == addressList.value[temp].cityName) {
+          cityCode = pca[index].children[i].code;
+          for (let j = 0; j < pca[index].children[i].children.length; j++) {
+            if (
+              pca[index].children[i].children[j].name ==
+              addressList.value[temp].countyName
+            ) {
+              countyCode = pca[index].children[i].children[j].code;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
+  addressEditForm.value = {
+    mobile: addressList.value[temp].mobile,
+    userName: addressList.value[temp].userName,
+    detailInfo: addressList.value[temp].detailInfo,
+    userDetailInfo: addressList.value[temp].userDetailInfo,
+    cityName: [
+      addressList.value[temp].provinceName,
+      addressList.value[temp].cityName,
+      addressList.value[temp].countyName,
+    ],
+    cityCode:
+      provinceCode.length > 0 && cityCode.length > 0 && countyCode.length > 0
+        ? [provinceCode, cityCode, countyCode]
+        : [],
+    latitude: addressList.value[temp].latitude,
+    longitude: addressList.value[temp].longitude,
+    lab: addressList.value[temp].lab,
+  };
+  detailInfo.value = addressList.value[temp].detailInfo;
+  detailLab.value = addressList.value[temp].lab;
+  dialogTableVisible.value = false;
+  dialogEditVisible.value = true;
+  editAddressId.value = addressList.value[temp].id;
+  addressStatus.value = 2;
+  addressPopoverVisible.value = false;
+};
 const del = () => {
   ElMessageBox.confirm("是否删除该送餐地址？", "提示").then(() => {
     let usr = localStorage.getItem("userInfo");
@@ -2004,6 +2957,9 @@ const del = () => {
         (res) => {
           if (res.data.code === 11000) {
             dialogEditVisible.value = false;
+            if (agent.value) {
+              cascaderValue.value = "";
+            }
             // if (currentAddress.value == index) {
             //   currentAddress.value = 0;
             // } else if (currentAddress.value > index) {
@@ -2256,32 +3212,43 @@ const removeChoose = (id: number) => {
   checkList.value[id].check = false;
 };
 const payAmount = async (item: { img: string; id: number; money: string }) => {
-  const img = await wechatPayMcd({
-    accessKey: userInfo.value.accessKey,
-    osType: agent.value ? 2 : 1,
-    payAmount: +item.id,
-    currency: "RMB",
-  });
-  if (agent.value) {
-    // if (img.data.data.h5Url) {
-    //   window.location.href = img.data.data.h5Url;
-    //   setTimeout(() => {
-    //     loopOrderDetail(img.data.data.orderNo);
-    //   }, 3000);
-    // } else {
-    //   ElMessage({
-    //     type: "error",
-    //     message: "获取微信支付链接失败",
-    //   });
-    // }
+  if (isWeiXinBrowser()) {
+    window.location.href =
+      `https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa1c2983ad99da4bc&redirect_uri=https%3A%2F%2F${
+        import.meta.env.VITE_PUBLIC_URL
+      }%2Fapi%2FgetOpenid&response_type=code&scope=snsapi_base&state=` +
+      userInfo.value.id +
+      "-" +
+      item.id +
+      "-rmb";
   } else {
-    QRCode.toDataURL(img.data.data.codeUrl).then((res1: any) => {
-      currentPrice.value = item.id + "";
-      qrCodeImgUrl.value = res1;
-      if (qrCodeImgUrl.value) {
-        loopOrderDetail(img.data.data.orderNo);
-      }
+    const img = await wechatPayMcd({
+      accessKey: userInfo.value.accessKey,
+      osType: agent.value ? 2 : 1,
+      payAmount: +item.id,
+      currency: "RMB",
     });
+    if (agent.value) {
+      if (img.data.data.h5Url) {
+        window.location.href = img.data.data.h5Url;
+        setTimeout(() => {
+          loopOrderDetail(img.data.data.orderNo);
+        }, 3000);
+      } else {
+        ElMessage({
+          type: "error",
+          message: "获取微信支付链接失败",
+        });
+      }
+    } else {
+      QRCode.toDataURL(img.data.data.codeUrl).then((res1: any) => {
+        currentPrice.value = item.id + "";
+        qrCodeImgUrl.value = res1;
+        if (qrCodeImgUrl.value) {
+          loopOrderDetail(img.data.data.orderNo);
+        }
+      });
+    }
   }
 };
 const loopOrderDetail = async (orderNo: string) => {
@@ -2309,6 +3276,33 @@ const loopOrderDetail = async (orderNo: string) => {
       loopOrderDetail(orderNo);
     }, 3000);
   }
+};
+const cascaderFinish = ({
+  value,
+  selectedOptions,
+}: {
+  value: string | number;
+  selectedOptions: any;
+}) => {
+  cascaderValue.value = value + "";
+  addressEditForm.value.cityName = [
+    selectedOptions[0].name,
+    selectedOptions[1].name,
+    selectedOptions[2].name,
+  ];
+  addressEditForm.value.cityCode = [
+    selectedOptions[0].code,
+    selectedOptions[1].code,
+    selectedOptions[2].code,
+  ];
+  cascaderShow.value = false;
+};
+const openCascader = () => {
+  addressRules.value[2] = false;
+  if (addressEditForm.value.cityCode.length > 0) {
+    cascaderValue.value = addressEditForm.value.cityCode[2];
+  }
+  cascaderShow.value = true;
 };
 </script>
 <style lang="scss" scoped>
@@ -2409,20 +3403,28 @@ const loopOrderDetail = async (orderNo: string) => {
     background: #ffffff;
     padding: 0 20px;
     box-shadow: 0px 6px 9px rgba(0, 0, 0, 0.16);
+    z-index: 2048;
+    position: relative;
     .logo {
       height: 20px;
       cursor: pointer;
+      position: absolute;
+      left: 20px;
+      top: 20px;
     }
     .center-logo {
       height: 40px;
     }
     .header-right {
-      width: 84px;
-      min-width: 84px;
+      width: 140px;
+      min-width: 140px;
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: flex-end;
+      position: absolute;
+      right: 20px;
+      top: 10px;
       .avatar {
         width: 32px;
         height: 32px;
@@ -2439,6 +3441,33 @@ const loopOrderDetail = async (orderNo: string) => {
         color: #ffffff;
         z-index: 2;
         cursor: pointer;
+      }
+      .info {
+        background: linear-gradient(
+          90deg,
+          rgba(67, 202, 234, 1) 0%,
+          rgba(148, 81, 235, 0.81) 65%,
+          rgba(235, 72, 160, 1) 100%
+        );
+        height: 40px;
+        padding: 0 10px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        cursor: pointer;
+        .txt {
+          font-size: 12px;
+          font-family: Gotham-Rounded;
+          font-weight: bold;
+          color: #fff;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+        }
       }
     }
   }
@@ -2615,6 +3644,12 @@ const loopOrderDetail = async (orderNo: string) => {
       color: #000;
       font-size: 4rem;
       font-family: Gotham-Rounded;
+    }
+    .big-desc {
+      color: #000;
+      font-size: 1rem;
+      font-family: Gotham-Rounded;
+      margin-bottom: 30px;
     }
     .address {
       display: flex;
@@ -2930,34 +3965,204 @@ const loopOrderDetail = async (orderNo: string) => {
     color: #ffffff;
     font-size: 18px;
   }
-  .phone-main {
-    height: calc(100vh - 60px);
+  .phone-foot-container {
+    background: #b967db;
+    height: 80px;
+    width: 100vw;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    font-family: FUTURA-MEDIUM;
+    color: #ffffff;
+    font-size: 14px;
+  }
+  .phone-main {
+    height: calc(100vh - 60px - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
+    .edit-address {
+      // height: 70vh;
+      width: 100vw;
+      // background: #ffffff;
+      border-radius: 29px;
+      // padding: 50px 30px;
+      // border: #cecbcb 1px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 80px 0 0;
+      .back {
+        position: absolute;
+        top: 20px;
+        left: 30px;
+        font-size: 18px;
+        color: #59d0ec;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .del {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 18px;
+        color: #f56c6c;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .edit-label-container {
+        width: 300px;
+        .label {
+          color: #59d0ec;
+          font-size: 32px;
+          line-height: 32px;
+        }
+        :deep(.el-input__wrapper) {
+          box-shadow: none;
+          background: transparent;
+        }
+        :deep(.el-cascader) {
+          width: 100%;
+        }
+        :deep(.el-input__inner) {
+          text-align: center;
+          color: #59d0ec;
+          --el-input-inner-height: auto !important;
+        }
+      }
+      .edit-input-container {
+        border: #121212 1px solid;
+        width: 300px;
+        height: 50px;
+        border-radius: 11px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 5px 8px;
+        .input-content {
+          font-size: 14px;
+          padding: 1px 11px;
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+        }
+        &.rule {
+          border: #f56c6c 1px solid;
+        }
+        :deep(.el-input__wrapper) {
+          box-shadow: none;
+          background: transparent;
+        }
+        :deep(.el-cascader) {
+          width: 100%;
+        }
+      }
+      .confirm {
+        color: #59d0ec;
+        font-size: 32px;
+        cursor: pointer;
+      }
+    }
+    .tag-container {
+      width: 320px;
+      height: 46px;
+      border-radius: 30px;
+      background: #d9e1e3;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 2px 2px 9px rgba(0, 0, 0, 0.16);
+      margin: 30px 0;
+      .tag-part {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .check {
+          background: linear-gradient(
+            90deg,
+            rgba(67, 202, 234, 1) 0%,
+            rgba(148, 81, 235, 0.81) 55%,
+            rgba(235, 72, 160, 1) 100%
+          );
+          height: 40px;
+          width: 96%;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          border-radius: 18px;
+          mix-blend-mode: multiply;
+          cursor: pointer;
+          .tag {
+            font-family: Gotham-Rounded;
+            font-weight: bold;
+            color: #fff;
+            font-size: 1rem;
+          }
+        }
+        .normal {
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          .tag {
+            color: rgba(0, 0, 0, 0.5);
+            font-family: Gotham-Rounded;
+            font-weight: bold;
+            font-size: 1rem;
+          }
+        }
+      }
+    }
     .big {
       color: #000;
-      font-size: 2rem;
+      font-size: 36px;
       font-family: Gotham-Rounded;
+      margin-top: 20px;
+    }
+    .big-desc {
+      color: #000;
+      font-size: 16px;
+      font-family: Gotham-Rounded;
+      margin-bottom: 30px;
     }
     .address {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      flex-direction: row;
+      align-items: center;
       justify-content: center;
-      color: #000;
-      font-size: 1rem;
+      width: 320px;
+      background: #ffffff;
+      padding: 12px;
       .hamburger-container {
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
         width: 100%;
-        .hamburger {
-          height: 30px;
-          width: 36px;
-        }
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        font-size: 18px;
+        color: #000;
       }
       .phone-container {
         display: flex;
@@ -2965,12 +4170,261 @@ const loopOrderDetail = async (orderNo: string) => {
         align-items: center;
         justify-content: flex-start;
         width: 100%;
-        margin-top: 20px;
-        .phone {
-          height: 30px;
-          width: 18px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        font-size: 14px;
+        color: #666;
+      }
+    }
+    .count-container {
+      width: 300px;
+      margin-top: 30px;
+    }
+    .count {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: center;
+      margin-top: 10px;
+      .txt {
+        color: #000;
+        font-size: 18px;
+        line-height: 24px;
+        .num {
+          font-size: 32px;
+          line-height: 32px;
         }
       }
+    }
+    .count-normal {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: center;
+      margin-top: 10px;
+      .txt {
+        color: #000;
+        font-size: 18px;
+        line-height: 24px;
+        opacity: 0.3;
+        .num {
+          font-size: 32px;
+          line-height: 32px;
+        }
+      }
+    }
+    .area {
+      width: 300px;
+      margin-top: 20px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      // padding: 20px 30px;
+      border-radius: 10px;
+      .want-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px 30px 0 30px;
+        .label {
+          color: #8a8b8b;
+          font-size: 20px;
+          white-space: nowrap;
+        }
+        .tags-container {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+          .tags {
+            margin-left: 20px;
+          }
+          :deep(.el-tag--dark) {
+            --el-tag-bg-color: none;
+            --el-tag-border-color: none;
+            // --el-tag-hover-color: none;
+          }
+        }
+      }
+      .area-container {
+        padding: 20px 30px;
+        :deep(.el-textarea__inner) {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          padding: 0;
+        }
+        :deep(.el-textarea__inner:hover) {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+      }
+      .check-container {
+        width: 100%;
+        height: 40px;
+        background: rgba(255, 216, 0, 0.15);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+      }
+    }
+    .button {
+      margin-top: 30px;
+      width: 140px;
+      border-radius: 12px;
+    }
+    .process-container {
+      width: 320px;
+      margin-top: 20px;
+      .pro {
+        height: 80px;
+        background: #3180ff;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .txt {
+          font-size: 1rem;
+          color: #ffffff;
+        }
+      }
+    }
+    .count-down {
+      text-align: center;
+      border-radius: 12px;
+      width: 120px;
+      height: 48px;
+      font-size: 1rem;
+      font-weight: bolder;
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      border: #000 solid 1px;
+      .column {
+        transition: transform 300ms;
+      }
+      .num {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        width: 10px;
+      }
+    }
+    .button-count-down {
+      text-align: center;
+      height: 30px;
+      font-size: 1rem;
+      color: #fff;
+      font-weight: bolder;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      .column {
+        transition: transform 300ms;
+      }
+      .num {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 30px;
+        width: 10px;
+      }
+    }
+    .report-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      .hamburger {
+        width: 120px;
+        height: 120px;
+      }
+      .solid {
+        margin: 10px 0 10px 36px;
+        width: 1px;
+        height: 100px;
+        background: #737379;
+      }
+      .report-part {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        margin-left: 10px;
+        .desc {
+          color: #737379;
+          font-size: 16px;
+        }
+        .content {
+          font-size: 20px;
+          color: #000000;
+          display: flex;
+          flex-direction: row;
+          align-items: flex-end;
+          justify-content: center;
+          line-height: 20px;
+          margin-top: 10px;
+          .large {
+            font-size: 24px;
+            line-height: 24px;
+            color: #000000;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+    .evaluate {
+      width: 320px;
+      margin-top: 20px;
+      position: relative;
+      .evaluate-group {
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        right: 10px;
+        bottom: 10px;
+        .normal {
+          width: 80px;
+          background: #ffffff;
+          border: #000 1px solid;
+          color: #000;
+          border-radius: 8px;
+        }
+        .selected {
+          width: 80px;
+          background: #000000;
+          border: #000 1px solid;
+          color: #fff;
+          border-radius: 8px;
+        }
+      }
+    }
+    .button-group {
+      width: 160px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .order-no {
+      margin-top: 30px;
+      color: rgba(0, 0, 0, 0.6);
     }
   }
 }
@@ -3187,9 +4641,61 @@ const loopOrderDetail = async (orderNo: string) => {
     }
   }
 }
+
+.phone-aside {
+  width: 140px;
+  min-width: 140px;
+  color: #fff;
+  box-sizing: border-box;
+  min-height: 248px;
+  padding: 0 20px;
+  .aside-left {
+    height: 248px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    .label-container {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      .price-container {
+        color: #000000;
+        font-size: 1rem;
+        font-family: FUTURA-MEDIUM;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .price {
+          color: #000000;
+          font-size: 2rem;
+          font-family: FUTURA-MEDIUM;
+        }
+      }
+    }
+    .label {
+      font-size: 18px;
+      font-family: Gotham-Rounded;
+      font-weight: bold;
+      color: #afadaa;
+      cursor: pointer;
+      &.check {
+        color: #000;
+      }
+    }
+  }
+}
 .main-content {
   box-shadow: inset 6px -1px 12px rgba(0, 0, 0, 0.16);
   padding: 0 0 20px;
+}
+.phone-main-content {
+  box-shadow: inset 6px -1px 12px rgba(0, 0, 0, 0.16);
+  padding: 0;
 }
 .album-container {
   width: 100%;
@@ -3268,30 +4774,182 @@ const loopOrderDetail = async (orderNo: string) => {
     justify-content: center;
   }
 }
-.history-container {
-  width: 264px;
+.phone-album-container {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  .history-row {
-    width: 100%;
+  padding: 30px 0 0;
+  .part-container {
+    width: 206px;
+    height: 118px;
+    margin-bottom: 20px;
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    &.check {
+      background: #ffd800;
+    }
+    .part {
+      width: 174px;
+      height: 98px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px #000 solid;
+      border-radius: 12px;
+      .txt {
+        color: #000000;
+        font-size: 18px;
+        font-family: FUTURA-MEDIUM;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .big {
+          color: #000000;
+          font-size: 24px;
+          font-family: FUTURA-MEDIUM;
+        }
+      }
+      .txt2 {
+        color: #ffd800;
+        font-size: 18px;
+        font-family: FUTURA-MEDIUM;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .big {
+          color: #ffd800;
+          font-size: 24px;
+          font-family: FUTURA-MEDIUM;
+        }
+      }
+    }
+  }
+  .pay {
+    border: #000000 solid 1px;
+    width: 120px;
+    height: 42px;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: FUTURA-MEDIUM;
+  }
+  // .empty {
+  //   width: 150px;
+  //   height: 50px;
+  //   background: transparent;
+  // }
+  .pay-disable {
+    background: #f2f2f2;
+    border: #f2f2f2 solid 1px;
+    width: 120px;
+    height: 42px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+}
+.history-container {
+  width: 284px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  .history-row {
+    width: 284px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
     justify-content: flex-start;
+    margin-top: 10px;
     .history-left {
       color: #8a8b8b;
-      font-size: 1rem;
-      width: 65px;
+      font-size: 0.8rem;
+      width: 84px;
+      .history-logo {
+        width: 48px;
+        height: 48px;
+      }
     }
     .history-right {
+      max-width: 200px;
+      width: 200px;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
       justify-content: flex-start;
       color: #000000;
-      font-size: 1rem;
+      font-size: 0.8rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      .big {
+        font-size: 1.5rem;
+        color: #000000;
+      }
+      .desc {
+        font-size: 0.8rem;
+        color: #8a8b8b;
+      }
+    }
+  }
+}
+
+.phone-history-container {
+  width: 244px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 10px 0 0;
+  .history-row {
+    width: 244px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-top: 10px;
+    .history-left {
+      color: #8a8b8b;
+      font-size: 12px;
+      width: 68px;
+      .history-logo {
+        width: 48px;
+        height: 48px;
+      }
+    }
+    .history-right {
+      max-width: 176px;
+      width: 176px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      color: #000000;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      .big {
+        font-size: 24px;
+        color: #000000;
+      }
+      .desc {
+        font-size: 12px;
+        color: #8a8b8b;
+      }
     }
   }
 }
@@ -3317,6 +4975,43 @@ const loopOrderDetail = async (orderNo: string) => {
     &:first-child {
       margin-left: 68px;
     }
+  }
+}
+.address-list-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 294px;
+  background: #ffffff;
+  padding: 12px 24px 12px 0;
+  border-bottom: #aaa 1px solid;
+  .hamburger-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 18px;
+    color: #000;
+  }
+  .phone-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    font-size: 14px;
+    color: #666;
   }
 }
 </style>

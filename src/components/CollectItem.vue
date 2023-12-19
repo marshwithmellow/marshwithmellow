@@ -108,7 +108,7 @@ import { ref } from "vue";
 import { ElNotification } from "element-plus";
 import { StarFilled, Download } from "@element-plus/icons-vue";
 import { httpUrlAddKey } from "@/utils/utils";
-const emits = defineEmits(["openOverlay", "skip"]);
+const emits = defineEmits(["openOverlay", "skip", "toLogin"]);
 // type Option = {
 //   value: string;
 //   label: string;
@@ -189,16 +189,27 @@ const appList = ref([
     download: 0,
   },
   {
-    name: "AutoGPT Next Web",
-    desc: "这个由 GPT-4 驱动的项目将 LLM 的“思想”链接在一起，以自主实现你设定的任何目标。作为 GPT-4 完全自主运行的首批示例之一，Auto-GPT 突破了 AI 可能性的界限。",
-    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/gpt-auto-icon.png",
-    url: "http://autogpt.mbmzone.com/",
+    name: "LegalNow",
+    desc: "LegalNow是您的私人AI合同法律助手，为您提供专业的合同撰写、审查、咨询和管理服务，满足您所有的合同需求。",
+    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/legal-now-icon.png",
+    url: "https://ai.legalnow.xyz/",
     useToken: true,
     btnType: 0,
     btnText: "立即体验",
     collect: false,
     download: 0,
   },
+  // {
+  //   name: "AutoGPT Next Web",
+  //   desc: "这个由 GPT-4 驱动的项目将 LLM 的“思想”链接在一起，以自主实现你设定的任何目标。作为 GPT-4 完全自主运行的首批示例之一，Auto-GPT 突破了 AI 可能性的界限。",
+  //   img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/gpt-auto-icon.png",
+  //   url: "http://autogpt.mbmzone.com/",
+  //   useToken: true,
+  //   btnType: 0,
+  //   btnText: "立即体验",
+  //   collect: false,
+  //   download: 0,
+  // },
   // {
   //   name: "ChatGPT With GPT4",
   //   desc: "标准的 ChatGPT 聊天机器人，包含提示词商店。\n可选择 GPT-4 、 GPT-4 32K 和 GPT-3.5 turbo 模型。\n拥有快速充值入口。",
@@ -209,17 +220,17 @@ const appList = ref([
   //   btnText: "立即体验",
   //   collect: false,
   // },
-  {
-    name: "Paper - ChatGPT 学术优化",
-    desc: "科研工作专用 ChatGPT 拓展，特别优化学术 Paper 润色体验，支持自定义快捷按钮，支持 markdown 表格显示，Tex公式双显示，代码显示功能完善，新增本地Python工程剖析功能/自我部析功能。",
-    img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/paper-icon.png",
-    url: "http://paper.mbmzone.com/",
-    useToken: true,
-    btnType: 0,
-    btnText: "需要 API",
-    collect: false,
-    download: 0,
-  },
+  // {
+  //   name: "Paper - ChatGPT 学术优化",
+  //   desc: "科研工作专用 ChatGPT 拓展，特别优化学术 Paper 润色体验，支持自定义快捷按钮，支持 markdown 表格显示，Tex公式双显示，代码显示功能完善，新增本地Python工程剖析功能/自我部析功能。",
+  //   img: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/paper-icon.png",
+  //   url: "http://paper.mbmzone.com/",
+  //   useToken: true,
+  //   btnType: 0,
+  //   btnText: "需要 API",
+  //   collect: false,
+  //   download: 0,
+  // },
   {
     name: "Law - AI法律助手",
     desc: "学习了中国法律的 AI 法律助手。",
@@ -242,9 +253,6 @@ const appList = ref([
     collect: false,
     download: 0,
   },
-  {
-    name: "",
-  },
 ]);
 // do collect / uncollect
 const doCollect = (item: any) => {
@@ -266,14 +274,20 @@ const skip = (url: string, openNew: boolean, useToken: boolean) => {
       const user = JSON.parse(usr);
       urlString = httpUrlAddKey(urlString, "token", user.token);
       urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
+      emits("skip", {
+        urlString,
+        openNew,
+      });
     } else {
-      urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
+      // urlString = httpUrlAddKey(urlString, "version", aiVersion.value);
+      emits("toLogin");
     }
+  } else {
+    emits("skip", {
+      urlString,
+      openNew,
+    });
   }
-  emits("skip", {
-    urlString,
-    openNew,
-  });
   // if (openNew) {
   //   window.open(urlString);
   // } else {

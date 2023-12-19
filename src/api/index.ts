@@ -325,3 +325,140 @@ export const wechatPayMcd = (data: {
   accessKey: string;
   currency: string;
 }) => axios({ url: `/wechatPay`, method: "post", data });
+
+export const createChatResume = (data: { token: string; accessKey: string }) =>
+  axios({
+    url: `/resume/aCreateResume`,
+    method: "get",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+      "api-key": data.accessKey,
+    },
+  });
+
+export const connectChatCompletions = (data: {
+  token: string;
+  accessKey: string;
+  resumeId: string;
+  messages: any;
+}) =>
+  // axios({
+  //   url: `/resume/cCompletions`,
+  //   method: "post",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //     Authorization: data.token,
+  //     accessKey: data.accessKey,
+  //     resumeId: data.resumeId,
+  //   },
+  //   responseType: "blob",
+  //   data: {
+  //     messages: data.messages,
+  //   },
+  // });
+  fetch(
+    `https://${import.meta.env.VITE_PUBLIC_URL}/` +
+      (import.meta.env.VITE_PUBLIC_URL == "openai-service.mbmzone.com"
+        ? "api"
+        : "api-resume") +
+      `/resume/cCompletions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: data.token,
+        accessKey: data.accessKey,
+        "api-key": data.accessKey,
+        resumeId: data.resumeId,
+      },
+      body: JSON.stringify({
+        messages: data.messages,
+      }),
+    }
+  );
+
+export const uploadChatCompletions = (data: {
+  token: string;
+  accessKey: string;
+  resumeId: string;
+  formData: any;
+}) =>
+  axios({
+    url: `/resume/bUploadResume`,
+    method: "post",
+    headers: {
+      "Content-Type":
+        "multipart/form-data; boundary=----WebKitFormBoundarynl6gT1BKdPWIejNq",
+      Authorization: data.token,
+      accessKey: data.accessKey,
+      "api-key": data.accessKey,
+      resumeId: data.resumeId,
+    },
+    data: data.formData,
+  });
+// fetch(
+//   `https://${import.meta.env.VITE_PUBLIC_URL}/` +
+//     (import.meta.env.VITE_PUBLIC_URL == "openai-service.mbmzone.com"
+//       ? "api"
+//       : "api-resume") +
+//     `/resume/bUploadResume`,
+//   {
+//     method: "POST",
+//     headers: {
+//       "Content-Type":
+//         "multipart/form-data; boundary=----WebKitFormBoundarynl6gT1BKdPWIejNq",
+//       Authorization: data.token,
+//       accessKey: data.accessKey,
+//       resumeId: data.resumeId,
+//     },
+//     body: data.formData,
+//   }
+// );
+
+export const getChatResume = (data: {
+  token: string;
+  accessKey: string;
+  resumeId: string;
+}) =>
+  fetch(
+    `https://${import.meta.env.VITE_PUBLIC_URL}/` +
+      (import.meta.env.VITE_PUBLIC_URL == "openai-service.mbmzone.com"
+        ? "api"
+        : "api-resume") +
+      `/resume/dGetResume`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: data.token,
+        accessKey: data.accessKey,
+        "api-key": data.accessKey,
+        resumeId: data.resumeId,
+      },
+    }
+  );
+
+  export const getChatResumePosition = (data: {
+    token: string;
+    accessKey: string;
+    resumeId: string;
+  }) =>
+    fetch(
+      `https://${import.meta.env.VITE_PUBLIC_URL}/` +
+        (import.meta.env.VITE_PUBLIC_URL == "openai-service.mbmzone.com"
+          ? "api"
+          : "api-resume") +
+        `/resume/eGetResumPositione`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: data.token,
+          accessKey: data.accessKey,
+          "api-key": data.accessKey,
+          resumeId: data.resumeId,
+        },
+      }
+    );

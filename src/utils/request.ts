@@ -4,7 +4,11 @@ import axios from "axios";
 const service = axios.create({
   // baseURL: "https://openai.yingjin.pro/api",
   // baseURL: "https://openai-service.mbmzone.com/api",
-  baseURL: `https://${import.meta.env.VITE_PUBLIC_URL}/api`,
+  baseURL:
+    `https://${import.meta.env.VITE_PUBLIC_URL}/` +
+    (import.meta.env.VITE_PUBLIC_URL == "openai-service.mbmzone.com"
+      ? "api"
+      : "api-resume"),
   headers: { "Content-Type": "application/json" },
   timeout: 60000, // 请求超时时间
 });

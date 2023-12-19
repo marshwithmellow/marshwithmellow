@@ -226,6 +226,7 @@
                 ref="collect"
                 @open-overlay="mpQrcodeShow = true"
                 @skip="collectSkip"
+                @to-login="toLogin"
               ></collect-item>
             </div>
             <div class="foot">
@@ -439,6 +440,7 @@
               <collect-item-small
                 ref="collect"
                 @skip="collectSkip"
+                @to-login="toLogin"
               ></collect-item-small>
             </div>
             <!-- <div class="foot">
@@ -1226,6 +1228,16 @@ watch(
     proxy?.$refs["collect"]?.setAIVersion(newValue);
   }
 );
+// watch(
+//   () => showDialog.value,
+//   (newValue) => {
+//     if (!newValue) {
+//       if (proxy?.$refs["login"]) {
+//         proxy?.$refs["login"].reset();
+//       }
+//     }
+//   }
+// );
 onMounted(() => {
   slideBanner();
 });
@@ -2751,7 +2763,7 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
   background: #000 !important;
   border: none;
 }
-:global(.el-scrollbar) {
+:deep(.el-scrollbar) {
   background: #000 !important;
   border: none;
 }

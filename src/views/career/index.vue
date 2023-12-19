@@ -4,9 +4,9 @@
       <el-header class="top">
         <div class="top-header">
           <div class="title">YourCareer.Ai</div>
-          <div class="wel">欢迎回来 小李子</div>
+          <div class="wel">欢迎回来 {{ userInfo.name }}</div>
         </div>
-        <img :src="banner" class="banner" />
+        <img :src="banner" class="banner" @click="navChat" />
         <el-divider style="--el-border-color: #535353" />
       </el-header>
       <el-main class="main-container">
@@ -16,11 +16,14 @@
               <img :src="iconHomeHouse" class="part-icon" />
               <div class="text">主页</div>
             </div>
-            <div class="aside-part normal">
+            <div class="aside-part normal" @click="navChat">
               <img :src="iconChatLine" class="part-icon" />
               <div class="text">咨询</div>
             </div>
-            <div class="aside-part normal">
+            <div
+              class="aside-part normal"
+              @click="ElMessage('暂未开放，敬请期待！')"
+            >
               <img :src="iconUserPlus" class="part-icon" />
               <div class="text">社区</div>
             </div>
@@ -28,10 +31,10 @@
           <el-container>
             <el-header class="content-top">
               <div class="content-start-container">
-                <div class="content-start-left">
+                <div class="content-start-left" @click="navChat">
                   <div class="txt">立即获取你的专属Career.AI</div>
                 </div>
-                <div class="content-start-right">
+                <div class="content-start-right" @click="navChat">
                   <div class="txt">开始聊天</div>
                 </div>
               </div>
@@ -56,7 +59,33 @@
                 </swiper-slide>
               </swiper>
             </el-header>
-            <el-main>Main</el-main>
+            <el-main style="padding: 10px 20px 0">
+              <swiper
+                :initialSlide="0"
+                :loopedSlides="2"
+                slidesPerView="auto"
+                :spaceBetween="0"
+                :scrollbar="false"
+                :loop="false"
+                class="expert-swiper"
+              >
+                <swiper-slide v-for="(item, index) in expertList" :key="index">
+                  <div class="expert-container" @click="navChat">
+                    <img :src="item.headImg" class="avatar" />
+                    <div class="name">{{ item.name }}</div>
+                    <el-tooltip
+                      placement="left"
+                      :disabled="
+                        item.desc && item.desc.length > 32 ? false : true
+                      "
+                    >
+                      <template #content>{{ item.desc }}</template>
+                      <div class="desc">{{ item.desc }}</div>
+                    </el-tooltip>
+                  </div>
+                </swiper-slide>
+              </swiper>
+            </el-main>
           </el-container>
         </el-container>
       </el-main>
@@ -94,22 +123,18 @@ import banner from "@/assets/images/career-banner-1.png";
 import iconUserPlus from "@/assets/images/career-user-plus.png";
 import iconChatLine from "@/assets/images/career-chat-line.png";
 import iconHomeHouse from "@/assets/images/career-home-house.png";
+import avatarLina from "@/assets/images/career-linda-avatar2.png";
+import avatarExpert from "@/assets/images/career-expert-avatar.png";
+import avatarJoo from "@/assets/images/career-joo-avatar.png";
+import avatarGame from "@/assets/images/career-game-avatar.png";
+import { useRouter } from "vue-router";
 import { House, ChatLineSquare, User } from "@element-plus/icons-vue";
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from "swiper/vue";
 // Import Swiper styles
 import "swiper/css";
-const textCount = ref(0);
-const timer = ref();
-const chatBaseList = ref<Array<string>>([
-  "以今日5辆满电无人车，运输5小时能运完50吨货物的标准，已知每辆无人车运输1小时耗电10%，运输效率是多少，每辆无人车耗电多少？花费多长时间？",
-  "运输效率：50吨/5小时=10顿/小时，每辆无人车耗电：10%×5小时=50%，需花费5小时。",
-  "以现有运输效率前提下，再增加5辆无人运输车，完成共计150吨物资的运输任务，整体效率会提高到多少？每辆无人车耗电又是多少？共花费多长时间？",
-  "增加到10辆无人车，完成共计150吨物资运输任务，整体效率会提高到15顿/小时，每辆无人车耗电百分比是15%。运完150吨的话，总共要耗用1.5小时。",
-  "我来想想是否确认执行此调配操作？",
-  "您好，请您慎重考虑。我们将根据您的确认来决定是否执行此调配操作。",
-  "是",
-]);
+import { doGetInfo } from "@/api/index";
+const $router = useRouter();
 const currentTags = ref(0);
 const tagsList = ref<Array<string>>([
   "互联网",
@@ -119,64 +144,89 @@ const tagsList = ref<Array<string>>([
   "重工机械",
   "服装纺织",
 ]);
-type chatItem = {
-  content: string;
-  status: boolean;
+type expertItem = {
+  headImg: string;
+  name: string;
+  desc: string;
+  tag: number;
 };
-const chatList = ref<Array<chatItem>>([]);
-onMounted(() => {
-  //   initGPT();
+const expertList = ref<Array<expertItem>>([
+  {
+    headImg: avatarLina,
+    name: "Lee.AI",
+    desc: "大数据行业领军者，精通实时和理线大数据处理业务，大数据行业领军者，精通实时和理线大数据处理业务",
+    tag: 0,
+  },
+  {
+    headImg: avatarExpert,
+    name: "张琦.AI",
+    desc: "新商业架构师，全域流量架构师，企业盈利模式增长专家，新商业架构师，全域流量架构师，企业盈利模式增长专",
+    tag: 0,
+  },
+  {
+    headImg: avatarJoo,
+    name: "Joo.AI",
+    desc: "大数据行业咨询，全球高级顾问，职业规划专家",
+    tag: 0,
+  },
+  {
+    headImg: avatarGame,
+    name: "Game.AI",
+    desc: "了解自己的性格，如何和他人相处",
+    tag: 0,
+  },
+]);
+const userInfo = ref({
+  mobile: "",
+  id: "",
+  name: "",
+  remainAmount: 0,
+  requestCount: 0,
+  token: "",
+  createTime: "",
+  inviteCode: "",
+  isAuth: 0,
+  accountType: 1,
+  accessKey: "",
 });
-// 延时函数
-const sleep = (delayTime = 10000) => {
-  return new Promise((resolve) => setTimeout(resolve, delayTime));
-};
-// 同步遍历，自定义延时时间
-const delayDo = async (
-  iterList: Array<string>,
-  callback = (item: string, i: number) => console.log(`数据：${item}`),
-  delayTimeList: Array<number>
-) => {
-  let len = iterList.length;
-  for (let i = 0; i < len; i++) {
-    callback(iterList[i], i);
-    await sleep(delayTimeList[i]);
+onBeforeMount(() => {
+  let usr = localStorage.getItem("userInfo");
+  if (usr) {
+    const info = JSON.parse(usr);
+    getUserInfo(info.token, info.accessKey);
+  } else {
+    $router.replace({
+      name: "singleLogin",
+      query: {
+        redirectUrl: window.location.href,
+      },
+    });
+  }
+});
+//请求接口获取用户信息
+const getUserInfo = async (token: string, accessKey: string) => {
+  const res = await doGetInfo({ token, accessKey });
+  if (res.data.code === 11000) {
+    userInfo.value = res.data.data;
+  } else if (res.data.code === 12004) {
+    localStorage.removeItem("userInfo");
+    $router.replace({
+      name: "singleLogin",
+      query: {
+        redirectUrl: window.location.href,
+      },
+    });
   }
 };
-// 逐字显示内容
-const getChatContent = (text: string, index: number) => {
-  timer.value = setInterval(() => {
-    textCount.value++;
-    if (textCount.value == text.length + 1) {
-      textCount.value = 0;
-      chatList.value.splice(index, 1, { content: text, status: false });
-      clearInterval(timer.value);
-      return;
-    }
-
-    // 取字符串子串
-    let nowStr = text.substring(0, textCount.value);
-    chatList.value.splice(index, 1, { content: nowStr, status: true });
-  }, 200);
-};
-// 点击开始聊天
-const initGPT = () => {
-  // const delayTimeList = [11000, 8000, 6000, 15000, 4000];
-  const delayTimeList = [16000, 11000, 16000, 16000, 5000, 7000];
-  delayDo(
-    chatBaseList.value,
-    (item: string, i: number) => {
-      getChatContent(item, i);
-    },
-    delayTimeList
-  );
+const navChat = () => {
+  $router.push({ name: "careerChat" });
 };
 </script>
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
   min-width: 100vw;
-  background: #282828;
+  background: #484848;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -214,6 +264,7 @@ const initGPT = () => {
       .banner {
         width: 1080px;
         height: 290px;
+        cursor: pointer;
       }
     }
   }
@@ -345,6 +396,48 @@ const initGPT = () => {
         }
       }
     }
+    .expert-container {
+      width: 220px;
+      height: 316px;
+      background: #373938;
+      border-radius: 10px;
+      opacity: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      cursor: pointer;
+      position: relative;
+      &:hover {
+        background: rgba(27, 31, 35, 0.5);
+      }
+      &:active {
+        background: #1b1f23;
+      }
+      .avatar {
+        margin-top: 20px;
+        width: 140px;
+        height: 140px;
+      }
+      .name {
+        margin-top: 14px;
+        font-size: 1.2rem;
+        color: #ffffff;
+      }
+      .desc {
+        margin-top: 14px;
+        font-size: 1rem;
+        color: #cdcdcd;
+        max-width: 188px;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis; /* 超出部分省略号 */
+        word-break: break-all; /* 设置省略字母数字 */
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3; /* 显示的行数 */
+      }
+    }
   }
   //   .chat-gpt {
   //     width: 33rem;
@@ -447,5 +540,20 @@ const initGPT = () => {
       align-items: flex-start;
     }
   }
+  .expert-swiper {
+    margin-left: 0;
+    margin-right: 0;
+    :deep(.swiper-slide) {
+      width: 230px !important;
+      height: 316px !important;
+      display: flex;
+      justify-items: flex-start;
+      align-items: flex-start;
+    }
+  }
+}
+
+:global(.el-popper) {
+  width: 188px;
 }
 </style>

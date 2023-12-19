@@ -1226,7 +1226,7 @@ defineExpose({
   background: #000 !important;
   border: none;
 }
-:global(.el-scrollbar) {
+:deep(.el-scrollbar) {
   background: #000 !important;
   border: none;
 }
