@@ -358,6 +358,7 @@
               >
                 <div
                   class="title"
+                  :style="item.titleStyle"
                   :class="{
                     'animate__animated animate__fadeIn animate__delay-1':
                       animate,
@@ -367,6 +368,7 @@
                 </div>
                 <div
                   class="desc"
+                  :style="item.descStyle"
                   :class="{
                     'animate__animated animate__fadeIn animate__delay-2':
                       animate,
@@ -1153,9 +1155,9 @@ const redirectUrl = ref<any>("");
 const swiperList = ref([
   {
     title: "MBM OpenAI GPT-4 新模型更新",
-    titleStyle: "color: #000",
+    titleStyle: {color: 'black'},
     desc: "2023年12月，我们更新了 Azure OpenAI 一系列新模型到我们的服务中。包括：新增 GPT-4 Turbo，Dall.E 3 图像模型，GPT-3.5模型。\n并为开发者额外新增：GPT-4 Turbo with Version，GPT3.5 Fine Tuning 微调功能和 Whisper 模型。",
-    descStyle: "color: #000",
+    descStyle: {color: 'black'},
     bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/bg1.jpg",
     button: "了解更多",
   },
