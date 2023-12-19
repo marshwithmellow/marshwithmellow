@@ -74,6 +74,7 @@
               >
                 <div
                   class="title"
+                  :style="item.titleStyle"
                   :class="{
                     'animate__animated animate__fadeIn animate__delay-1':
                       animate,
@@ -83,6 +84,7 @@
                 </div>
                 <div
                   class="desc"
+                  :style="item.descStyle"
                   :class="{
                     'animate__animated animate__fadeIn animate__delay-2':
                       animate,
@@ -1149,6 +1151,20 @@ const showUserInfo = ref(false);
 const $router = useRouter();
 const redirectUrl = ref<any>("");
 const swiperList = ref([
+  {
+    title: "MBM OpenAI GPT-4 新模型更新",
+    titleStyle: "color: #000",
+    desc: "2023年12月，我们更新了 Azure OpenAI 一系列新模型到我们的服务中。包括：新增 GPT-4 Turbo，Dall.E 3 图像模型，GPT-3.5模型。\n并为开发者额外新增：GPT-4 Turbo with Version，GPT3.5 Fine Tuning 微调功能和 Whisper 模型。",
+    descStyle: "color: #000",
+    bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/bg1.jpg",
+    button: "了解更多",
+  },
+  {
+    title: "MBM 城市聚会",
+    desc: "想与身边的人一起讨论 AI 带来的有趣变化？\n 加入我们精心为你准备的城市组局活动，\n 学习更多，朋友更多。",
+    bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/bg2.jpg",
+    button: "加入我们",
+  },
   {
     title: "MBM OpenAI GPT-4 服务",
     desc: "作为 微软 Azure OpenAI 中国合作伙伴，MBM 为\n企业用户和个人消费者提供可靠、企业级 OpenAI 服务，\n实现快速访问，无需代理的先进体验。",
