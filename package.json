@@ -11,6 +11,7 @@
     "build:test": "npm run type-check && npm run build-only -- --mode development",
     "build:career": "npm run type-check && npm run build-only -- --mode career",
     "deploy": "rsync -avz dist/. ubuntu@openai.mbmzone.com:/data/apps/openai.mbmzone.com/.",
+    "deploy2": "rsync -avz dist/. ubuntu@openai.mbmzone.com:/data/apps/openai.mbmzone.com/mbm-gpt/.",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit"
