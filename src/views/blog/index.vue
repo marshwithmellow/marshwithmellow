@@ -315,6 +315,32 @@
                     <div class="right-2">0.008美金 / 1K tokens</div>
                   </el-col>
                 </el-row>
+                <el-row :gutter="0" v-if="blogType == '2'">
+                  <el-col
+                    :span="8"
+                    style="background: #ffffff; border-top: 1px solid #000000"
+                  >
+                    <div class="left">GPT4-1106-128K</div>
+                  </el-col>
+                  <el-col
+                    :span="8"
+                    style="
+                      border-right: 1px solid #ffffff;
+                      border-bottom: 1px solid #ffffff;
+                    "
+                  >
+                    <div class="right-2">0.02美金 / 1K tokens</div>
+                  </el-col>
+                  <el-col
+                    :span="8"
+                    style="
+                      border-right: 1px solid #ffffff;
+                      border-bottom: 1px solid #ffffff;
+                    "
+                  >
+                    <div class="right-2">0.06美金 / 1K tokens</div>
+                  </el-col>
+                </el-row>
               </el-col>
             </el-row>
             <div
