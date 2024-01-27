@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite --mode career",
+    "dev": "vite --mode development",
     "dev:mcd": "vite --mode development",
     "build": "npm run type-check && npm run build-only -- --mode mbm",
     "build:mbm": "npm run type-check && npm run build-only -- --mode mbm",
