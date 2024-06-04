@@ -219,7 +219,44 @@
             </div> -->
           </el-header>
           <el-main class="main">
-            <div style="padding: 40px 50px">
+            <div style="padding: 20px 50px 40px">
+              <div class="main-header">
+                <img
+                  style="width: 24px; height: 24px; margin-top: 6px"
+                  src="@/assets/images/cheron-down.png"
+                />
+                <div class="main-header-content">
+                  <div class="main-header-content-top">
+                    <div style="font-size: 18px; color: #999897">
+                      换一种方式使用
+                    </div>
+                    <div style="font-size: 18px; color: #997917">
+                      GPT 4o 新模型
+                    </div>
+                  </div>
+                  <div style="color: #999897; opacity: 0.7; font-size: 14px">
+                    Powered by MBM AI
+                  </div>
+                </div>
+                <div class="main-header-content2">
+                  <div class="main-header-content2-bg">
+                    <div class="main-header-content2-title">
+                      试试在微信里与 GPT 4o 对话, 超方便。
+                    </div>
+                    <div class="main-header-content2-right">It's so cool!</div>
+                  </div>
+                </div>
+                <div class="main-header-content3">
+                  <img
+                    style="width: 30px; height: 30px"
+                    src="@/assets/images/scan-code.png"
+                  />
+                  <img
+                    style="width: 108px; height: 108px"
+                    src="@/assets/images/marsh-wx.png"
+                  />
+                </div>
+              </div>
               <h1 class="title">
                 当下热门 AI 应用
                 <span class="app-num">(9)</span>
@@ -437,6 +474,61 @@
           </h1>
           <collect-item></collect-item> -->
             <div style="padding: 20px 25px">
+              <div class="phone-main-header">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+                    flex-direction: row;
+                  "
+                >
+                  <img
+                    style="width: 24px; height: 24px; margin-top: 6px"
+                    src="@/assets/images/cheron-down.png"
+                  />
+                  <div class="phone-main-header-content">
+                    <div class="phone-main-header-content-top">
+                      <div style="font-size: 18px; color: #999897">
+                        换一种方式使用
+                      </div>
+                      <div style="font-size: 18px; color: #997917">
+                        GPT 4o 新模型
+                      </div>
+                    </div>
+                    <div style="color: #999897; opacity: 0.7; font-size: 12px">
+                      保存到相册，使用微信扫一扫添加
+                    </div>
+                  </div>
+                </div>
+                <img
+                  style="width: 108px; height: 108px"
+                  src="@/assets/images/marsh-wx.png"
+                />
+                <!-- <div class="main-header-content2">
+                  <div class="main-header-content2-bg">
+                    <div class="main-header-content2-title">
+                      试试在微信里与 GPT 4o 对话, 超方便。
+                    </div>
+                    <div class="main-header-content2-right">It's so cool!</div>
+                  </div>
+                </div>
+                <div class="main-header-content3">
+                  <img
+                    style="width: 30px; height: 30px"
+                    src="@/assets/images/scan-code.png"
+                  />
+                  <img
+                    style="width: 108px; height: 108px"
+                    src="@/assets/images/marsh-wx.png"
+                  />
+                </div> -->
+              </div>
+              <div class="phone-main-header-content2">
+                <div class="phone-main-header-content2-title">
+                  试试在微信里与 GPT 4o 对话, 超方便。
+                </div>
+              </div>
               <h1 class="title">
                 当下热门 AI 应用
                 <span class="app-num">(7)</span>
@@ -1155,9 +1247,9 @@ const redirectUrl = ref<any>("");
 const swiperList = ref([
   {
     title: "MBM OpenAI GPT-4 新模型更新",
-    titleStyle: {color: 'black'},
+    titleStyle: { color: "black" },
     desc: "2023年12月，我们更新了 Azure OpenAI 一系列新模型到我们的服务中。包括：新增 GPT-4 Turbo，Dall.E 3 图像模型，GPT-3.5模型。\n并为开发者额外新增：GPT-4 Turbo with Version，GPT3.5 Fine Tuning 微调功能和 Whisper 模型。",
-    descStyle: {color: 'black'},
+    descStyle: { color: "black" },
     bg: "https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/bg1.jpg",
     button: "了解更多",
   },
@@ -2374,6 +2466,73 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
     box-sizing: border-box;
     // padding: 40px 50px;
     background: #f5f5f7;
+    .main-header {
+      background: #ffffff;
+      width: calc(100% - 30px);
+      height: 148px;
+      border: 1px solid #707070;
+      margin-bottom: 20px;
+      border-radius: 79px;
+      padding: 20px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-direction: row;
+      .main-header-content {
+        height: 108px;
+        width: 220px;
+        min-width: 160px;
+        display: flex;
+        padding-left: 30px;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-direction: column;
+        .main-header-content-top {
+          display: flex;
+          justify-content: flex-start;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+      .main-header-content2 {
+        height: 108px;
+        display: flex;
+        flex: 1;
+        justify-content: center;
+        align-items: center;
+        flex-direction: row;
+        .main-header-content2-bg {
+          background: #3bad4f;
+          width: 100%;
+          max-width: 520px;
+          min-width: 400px;
+          // height: 56px;
+          border-radius: 79px;
+          padding: 16px 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          flex-direction: row;
+          .main-header-content2-title {
+            font-size: 14px;
+            color: #ffffff;
+          }
+          .main-header-content2-right {
+            font-size: 12px;
+            color: #ffeaa8;
+          }
+        }
+      }
+      .main-header-content3 {
+        height: 108px;
+        width: 168px;
+        min-width: 148px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: row;
+      }
+    }
     .title {
       font-size: 23px;
       font-family: FUTURA-MEDIUM;
@@ -2412,6 +2571,44 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
     box-sizing: border-box;
     // padding: 20px 25px;
     background: #f5f5f7;
+    .phone-main-header {
+      width: 100%;
+      height: 108px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-direction: row;
+      .phone-main-header-content {
+        height: 108px;
+        display: flex;
+        padding-left: 10px;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-direction: column;
+        .phone-main-header-content-top {
+          display: flex;
+          justify-content: flex-start;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    }
+    .phone-main-header-content2 {
+      background: #3bad4f;
+      width: 100%;
+      border-radius: 79px;
+      padding: 16px 30px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-direction: row;
+      .phone-main-header-content2-title {
+        font-size: 14px;
+        color: #ffffff;
+      }
+    }
     .title {
       font-size: 16px;
       font-family: FUTURA-MEDIUM;
