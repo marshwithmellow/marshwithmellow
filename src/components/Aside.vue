@@ -42,13 +42,14 @@
             />
           </el-select>
         </div>
-        <div class="default-model" @click="skip('http://visus.ai/', true)">
+        <!-- http://visus.ai/ -->
+        <div class="default-model" @click="openOverlay()">
           <img
             class="icon-ai"
             src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
             alt=""
           />
-          <div class="model-name">训练你自己的 ChatGPT</div>
+          <div class="model-name">创建你自己的 微信机器人</div>
         </div>
         <el-popover
           placement="right"
@@ -592,6 +593,7 @@ import {
 } from "vue";
 import useClipboard from "vue-clipboard3";
 import { getSerialNumber } from "@/api/index";
+import { httpUrlAddKey } from "@/utils/utils";
 type Option = {
   value: string;
   label: string;
@@ -621,6 +623,7 @@ const emits = defineEmits([
   "exchangeConfirm",
   "setExchangeShow",
   "changeAiVersion",
+  "openOverlay",
 ]);
 // select opetion
 // const options = ref<Option[]>([
@@ -781,6 +784,23 @@ const navQuestion = (blogType: string) => {
   emits("navQuestion", {
     blogType,
   });
+};
+const openOverlay = () => {
+  // emits("openOverlay");
+  let urlString = "http://192.168.0.33:5173/test#/";
+  let usr = localStorage.getItem("userInfo");
+  if (usr) {
+    const user = JSON.parse(usr);
+    urlString = httpUrlAddKey(urlString, "token", user.token);
+    urlString = httpUrlAddKey(urlString, "accessKey", user.accessKey);
+    window.open(urlString);
+    // emits("skip", {
+    //   urlString,
+    //   openNew:true,
+    // });
+  } else {
+    emits("toLogin");
+  }
 };
 const popoverConfirm = () => {
   popoverShow.value = false;

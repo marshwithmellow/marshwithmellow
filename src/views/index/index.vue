@@ -36,6 +36,44 @@
           返回
         </div>
       </div>
+      <div
+        class="overlay-1"
+        :style="{
+          animation: fadeName + ' 1s',
+        }"
+        v-if="mpQrCodeShow2"
+        @click="hideQrCode2"
+      >
+        <img
+          src="@/assets/images/marsh-wx.png"
+          class="qrcode"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click.stop="() => {}"
+        />
+        <div
+          class="content2"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+        >
+          <div>微信机器人+定制知识库</div>
+          <div>30元一月，MBM AI 自研大模型。</div>
+          <div>如果没有备用手机，30元一月+300元手机租赁。</div>
+          <div>租赁3个月以上免费获得一部手机。服务结束可寄给你。</div>
+          <div>新增知识库，一次，6元。类似彩铃一样。</div>
+        </div>
+        <div
+          class="back"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click="hideQrCode2"
+        >
+          返回
+        </div>
+      </div>
       <el-container>
         <el-aside class="aside">
           <left-aside
@@ -51,6 +89,7 @@
             @exchange-confirm="toExchangeConfirm"
             @set-exchange-show="setExchangeShow"
             @change-ai-version="changeAiVersion"
+            @open-overlay="mpQrCodeShow2 = true"
           ></left-aside>
         </el-aside>
         <el-container>
@@ -247,10 +286,21 @@
                   </div>
                 </div>
                 <div class="main-header-content3">
-                  <img
-                    style="width: 30px; height: 30px"
-                    src="@/assets/images/scan-code.png"
-                  />
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      flex-direction: row;
+                      flex: 1;
+                      height: 108px;
+                    "
+                  >
+                    <img
+                      style="width: 30px; height: 30px"
+                      src="@/assets/images/scan-code.png"
+                    />
+                  </div>
                   <img
                     style="width: 108px; height: 108px"
                     src="@/assets/images/marsh-wx.png"
@@ -338,6 +388,44 @@
       </el-dialog>
     </div>
     <div v-else>
+      <div
+        class="overlay-2"
+        :style="{
+          animation: fadeName + ' 1s',
+        }"
+        v-if="mpQrCodeShow2"
+        @click="hideQrCode2"
+      >
+        <img
+          src="@/assets/images/marsh-wx.png"
+          class="qrcode"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click.stop="() => {}"
+        />
+        <div
+          class="content2"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+        >
+          <div>微信机器人+定制知识库</div>
+          <div>30元一月，MBM AI 自研大模型。</div>
+          <div>如果没有备用手机，30元一月+300元手机租赁。</div>
+          <div>租赁3个月以上免费获得一部手机。服务结束可寄给你。</div>
+          <div>新增知识库，一次，6元。类似彩铃一样。</div>
+        </div>
+        <div
+          class="back"
+          :style="{
+            animation: fadeName + ' 1s',
+          }"
+          @click="hideQrCode2"
+        >
+          返回
+        </div>
+      </div>
       <el-container>
         <el-header class="toolbar">
           <img
@@ -621,7 +709,7 @@
               <div
                 class="default-model"
                 @click="
-                  skip('http://visus.ai/', true);
+                  mpQrCodeShow2 = true;
                   drawer = false;
                 "
               >
@@ -630,7 +718,7 @@
                   src="https://mbm-oss1.oss-cn-shenzhen.aliyuncs.com/OpenAI/icon-ai-self.png"
                   alt=""
                 />
-                <div class="model-name">训练你自己的 ChatGPT</div>
+                <div class="model-name">创建你自己的 微信机器人</div>
               </div>
               <div class="default-model" @click="openExchangeDrawer">
                 <img
@@ -1208,6 +1296,7 @@ const aiVersion = ref<string>(options.value[0].value);
 const showDialog = ref(false);
 const popoverShow = ref(false);
 const mpQrcodeShow = ref(false);
+const mpQrCodeShow2 = ref(false);
 const exchangeShow = ref(false);
 const fadeName = ref("fadeIn");
 const inviteCode = ref<any>("");
@@ -1715,6 +1804,13 @@ const hideQrcode = () => {
     fadeName.value = "fadeIn";
   }, 1000);
 };
+const hideQrCode2 = () => {
+  fadeName.value = "fadeOut";
+  setTimeout(() => {
+    mpQrCodeShow2.value = false;
+    fadeName.value = "fadeIn";
+  }, 1000);
+};
 const showMessage = (params: any) => {
   ElMessage(params);
 };
@@ -1974,7 +2070,6 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
     background-color: rgba(0, 0, 0, 0.8);
     z-index: 200;
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: center;
     flex-direction: column;
@@ -1986,12 +2081,63 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
       width: 200px;
       margin-top: 20px;
     }
+    .content2 {
+      width: 500px;
+      margin-top: 20px;
+      color: #ffffff;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
     .back {
       color: #fff;
       opacity: 0.6;
       text-decoration: underline;
       cursor: pointer;
       font-size: 1rem;
+      margin-top: 20px;
+    }
+  }
+  .overlay-2 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    .qrcode {
+      width: 200px;
+      height: 200px;
+    }
+    .content {
+      width: 200px;
+      margin-top: 20px;
+    }
+    .content2 {
+      width: 100%;
+      margin-top: 20px;
+      color: #ffffff;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+    .back {
+      color: #fff;
+      opacity: 0.6;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 0.8rem;
       margin-top: 20px;
     }
   }
@@ -2525,10 +2671,10 @@ const collectSkip = (e: { urlString: string; openNew: boolean }) => {
       }
       .main-header-content3 {
         height: 108px;
-        width: 168px;
+        width: 228px;
         min-width: 148px;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
         flex-direction: row;
       }
