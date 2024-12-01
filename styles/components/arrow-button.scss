@@ -1,0 +1,28 @@
+.arrow-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  // hover效果
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  // 点击效果
+  &:active {
+    transform: scale(0.9);
+  }
+
+  .arrow-icon {
+    width: 20px;
+    height: 20px;
+    color: #fff;
+  }
+} 

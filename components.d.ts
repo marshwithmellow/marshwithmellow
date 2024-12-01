@@ -20,6 +20,7 @@ declare module 'vue' {
     McdModal: typeof import('./src/components/McdModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchButton: typeof import('./src/components/SearchButton.vue')['default']
     VanCascader: typeof import('vant/es')['Cascader']
     VanPopup: typeof import('vant/es')['Popup']
   }

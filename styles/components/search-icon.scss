@@ -1,0 +1,46 @@
+<template>
+  <div 
+    class="search-icon"
+    @mousedown="handleMouseDown"
+    @mouseup="handleMouseUp"
+    @mouseleave="handleMouseUp"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"></path>
+    </svg>
+  </div>
+</template>
+
+<script setup>
+const handleMouseDown = (e) => {
+  e.currentTarget.style.transform = 'scale(0.9)'
+}
+
+const handleMouseUp = (e) => {
+  e.currentTarget.style.transform = ''
+}
+</script>
+
+<style scoped>
+.search-icon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.search-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
+
+.search-icon:hover {
+  transform: scale(1.05);
+}
+</style>

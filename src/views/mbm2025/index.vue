@@ -50,10 +50,8 @@
               type="text" 
               class="search-input" 
             />
-            <div class="search-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-              </svg>
+            <div class="button-wrapper">
+              <SearchButton @click="handleSearch" />
             </div>
           </div>
         </div>
@@ -189,6 +187,7 @@ const modelOptions = [
   { label: 'GPT 4o mini', value: 'GPT 4o mini' }
 ]
 import CardSlider from '@/components/CardSlider.vue'
+import SearchButton from '@/components/SearchButton.vue'
 </script>
 
 <style lang="scss" scoped>
@@ -365,31 +364,11 @@ import CardSlider from '@/components/CardSlider.vue'
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  .search-icon {
+  .button-wrapper {
     position: absolute;
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    width: 36px;
-    height: 36px;
-    background: #000;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-
-    svg {
-      width: 20px;
-      height: 20px;
-      color: #fff;
-    }
-
-    &:hover {
-      background: #333;
-      transform: translateY(-50%) scale(1.05);
-    }
   }
 }
 
