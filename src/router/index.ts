@@ -90,6 +90,11 @@ const router = createRouter({
       name: "work",
       component: () => import("../views/work/index.vue"),
     },
+    {
+      path: '/mbm2025',
+      name: 'MBM2025',
+      component: () => import('@/views/mbm2025/index.vue')
+    }
   ],
 });
 

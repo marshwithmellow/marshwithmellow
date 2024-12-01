@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Aside: typeof import('./src/components/Aside.vue')['default']
+    CardSlider: typeof import('./src/components/CardSlider.vue')['default']
     ChatGptSharewriter: typeof import('./src/components/ChatGptSharewriter.vue')['default']
     ChatGptSharewriterSmall: typeof import('./src/components/ChatGptSharewriterSmall.vue')['default']
     ChatGptTypewriter: typeof import('./src/components/ChatGptTypewriter.vue')['default']

@@ -14,7 +14,8 @@
     "deploy2": "rsync -avz dist/. ubuntu@openai.mbmzone.com:/data/apps/openai.mbmzone.com/mbm-gpt/.",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "start": "node app.js"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
