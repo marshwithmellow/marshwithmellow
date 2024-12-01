@@ -17,19 +17,29 @@
 </template>
 
 <script setup lang="ts">
-const handleMouseDown = (e: MouseEvent) => {
-  const target = e.currentTarget as HTMLElement
-  target.style.transform = 'scale(0.95)'
-  const arrow = target.querySelector('.arrow-icon') as HTMLElement
-  arrow.classList.add('arrow-pressed')
+const handleMouseDown = (e?: MouseEvent) => {
+  const target = e ? e.currentTarget as HTMLElement : document.querySelector('.search-button')
+  if (target) {
+    target.style.transform = 'scale(0.95)'
+    const arrow = target.querySelector('.arrow-icon') as HTMLElement
+    arrow.classList.add('arrow-pressed')
+  }
 }
 
-const handleMouseUp = (e: MouseEvent) => {
-  const target = e.currentTarget as HTMLElement
-  target.style.transform = ''
-  const arrow = target.querySelector('.arrow-icon') as HTMLElement
-  arrow.classList.remove('arrow-pressed')
+const handleMouseUp = (e?: MouseEvent) => {
+  const target = e ? e.currentTarget as HTMLElement : document.querySelector('.search-button')
+  if (target) {
+    target.style.transform = ''
+    const arrow = target.querySelector('.arrow-icon') as HTMLElement
+    arrow.classList.remove('arrow-pressed')
+  }
 }
+
+// 暴露方法给父组件使用
+defineExpose({
+  triggerPress: () => handleMouseDown(),
+  triggerRelease: () => handleMouseUp()
+})
 </script>
 
 <style scoped>

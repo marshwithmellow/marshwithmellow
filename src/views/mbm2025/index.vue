@@ -48,10 +48,12 @@
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="search-input" 
+              class="search-input"
+              @keydown.enter="handleEnter"
+              @keyup.enter="handleEnterUp"
             />
             <div class="button-wrapper">
-              <SearchButton @click="handleSearch" />
+              <SearchButton ref="searchButtonRef" />
             </div>
           </div>
         </div>
@@ -132,6 +134,7 @@ import '@/assets/styles/fonts.scss'
 
 const searchQuery = ref('')
 const currentPlaceholderIndex = ref(0)
+const searchButtonRef = ref()
 
 // 占位符文本数组和动画状态
 const placeholders = [
@@ -165,7 +168,16 @@ onMounted(() => {
   }, 3000)
 })
 
-const handleSearch = () => {
+const handleEnter = () => {
+  // 直接调用按钮组件的方法，不传递事件对象
+  searchButtonRef.value?.triggerPress()
+}
+
+const handleEnterUp = () => {
+  // 直接调用按钮组件的方法，不传递事件对象
+  searchButtonRef.value?.triggerRelease()
+  
+  // 执行搜索逻辑
   if (searchQuery.value.trim()) {
     console.log('搜索查询:', searchQuery.value)
     // 实现搜索逻辑
