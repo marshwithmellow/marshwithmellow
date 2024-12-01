@@ -50,18 +50,10 @@
               type="text" 
               class="search-input" 
             />
-            <div class="placeholder-animation">
-              <div 
-                class="placeholder-text"
-                :style="{ transform: `translateY(-${currentPlaceholderIndex * 100}%)` }"
-              >
-                <div v-for="(placeholder, index) in placeholders" 
-                     :key="index" 
-                     class="placeholder-item"
-                >
-                  {{ placeholder }}
-                </div>
-              </div>
+            <div class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+              </svg>
             </div>
           </div>
         </div>
@@ -328,115 +320,75 @@ import CardSlider from '@/components/CardSlider.vue'
 }
 
 .chat-container {
-  background-color: #161718;
-  border-radius: 24px;
-  width: 96.35vw;
-  height: 79.63vh;
-  max-width: 1850px;
-  max-height: 860px;
+  background-color: rgba(22, 23, 24, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 32px;
+  width: 96vw;
+  height: 80vh;
   position: absolute;
   top: 3vh;
   left: 50%;
   transform: translateX(-50%);
+  padding: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(60 * 100vh / 1080) calc(60 * 100vw / 1920);
-  box-sizing: border-box;
-  justify-content: space-between;
 }
 
 .chat-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin-top: 10vh;
+  text-align: center;
   
   .title {
-    text-align: center;
-    font-size: 30px;
-    margin-bottom: 40px;
+    font-size: 36px;
+    margin-bottom: 48px;
+    font-weight: 600;
     color: #fff;
-    font-weight: 500;
-    font-family: "GothamRoundedBold", sans-serif !important;
   }
 }
 
 .search-wrapper {
   position: relative;
+  width: 600px;
   
-  .placeholder-animation {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 20px;
-    overflow: hidden;
-    pointer-events: none;
-    color: #666;
-  }
-
-  .placeholder-text {
-    transition: transform 0.5s ease-in-out;
-  }
-
-  .placeholder-item {
-    height: 20px;
-    opacity: 0.8;
-    white-space: nowrap;
-  }
-
   .search-input {
     width: 100%;
-    height: 48px;
-    padding: 0 54px 0 20px;
+    height: 56px;
+    padding: 0 60px 0 24px;
     border: none;
-    border-radius: 24px;
+    border-radius: 28px;
     outline: none;
     background: #fff;
-    font-size: 15px;
+    font-size: 16px;
     color: #000;
     caret-color: #000;
-    
-    &::placeholder {
-      opacity: 0;
-      animation: placeholderFade 3s ease-in-out infinite;
-    }
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  .search-button {
+  .search-icon {
     position: absolute;
-    right: 8px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 36px;
+    height: 36px;
     background: #000;
-    border: none;
-    cursor: pointer;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    transition: all 0.7s cubic-bezier(0.42, 0, 0.58, 1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      color: #fff;
+    }
 
     &:hover {
       background: #333;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-
-    &:active {
-      transform: translateY(-48%);
-    }
-
-    svg {
-      transition: all 0.7s cubic-bezier(0.42, 0, 0.58, 1);
-      opacity: 1;
-    }
-
-    &:hover svg {
-      transform: scale(0.9);
-      opacity: 0.8;
+      transform: translateY(-50%) scale(1.05);
     }
   }
 }
@@ -448,106 +400,53 @@ import CardSlider from '@/components/CardSlider.vue'
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 
   .model-name {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 12px;
-    font-family: "GothamRnd-Book", sans-serif;
-    
-    &.active {
-      opacity: 0.8;
-    }
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    font-family: "GothamRoundedMedium", sans-serif;
   }
 }
 
 :deep(.ai-select) {
   .el-input {
-    width: 140px;
+    width: 160px;
     
     .el-input__wrapper {
-      background: #202226;
-      border: 1px dashed rgba(255,255,255,0.6) !important;
-      border-radius: 4px;
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.3) !important;
+      border-radius: 6px;
       box-shadow: none !important;
-      padding: 0 20px 0 4px !important;
-      height: 28px;
-      padding-left: 2px !important;
+      height: 32px;
     }
     
     .el-input__inner {
-      color: #fff;
+      color: rgba(255, 255, 255, 0.8);
       font-size: 14px;
-      font-family: "GothamRnd-Book", sans-serif;
-      height: 28px;
-      padding-left: 4px !important;
+      font-family: "GothamRoundedMedium", sans-serif;
+      padding-left: 12px !important;
     }
 
     .el-input__suffix {
-      right: -14px !important;
-
-      .el-input__suffix-inner {
-        .el-select__caret {
-          color: rgba(255,255,255,0.6) !important;
-          font-size: 12px;
-          width: 16px !important;
-          height: 16px !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          transform: translateX(0);
-
-          background: transparent !important;
-          border: none !important;
-          box-shadow: none !important;
-
-          &.is-reverse {
-            transform: rotate(180deg) translateX(0) !important;
-          }
-        }
-      }
+      right: 8px !important;
     }
   }
 }
 
 .select-down {
-  margin-top: 4px !important;
-  background: #000 !important;
-  border: none !important;
-  border-radius: 4px !important;
-  padding: 4px 0 !important;
-  box-shadow: none !important;
-
-  .el-select-dropdown__wrap {
-    background: #000 !important;
-  }
-
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 6px !important;
+  
   .el-select-dropdown__item {
-    color: #fff !important;
-    font-size: 14px;
-    font-family: "GothamRnd-Book", sans-serif;
-    height: 32px;
-    line-height: 32px;
-    padding: 0 4px !important;
-    background: #000 !important;
-    margin: 0 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-family: "GothamRoundedMedium", sans-serif;
+    padding: 8px 12px;
     
-    &.selected {
-      background: #111 !important;
-      font-weight: normal !important;
-      color: #fff !important;
+    &:hover, &.selected {
+      background: rgba(255, 255, 255, 0.1) !important;
     }
-    
-    &:hover {
-      background: #111 !important;
-    }
-  }
-
-  .el-select__caret {
-    color: rgba(255,255,255,0.6) !important;
-    right: 2px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 20px !important;
   }
 }
 
