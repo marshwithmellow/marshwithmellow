@@ -49,9 +49,25 @@
               v-model="searchQuery" 
               type="text" 
               class="search-input"
+              @focus="handleFocus"
+              @blur="handleBlur"
+              @input="handleInput"
               @keydown.enter="handleEnter"
               @keyup.enter="handleEnterUp"
+              @compositionstart="handleCompositionStart"
+              @compositionend="handleCompositionEnd"
             />
+            <div class="placeholder-container" v-show="!searchQuery && !isInputting">
+              <transition name="fade">
+                <span
+                  :key="currentPlaceholderIndex"
+                  class="placeholder-text"
+                  :class="{ 'focused': isFocused }"
+                >
+                  {{ placeholders[currentPlaceholderIndex] }}
+                </span>
+              </transition>
+            </div>
             <div class="button-wrapper">
               <SearchButton ref="searchButtonRef" />
             </div>
@@ -124,19 +140,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-// 新图片导入
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import topRoundImg from '@/assets/images/top-round2.png'
 import logoImg from '@/assets/images/mbmailogo.png'
-
-// 导入字体样式
 import '@/assets/styles/fonts.scss'
 
 const searchQuery = ref('')
 const currentPlaceholderIndex = ref(0)
 const searchButtonRef = ref()
+const isFocused = ref(false)
+const isComposing = ref(false)
+const isInputting = ref(false)
 
-// 占位符文本数组和动画状态
 const placeholders = [
   "有什么可以帮助您的？",
   "帮我写一个Python脚本", 
@@ -150,41 +165,31 @@ const placeholders = [
   "帮我写一篇文章"
 ]
 
-// 计算滚动样式
-const scrollStyle = computed(() => ({
-  transform: `translateY(-${currentPlaceholderIndex.value * 30}px)`
-}))
-
-// 当前显示的占位符
-const currentPlaceholder = computed(() => placeholders[currentPlaceholderIndex.value])
-
-// 自动切换占位符
 let placeholderInterval: number
 
 onMounted(() => {
-  placeholderInterval = setInterval(() => {
+  currentPlaceholderIndex.value = 0
+  
+  placeholderInterval = window.setInterval(() => {
+    if (document.hidden) return;
+    
     currentPlaceholderIndex.value = 
       (currentPlaceholderIndex.value + 1) % placeholders.length
   }, 3000)
 })
 
 const handleEnter = () => {
-  // 直接调用按钮组件的方法，不传递事件对象
   searchButtonRef.value?.triggerPress()
 }
 
 const handleEnterUp = () => {
-  // 直接调用按钮组件的方法，不传递事件对象
   searchButtonRef.value?.triggerRelease()
-  
-  // 执行搜索逻辑
-  if (searchQuery.value.trim()) {
-    console.log('搜索查询:', searchQuery.value)
-    // 实现搜索逻辑
+  const query = searchQuery.value.trim() || placeholders[currentPlaceholderIndex.value]
+  if (query) {
+    window.location.href = `https://mchat.mbmzone.com?q=${encodeURIComponent(query)}`
   }
 }
 
-// 清理定时器
 onUnmounted(() => {
   if (placeholderInterval) {
     clearInterval(placeholderInterval)
@@ -200,6 +205,52 @@ const modelOptions = [
 ]
 import CardSlider from '@/components/CardSlider.vue'
 import SearchButton from '@/components/SearchButton.vue'
+
+const placeholder = computed(() => placeholders[currentPlaceholderIndex.value])
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
+
+const handleVisibilityChange = () => {
+  if (!document.hidden) {
+    clearInterval(placeholderInterval)
+    placeholderInterval = window.setInterval(() => {
+      if (!document.hidden) {
+        currentPlaceholderIndex.value = 
+          (currentPlaceholderIndex.value + 1) % placeholders.length
+      }
+    }, 3000)
+  }
+}
+
+const handleFocus = () => {
+  isFocused.value = true
+}
+
+const handleBlur = () => {
+  isFocused.value = false
+  if (!searchQuery.value) {
+    isInputting.value = false
+  }
+}
+
+const handleInput = () => {
+  isInputting.value = true
+}
+
+const handleCompositionStart = () => {
+  isComposing.value = true
+  isInputting.value = true
+}
+
+const handleCompositionEnd = () => {
+  isComposing.value = false
+}
 </script>
 
 <style lang="scss" scoped>
@@ -355,25 +406,65 @@ import SearchButton from '@/components/SearchButton.vue'
     margin-bottom: 48px;
     font-weight: 600;
     color: #fff;
+    font-family: "GothamRoundedBold", sans-serif !important;
   }
 }
 
 .search-wrapper {
   position: relative;
   width: 600px;
-  
+
   .search-input {
     width: 100%;
-    height: 56px;
-    padding: 0 60px 0 24px;
+    height: 48px;
+    padding: 0 60px 0 22px;
     border: none;
-    border-radius: 28px;
+    border-radius: 24px;
     outline: none;
     background: #fff;
-    font-size: 16px;
+    font-size: 15px;
     color: #000;
     caret-color: #000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.5);
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    &:focus::placeholder {
+      opacity: 0.7;
+    }
+  }
+
+  .placeholder-container {
+    position: absolute;
+    top: 0;
+    left: 22px;
+    height: 48px;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    width: calc(100% - 48px);
+    z-index: 1;
+  }
+
+  .placeholder-text {
+    position: absolute;
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 15px;
+    white-space: nowrap;
+    left: 0;
+    line-height: 48px;
+    width: auto;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &.focused {
+      color: rgba(0, 0, 0, 0.8);
+    }
   }
 
   .button-wrapper {
@@ -381,6 +472,7 @@ import SearchButton from '@/components/SearchButton.vue'
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 2;
   }
 }
 
@@ -580,18 +672,25 @@ import SearchButton from '@/components/SearchButton.vue'
   justify-content: center;
 }
 
-@keyframes placeholderFade {
-  0%, 100% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  20%, 80% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  90% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style> 
