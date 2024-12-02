@@ -382,7 +382,7 @@ const handleCompositionEnd = () => {
 }
 
 .chat-container {
-  background-color: rgba(22, 23, 24, 0.95);
+  background-color: rgba(#161718, 0.98);
   backdrop-filter: blur(10px);
   border-radius: 32px;
   width: 96vw;
@@ -398,12 +398,12 @@ const handleCompositionEnd = () => {
 }
 
 .chat-main {
-  margin-top: 10vh;
+  margin-top: 6vh;
   text-align: center;
   
   .title {
     font-size: 36px;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
     font-weight: 600;
     color: #fff;
     font-family: "GothamRoundedBold", sans-serif !important;
